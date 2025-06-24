@@ -5,11 +5,14 @@
   <ItemGroup>
     <PackageVersion Include="IvAt.CommonFramework" Version="1.1.0" />
     <PackageVersion Include="IvAt.CommonFramework.DependencyInjection" Version="1.1.0" />
-    <PackageVersion Include="IvAt.GenericQueryable" Version="1.0.0" />
+    <PackageVersion Include="IvAt.GenericQueryable" Version="1.1.0" />
+    <PackageVersion Include="IvAt.GenericQueryable.EntityFramework" Version="1.1.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.1" />
   </ItemGroup>
   <!-- Tests -->
   <ItemGroup>

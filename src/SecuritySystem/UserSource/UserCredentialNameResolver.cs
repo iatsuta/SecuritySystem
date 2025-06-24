@@ -1,11 +1,11 @@
 ﻿using CommonFramework;
+
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;
 
-public class UserSourceCredentialNameByIdResolver<TUser>(IQueryableSource queryableSource, UserPathInfo<TUser> userPathInfo)
-    : IUserCredentialNameByIdResolver
+public class UserSourceCredentialNameByIdResolver<TUser>(IQueryableSource queryableSource, UserPathInfo<TUser> userPathInfo) : IUserCredentialNameByIdResolver
     where TUser : class
 {
     public string? TryGetUserName(Guid id)
