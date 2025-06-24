@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>IvAt.SecuritySystem.VirtualPermission</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IvAt.GenericQueryable" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem\SecuritySystem.csproj" />
+  </ItemGroup>
+
+</Project>

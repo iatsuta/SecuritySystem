@@ -1,0 +1,3 @@
+﻿namespace SecuritySystem.ExternalSystem.ApplicationSecurity;
+
+public record SecurityAdministratorRuleInfo(DomainSecurityRule.RoleBaseSecurityRule SecurityRole);
