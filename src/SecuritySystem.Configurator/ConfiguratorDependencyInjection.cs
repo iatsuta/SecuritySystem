@@ -13,7 +13,7 @@ namespace SecuritySystem.Configurator;
 
 public static class ConfiguratorDependencyInjection
 {
-    private const string EmbeddedFileNamespace = "Framework.Configurator.configurator_ui.dist";
+    private const string EmbeddedFileNamespace = $"{nameof(SecuritySystem)}.{nameof(Configurator)}.configurator_ui.dist";
 
     public static IServiceCollection AddConfigurator(this IServiceCollection services, Action<IConfiguratorSetup>? setupAction = null)
     {

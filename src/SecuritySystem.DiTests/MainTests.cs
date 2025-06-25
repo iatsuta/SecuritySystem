@@ -1,6 +1,5 @@
-﻿using CommonFramework;
-
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
@@ -37,6 +36,13 @@ public class MainTests : TestBase
         this.employee2 = new Employee() { Id = Guid.NewGuid(), BusinessUnit = this.bu2 };
         this.employee3 = new Employee() { Id = Guid.NewGuid(), BusinessUnit = this.bu3 };
         this.employee4 = new Employee() { Id = Guid.NewGuid() };
+    }
+
+    protected override IServiceCollection CreateServices(IServiceCollection serviceCollection)
+    {
+        return base.CreateServices(serviceCollection)
+            .AddScoped<BusinessUnitAncestorLinkSourceExecuteCounter>()
+            .Replace(ServiceDescriptor.Scoped<IQueryableSource>(sp => new TestQueryableSource { BaseQueryableSource = this.BuildQueryableSource(sp) }));
     }
 
     protected override IEnumerable<TestPermission> GetPermissions()
@@ -87,11 +93,7 @@ public class MainTests : TestBase
         checkAccessAction.Should().Throw<AccessDeniedException>();
     }
 
-    protected override IServiceProvider BuildRootServiceProvider(IServiceCollection serviceCollection) =>
-        serviceCollection.AddScoped<BusinessUnitAncestorLinkSourceExecuteCounter>()
-                         .Pipe(base.BuildRootServiceProvider);
-
-    protected override IQueryableSource BuildQueryableSource(IServiceProvider serviceProvider)
+    protected IQueryableSource BuildQueryableSource(IServiceProvider serviceProvider)
     {
         var queryableSource = Substitute.For<IQueryableSource>();
 

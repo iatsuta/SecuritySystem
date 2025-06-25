@@ -1,0 +1,37 @@
+name: Integration tests
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: git config --global core.autocrlf true
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        working-directory: ./src
+        run: |
+          dotnet restore
+
+      - name: Build
+        working-directory: ./src
+        run: |
+          dotnet build ./SecuritySystem.slnx --no-restore
+
+      - name: Integration Tests
+        run: |
+          dotnet test --blame src/SecuritySystem.IntegrationTests --no-build --verbosity normal;

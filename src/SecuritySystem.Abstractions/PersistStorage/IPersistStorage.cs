@@ -1,6 +1,7 @@
 ﻿namespace SecuritySystem.PersistStorage;
 
-public interface IPersistStorage<in T>
+public interface IStorageWriter
 {
-    Task SaveAsync(T data, CancellationToken cancellationToken);
+    Task SaveAsync<TDomainObject>(TDomainObject data, CancellationToken cancellationToken)
+        where TDomainObject : class;
 }

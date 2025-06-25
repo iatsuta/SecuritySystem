@@ -1,5 +1,7 @@
 ﻿using CommonFramework.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Credential;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
@@ -8,7 +10,10 @@ using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
+
 using System.Linq.Expressions;
+
+using SecuritySystem.PersistStorage;
 
 namespace SecuritySystem.DependencyInjection;
 
@@ -21,6 +26,12 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     private Action<IServiceCollection> registerUserSourceAction = _ => { };
 
     private Action<IServiceCollection> registerRunAsManagerAction= _ => { };
+
+    private Action<IServiceCollection>? registerQueryableSourceAction;
+
+    private Action<IServiceCollection>? registerRawUserAuthenticationServiceAction;
+
+    private Action<IServiceCollection>? registerStorageWriterAction;
 
     private SecurityRuleCredential defaultSecurityRuleCredential = new SecurityRuleCredential.CurrentUserWithRunAsCredential();
 
@@ -136,6 +147,11 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
                                             if (runAsPath != null)
                                             {
+                                                if (this.registerStorageWriterAction == null)
+                                                {
+                                                    throw new InvalidOperationException("StorageWriter must be initialized");
+                                                }
+
                                                 sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(runAsPath));
                                                 sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
                                                 sc.AddScoped<IRunAsManager, UserSourceRunAsManager<TUser>>();
@@ -193,8 +209,38 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
+    public ISecuritySystemSettings SetQueryableSource<TQueryableSource>()
+        where TQueryableSource : class, IQueryableSource
+    {
+        this.registerQueryableSourceAction = sc => sc.AddScoped<IQueryableSource, TQueryableSource>();
+
+        return this;
+    }
+
+    public ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
+        where TRawUserAuthenticationService : class, IRawUserAuthenticationService
+    {
+        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScoped<IRawUserAuthenticationService, TRawUserAuthenticationService>();
+
+        return this;
+    }
+
+    public ISecuritySystemSettings SetStorageWriter<TStorageWriter>()
+        where TStorageWriter : class, IStorageWriter
+    {
+        this.registerStorageWriterAction = sc => sc.AddScoped<IStorageWriter, TStorageWriter>();
+
+        return this;
+    }
+
     public void Initialize(IServiceCollection services)
     {
+        (this.registerQueryableSourceAction ?? throw new InvalidOperationException("QueryableSource must be initialized")).Invoke(services);
+
+        (this.registerRawUserAuthenticationServiceAction ?? throw new InvalidOperationException("RawUserAuthenticationService must be initialized")).Invoke(services);
+
+        this.registerStorageWriterAction?.Invoke(services);
+
         services.AddSingleton(new SecurityAdministratorRuleInfo(this.securityAdministratorRule));
 
         this.registerActions.ForEach(v => v(services));

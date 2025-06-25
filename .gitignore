@@ -245,3 +245,6 @@ ModelManifest.xml
 # Javascript files and source maps
 *.js.map
 *.js
+/src/ExampleWebApp/test.db
+/src/ExampleWebApp/test.db-shm
+/src/ExampleWebApp/test.db-wal

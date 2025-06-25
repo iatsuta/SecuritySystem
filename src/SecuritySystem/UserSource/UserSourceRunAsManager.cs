@@ -13,20 +13,26 @@ public class UserSourceRunAsManager<TUser>(
     IUserSource<TUser> userSource,
     IUserSourceRunAsAccessor<TUser> accessor,
     UserPathInfo<TUser> userPathInfo,
-    IPersistStorage<TUser> persistStorage) : RunAsManager(rawUserAuthenticationService, securitySystemFactory)
+    IStorageWriter storageWriter) : RunAsManager(rawUserAuthenticationService, securitySystemFactory)
+    where TUser : class
 {
     private readonly Lazy<Func<TUser, User>> lazyToDefaultUserFunc = LazyHelper.Create(() => userPathInfo.ToDefaultUserExpr.Compile());
 
     private readonly TUser currentUser = userSource.GetUser(rawUserAuthenticationService.GetUserName());
 
-    public override User? RunAsUser => accessor.GetRunAs(this.currentUser).Maybe(v => this.lazyToDefaultUserFunc.Value(v));
+    public override User? RunAsUser => this.NativeRunAsUser.Maybe(v => this.lazyToDefaultUserFunc.Value(v));
+
+    private TUser? NativeRunAsUser => accessor.GetRunAs(this.currentUser);
 
     protected override async Task PersistRunAs(UserCredential? userCredential, CancellationToken cancellationToken)
     {
-        var runAsUser = userCredential == null ? default : userSource.GetUser(userCredential);
+        var newRunAsUser = userCredential == null ? null : userSource.GetUser(userCredential);
 
-        accessor.SetRunAs(this.currentUser, runAsUser);
+        if (this.NativeRunAsUser != newRunAsUser)
+        {
+            accessor.SetRunAs(this.currentUser, newRunAsUser);
 
-        await persistStorage.SaveAsync(this.currentUser, cancellationToken);
+            await storageWriter.SaveAsync(this.currentUser, cancellationToken);
+        }
     }
 }

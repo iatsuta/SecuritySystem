@@ -38,7 +38,7 @@ public class SecurityContextStorage : ISecurityContextStorage
 
         var authorizationTypedExternalSourceType =
 
-            hierarchicalInfo == null
+            hierarchicalInfo != null
 
             ? typeof(HierarchicalTypedSecurityContextStorage<>)
             : typeof(PlainTypedSecurityContextStorage<>);
