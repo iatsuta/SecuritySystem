@@ -16,7 +16,7 @@ public static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Configuration.Sources.Clear();
-        builder.Configuration.AddJsonFile("appsettings.json", false, true);
+        builder.Configuration.AddJsonFile("appSettings.json", false, true);
 
         builder.Host
             .UseDefaultServiceProvider(x =>

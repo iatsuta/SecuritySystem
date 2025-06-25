@@ -1,7 +1,9 @@
 ﻿using ExampleWebApp.Domain;
 using ExampleWebApp.Domain.Auth;
 using ExampleWebApp.Infrastructure;
+
 using Microsoft.AspNetCore.Mvc;
+
 using SecuritySystem.Services;
 
 namespace ExampleWebApp.Controllers;
@@ -13,7 +15,7 @@ public class InitController(
     TestDbContext dbContext) : ControllerBase
 {
     [HttpPost]
-    public async Task TestInitialize(CancellationToken cancellationToken)
+    public async Task TestInitialize(CancellationToken cancellationToken = default)
     {
         await dbContext.Database.EnsureDeletedAsync(cancellationToken);
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
@@ -31,7 +33,7 @@ public class InitController(
             var testBu = new BusinessUnit() { Name = $"TestBu{index}" };
             dbContext.Add(testBu);
 
-            var testEmployee = new Employee { Login = $"testEmployee{index}" };
+            var testEmployee = new Employee { Login = $"TestEmployee{index}" };
             dbContext.Add(testEmployee);
 
             var testObj = new TestObject { BusinessUnit = testBu };

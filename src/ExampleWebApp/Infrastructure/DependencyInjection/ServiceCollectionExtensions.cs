@@ -22,7 +22,7 @@ public static class ServiceCollectionExtensions
         return services
             .AddHttpContextAccessor()
             .AddDbContext<TestDbContext>(optionsBuilder => optionsBuilder
-                .UseSqlite("Data Source=test.db")
+                .UseSqlite(configuration.GetConnectionString("DefaultConnection"))
                 .UseLazyLoadingProxies()
                 .UseGenericQueryable())
             .AddSecuritySystem();

@@ -21,7 +21,7 @@ public class TestController(
     IDomainSecurityService<TestObject> domainSecurityService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IEnumerable<TestObjectDto>> GetTestObjects(CancellationToken cancellationToken)
+    public async Task<IEnumerable<TestObjectDto>> GetTestObjects(CancellationToken cancellationToken = default)
     {
         return await dbContext
             .Set<TestObject>()
@@ -31,7 +31,7 @@ public class TestController(
     }
 
     [HttpGet]
-    public async Task<string> GetCurrentUserLogin(CancellationToken cancellationToken)
+    public async Task<string> GetCurrentUserLogin(CancellationToken cancellationToken = default)
     {
         return currentUserSource.CurrentUser.Login;
     }
