@@ -1,6 +1,7 @@
 ﻿using CommonFramework;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
@@ -12,6 +13,13 @@ namespace SecuritySystem.DiTests;
 public class SecurityPathTests : TestBase
 {
     private readonly BusinessUnit bu1 = new() { Id = Guid.NewGuid() };
+
+
+    protected override IServiceCollection CreateServices(IServiceCollection serviceCollection)
+    {
+        return base.CreateServices(serviceCollection)
+            .Replace(ServiceDescriptor.Scoped<IQueryableSource>(_ => new TestQueryableSource { BaseQueryableSource = this.BuildQueryableSource() }));
+    }
 
     protected override IEnumerable<TestPermission> GetPermissions()
     {
@@ -153,7 +161,7 @@ public class SecurityPathTests : TestBase
         result2.Should().BeTrue();
     }
 
-    protected override IQueryableSource BuildQueryableSource(IServiceProvider serviceProvider)
+    private IQueryableSource BuildQueryableSource()
     {
         var queryableSource = Substitute.For<IQueryableSource>();
 
@@ -162,6 +170,7 @@ public class SecurityPathTests : TestBase
 
         return queryableSource;
     }
+
     private IEnumerable<BusinessUnitAncestorLink> GetBusinessUnitAncestorLinkSource()
     {
         yield return new BusinessUnitAncestorLink { Ancestor = this.bu1, Child = this.bu1 };

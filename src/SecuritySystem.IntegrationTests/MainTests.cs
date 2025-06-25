@@ -1,12 +1,9 @@
-﻿using CommonFramework;
-using CommonFramework.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
 using ExampleWebApp.Controllers;
 using ExampleWebApp.Infrastructure.DependencyInjection;
-using ExampleWebApp.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.Services;
-using System.Linq;
 
 namespace SecuritySystem.DiTests;
 

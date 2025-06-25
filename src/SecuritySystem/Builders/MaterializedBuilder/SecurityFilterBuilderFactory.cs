@@ -39,7 +39,7 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
 
         var builder = this.CreateBuilder(securityPath, securityContextRestrictions);
 
-        var filterExpression = expandedPermissions.BuildOr(builder.GetSecurityFilterExpression);
+        var filterExpression = expandedPermissions.BuildOr(builder.GetSecurityFilterExpression).ExpandConst();
 
         var lazyHasAccessFunc = LazyHelper.Create(
             () => filterExpression.UpdateBody(CacheContainsCallVisitor.Value).Pipe(this.expressionEvaluator.Compile));

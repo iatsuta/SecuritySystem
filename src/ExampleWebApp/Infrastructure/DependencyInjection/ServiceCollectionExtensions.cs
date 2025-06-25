@@ -9,8 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
-using SecuritySystem.PersistStorage;
-using SecuritySystem.Services;
 using SecuritySystem.VirtualPermission;
 
 namespace ExampleWebApp.Infrastructure.DependencyInjection;

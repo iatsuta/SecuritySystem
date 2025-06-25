@@ -8,7 +8,6 @@ using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
 using SecuritySystem.DiTests.Services;
 using SecuritySystem.HierarchicalExpand;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.DiTests;
 
@@ -18,24 +17,28 @@ public abstract class TestBase
 
     protected TestBase()
     {
-        this.lazyRootServiceProvider = LazyHelper.Create(() => this.BuildRootServiceProvider(new ServiceCollection()));
+        this.lazyRootServiceProvider = LazyHelper.Create<IServiceProvider>(() =>
+
+            this.CreateServices(new ServiceCollection())
+                .ValidateDuplicateDeclaration()
+                .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true }));
     }
 
     protected IServiceProvider RootServiceProvider => this.lazyRootServiceProvider.Value;
 
     protected virtual IEnumerable<TestPermission> GetPermissions() => [];
 
-    protected virtual IServiceProvider BuildRootServiceProvider(IServiceCollection serviceCollection)
+    protected virtual IServiceCollection CreateServices(IServiceCollection serviceCollection)
     {
         return serviceCollection
 
-               //.RegisterHierarchicalObjectExpander()
-               .AddScoped(this.BuildQueryableSource)
-
-               .AddSecuritySystem(
+            .AddSecuritySystem(
                    settings =>
 
                        settings
+                           .SetQueryableSource<TestQueryableSource>()
+                           .SetRawUserAuthenticationService<FakeRawUserAuthenticationService>()
+
                            .AddPermissionSystem<ExamplePermissionSystemFactory>()
 
                            .AddDomainSecurityServices(
@@ -88,16 +91,7 @@ public abstract class TestBase
 
                .AddRelativeDomainPath((Employee employee) => employee)
                .AddSingleton(typeof(TestCheckboxConditionFactory<>))
-               .AddScoped<IRawUserAuthenticationService, FakeRawUserAuthenticationService>()
 
-               .AddSingleton(_ => new TestPermissionData(this.GetPermissions().ToList()))
-
-               .ValidateDuplicateDeclaration()
-               .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
-    }
-
-    protected virtual IQueryableSource BuildQueryableSource(IServiceProvider serviceProvider)
-    {
-        return Substitute.For<IQueryableSource>();
+               .AddSingleton(_ => new TestPermissionData(this.GetPermissions().ToList()));
     }
 }
