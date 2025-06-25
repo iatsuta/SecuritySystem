@@ -16,7 +16,7 @@ namespace ExampleWebApp.Controllers;
 [Route("api/[controller]/[action]")]
 [ApiController]
 public class TestController(
-    ICurrentUserSource<Employee> employee,
+    ICurrentUserSource<Employee> currentUserSource,
     TestDbContext dbContext,
     IDomainSecurityService<TestObject> domainSecurityService) : ControllerBase
 {
@@ -33,7 +33,7 @@ public class TestController(
     [HttpGet]
     public async Task<string> GetCurrentUserLogin(CancellationToken cancellationToken)
     {
-        return employee.CurrentUser.Login;
+        return currentUserSource.CurrentUser.Login;
     }
 }
 

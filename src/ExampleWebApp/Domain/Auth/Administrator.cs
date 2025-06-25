@@ -7,5 +7,5 @@ namespace ExampleWebApp.Domain.Auth;
 [Table(nameof(Administrator), Schema = "auth")]
 public class Administrator : PersistentDomainObjectBase
 {
-    public Employee Employee { get; set; } = null!;
+    public virtual Employee Employee { get; set; } = null!;
 }

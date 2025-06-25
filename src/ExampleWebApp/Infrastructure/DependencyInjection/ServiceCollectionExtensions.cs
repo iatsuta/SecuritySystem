@@ -21,20 +21,22 @@ public static class ServiceCollectionExtensions
     {
         return services
             .AddHttpContextAccessor()
-            .AddDbContext<TestDbContext>(optionsBuilder => optionsBuilder.UseSqlite("Data Source=test.db").UseGenericQueryable())
+            .AddDbContext<TestDbContext>(optionsBuilder => optionsBuilder
+                .UseSqlite("Data Source=test.db")
+                .UseLazyLoadingProxies()
+                .UseGenericQueryable())
             .AddSecuritySystem();
     }
 
     private static IServiceCollection AddSecuritySystem(this IServiceCollection services)
     {
         return services
-
-            .AddScoped<IQueryableSource, EfQueryableSource>()
-            .AddScoped<IRawUserAuthenticationService, RawUserAuthenticationService>()
-            .AddScoped(typeof(IPersistStorage<>), typeof(EfPersistStorage<>))
-
             .AddSecuritySystem(sss =>
                 sss
+                    .SetQueryableSource<EfQueryableSource>()
+                    .SetRawUserAuthenticationService<RawUserAuthenticationService>()
+                    .SetStorageWriter<EfStorageWriter>()
+
                     .SetUserSource<Employee>(employee => employee.Id, employee => employee.Login, _ => true, employee => employee.RunAs)
 
                     .AddSecurityContext<BusinessUnit>(new Guid("{E4AE968E-7B6B-4236-B381-9886C8E0FA34}"), scb => scb.SetDisplayFunc(bu => bu.Name))

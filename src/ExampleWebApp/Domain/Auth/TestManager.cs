@@ -7,7 +7,7 @@ namespace ExampleWebApp.Domain.Auth;
 [Table(nameof(TestManager), Schema = "auth")]
 public class TestManager : PersistentDomainObjectBase
 {
-    public Employee Employee { get; set; } = null!;
+    public virtual Employee Employee { get; set; } = null!;
 
-    public BusinessUnit BusinessUnit { get; set; } = null!;
+    public virtual BusinessUnit BusinessUnit { get; set; } = null!;
 }

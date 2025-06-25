@@ -1,13 +1,11 @@
-﻿using System.Linq.Expressions;
-using Microsoft.Extensions.DependencyInjection;
-
+﻿using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
+using SecuritySystem.PersistStorage;
 using SecuritySystem.SecurityAccessor;
-
-
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.DependencyInjection;
 
@@ -63,4 +61,13 @@ public interface ISecuritySystemSettings
         where TClientSecurityRuleInfoSource : class, IClientSecurityRuleInfoSource;
 
     ISecuritySystemSettings AddClientSecurityRuleInfoSource(Type sourceType);
+
+    ISecuritySystemSettings SetQueryableSource<TQueryableSource>()
+        where TQueryableSource : class, IQueryableSource;
+
+    ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
+        where TRawUserAuthenticationService : class, IRawUserAuthenticationService;
+
+    ISecuritySystemSettings SetStorageWriter<TStorageWriter>()
+        where TStorageWriter : class, IStorageWriter;
 }

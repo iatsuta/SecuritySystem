@@ -7,5 +7,5 @@ namespace ExampleWebApp.Domain;
 [Table(nameof(TestObject), Schema = "app")]
 public class TestObject : PersistentDomainObjectBase
 {
-    public BusinessUnit BusinessUnit { get; set; } = null!;
+    public virtual BusinessUnit BusinessUnit { get; set; } = null!;
 }

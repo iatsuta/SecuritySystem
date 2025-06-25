@@ -32,7 +32,7 @@ public static class Program
 
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
-        
+
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
@@ -49,16 +49,17 @@ public static class Program
 
         var app = builder.Build();
 
-        app.UseHttpsRedirection()
+
+        app
+            .UseHttpsRedirection()
             .UseHsts()
-            .UseRouting()
             .UseAuthentication()
             .UseAuthorization()
             .UseConfigurator()
+            .UseSwagger()
+            .UseSwaggerUI()
+            .UseRouting()
             .UseEndpoints(x => x.MapControllers());
-        
-        app.UseSwagger();
-        app.UseSwaggerUI();
 
         await app.RunAsync();
     }

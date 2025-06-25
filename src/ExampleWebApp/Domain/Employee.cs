@@ -9,5 +9,5 @@ public class Employee : PersistentDomainObjectBase
 {
     public string Login { get; set; } = null!;
 
-    public Employee? RunAs { get; set; }
+    public virtual Employee? RunAs { get; set; }
 }

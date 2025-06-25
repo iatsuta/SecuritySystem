@@ -8,6 +8,8 @@
     <PackageReference Include="IvAt.GenericQueryable.EntityFramework" />
 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" />
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>

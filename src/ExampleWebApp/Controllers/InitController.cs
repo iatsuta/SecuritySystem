@@ -33,7 +33,7 @@ public class InitController(
 
             var testEmployee = new Employee { Login = $"testEmployee{index}" };
             dbContext.Add(testEmployee);
-            
+
             var testObj = new TestObject { BusinessUnit = testBu };
             dbContext.Add(testObj);
 
