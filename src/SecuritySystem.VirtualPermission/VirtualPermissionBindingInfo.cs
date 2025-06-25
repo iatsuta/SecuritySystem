@@ -84,13 +84,13 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
             {
                 if (pureFilter == null)
                 {
-                    yield return singlePath.Select(securityContext => securityContext != null ? (IEnumerable<Guid>)new[] { securityContext.Id } : new Guid[0]);
+                    yield return singlePath.Select(securityContext => securityContext != null ? (IEnumerable<Guid>)new[] { securityContext.Id } : Array.Empty<Guid>());
                 }
                 else
                 {
                     yield return ExpressionEvaluateHelper.InlineEvaluate(ee =>
                         singlePath.Select(securityContext =>
-                            securityContext != null && ee.Evaluate(pureFilter, securityContext) ? (IEnumerable<Guid>)new[] { securityContext.Id } : new Guid[0]));
+                            securityContext != null && ee.Evaluate(pureFilter, securityContext) ? (IEnumerable<Guid>)new[] { securityContext.Id } : Array.Empty<Guid>()));
                 }
             }
             else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)

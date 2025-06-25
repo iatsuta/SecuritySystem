@@ -1,6 +1,6 @@
 ﻿using SecuritySystem.Services;
 
-namespace SecuritySystem.DiTests;
+namespace SecuritySystem.DiTests.Services;
 
 public class TestQueryableSource : IQueryableSource
 {
@@ -9,6 +9,6 @@ public class TestQueryableSource : IQueryableSource
     public IQueryable<TDomainObject> GetQueryable<TDomainObject>()
         where TDomainObject : class
     {
-        return this.BaseQueryableSource.GetQueryable<TDomainObject>();
+        return BaseQueryableSource.GetQueryable<TDomainObject>();
     }
 }
