@@ -23,7 +23,15 @@ public static class ServiceCollectionExtensions
                 .UseSqlite(configuration.GetConnectionString("DefaultConnection"))
                 .UseLazyLoadingProxies()
                 .UseGenericQueryable())
-            .AddSecuritySystem();
+            .AddSecuritySystem()
+            .AddRepository();
+    }
+
+    private static IServiceCollection AddRepository(this IServiceCollection services)
+    {
+        return services
+            .AddScoped(typeof(IRepository<>), typeof(EfRepository<>))
+            .AddScoped(typeof(IRepositoryFactory<>), typeof(EfRepositoryFactory<>));
     }
 
     private static IServiceCollection AddSecuritySystem(this IServiceCollection services)
