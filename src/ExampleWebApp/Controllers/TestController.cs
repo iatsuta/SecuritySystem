@@ -1,14 +1,11 @@
-﻿using CommonFramework;
-
+﻿using ExampleWebApp.Application;
 using ExampleWebApp.Domain;
-using ExampleWebApp.Infrastructure;
 
 using GenericQueryable;
 
 using Microsoft.AspNetCore.Mvc;
 
 using SecuritySystem;
-using SecuritySystem.DomainServices;
 using SecuritySystem.UserSource;
 
 namespace ExampleWebApp.Controllers;
@@ -17,15 +14,14 @@ namespace ExampleWebApp.Controllers;
 [ApiController]
 public class TestController(
     ICurrentUserSource<Employee> currentUserSource,
-    TestDbContext dbContext,
-    IDomainSecurityService<TestObject> domainSecurityService) : ControllerBase
+    IRepositoryFactory<TestObject> testObjectRepositoryFactory) : ControllerBase
 {
     [HttpGet]
     public async Task<IEnumerable<TestObjectDto>> GetTestObjects(CancellationToken cancellationToken = default)
     {
-        return await dbContext
-            .Set<TestObject>()
-            .Pipe(domainSecurityService.GetSecurityProvider(SecurityRule.View).InjectFilter)
+        return await testObjectRepositoryFactory
+            .Create(SecurityRule.View)
+            .GetQueryable()
             .Select(testObj => new TestObjectDto(testObj.Id, testObj.BusinessUnit.Name))
             .GenericToListAsync(cancellationToken);
     }
