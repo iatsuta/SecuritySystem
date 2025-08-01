@@ -3,10 +3,11 @@
 using System.Reflection;
 
 using Microsoft.Extensions.DependencyInjection;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.HierarchicalExpand;
 
-public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceProvider, IRealTypeResolver? realTypeResolver = null) : IHierarchicalObjectExpanderFactory<TIdent>
+public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource, IRealTypeResolver? realTypeResolver = null) : IHierarchicalObjectExpanderFactory<TIdent>
     where TIdent : struct
 {
     private static readonly MethodInfo GenericCreateMethod =
@@ -29,7 +30,9 @@ public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceP
                 var expanderType = typeof(HierarchicalObjectAncestorLinkExpander<,,,>)
                     .MakeGenericType(typeof(TDomainObject), hierarchicalInfo.DirectedLinkType, hierarchicalInfo.UndirectedLinkType, typeof(TIdent));
 
-                return (IHierarchicalObjectExpander<TIdent>)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, hierarchicalInfo);
+                var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TDomainObject));
+
+                return (IHierarchicalObjectExpander<TIdent>)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, hierarchicalInfo, identityInfo);
 
             }
             else

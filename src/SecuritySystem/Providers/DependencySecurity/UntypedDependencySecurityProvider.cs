@@ -21,8 +21,8 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
     private readonly Lazy<HashSet<TIdent>> lazyAvailableIdents;
 
     public UntypedDependencySecurityProvider(
-        ISecurityProvider<TBaseDomainObject> baseSecurityProvider,
         IQueryableSource queryableSource,
+        ISecurityProvider<TBaseDomainObject> baseSecurityProvider,
         IdentityInfo<TDomainObject, TIdent> domainIdentityInfo,
         IdentityInfo<TBaseDomainObject, TIdent> baseDomainIdentityInfo)
     {

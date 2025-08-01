@@ -1,11 +1,12 @@
 ﻿using CommonFramework;
 
 using SecuritySystem.Providers;
+using SecuritySystem.Services;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
-public class AccessDeniedExceptionService(IServiceProvider serviceProvider) : IAccessDeniedExceptionService
+public class AccessDeniedExceptionService(IIdentityInfoSource identityInfoSource) : IAccessDeniedExceptionService
 {
     public Exception GetAccessDeniedException(AccessResult.AccessDeniedResult accessDeniedResult)
     {
@@ -85,7 +86,7 @@ public class AccessDeniedExceptionService(IServiceProvider serviceProvider) : IA
 
     private object? TryGetId(object domainObject, Type domainObjectType)
     {
-        var identityInfo = (IdentityInfo?)serviceProvider.GetService(typeof(IdentityInfo<>).MakeGenericType(domainObjectType));
+        var identityInfo = identityInfoSource.TryGetIdentityInfo(domainObjectType);
 
         if (identityInfo != null)
         {
