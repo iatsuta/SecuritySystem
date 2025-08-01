@@ -13,7 +13,6 @@ public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceP
         typeof(HierarchicalObjectExpanderFactory<TIdent>).GetMethod(nameof(Create), BindingFlags.Public | BindingFlags.Instance)!;
 
     public virtual IHierarchicalObjectExpander<TIdent> Create<TDomainObject>()
-        where TDomainObject : class, IIdentityObject<TIdent>
     {
         var realType = realTypeResolver?.Resolve(typeof(TDomainObject)) ?? typeof(TDomainObject);
 
@@ -41,7 +40,6 @@ public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceP
     }
 
     protected virtual IHierarchicalObjectExpander<TIdent> CreatePlain<TDomainObject>()
-        where TDomainObject : class, IIdentityObject<TIdent>
     {
         return new PlainHierarchicalObjectExpander<TIdent>();
     }

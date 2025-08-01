@@ -19,7 +19,6 @@ public abstract class DomainSecurityServiceBuilder : IDomainSecurityServiceBuild
 }
 
 internal class DomainSecurityServiceBuilder<TDomainObject> : DomainSecurityServiceBuilder, IDomainSecurityServiceBuilder<TDomainObject>
-    where TDomainObject : IIdentityObject<Guid>
 {
     private readonly List<Type> functorTypes = [];
 

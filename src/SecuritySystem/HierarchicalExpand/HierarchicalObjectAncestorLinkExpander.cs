@@ -9,10 +9,10 @@ namespace SecuritySystem.HierarchicalExpand;
 
 public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink, TIdent>(
     IQueryableSource queryableSource,
-    HierarchicalInfo<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink> hierarchicalInfo)
+    HierarchicalInfo<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink> hierarchicalInfo,
+    IdentityInfo<TDomainObject, TIdent> identityInfo)
     : IHierarchicalObjectExpander<TIdent>, IHierarchicalObjectQueryableExpander<TIdent>
 
-    where TDomainObject : IIdentityObject<TIdent>
     where TDirectedAncestorLink : class
     where TUndirectedAncestorLink : class
     where TIdent : notnull
@@ -37,11 +37,11 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => idents,
 
-            HierarchicalExpandType.Children => this.ExpandEnumerable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.FromPath, hierarchicalInfo.DirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.Children => this.ExpandEnumerable(idents, hierarchicalInfo.DirectedAncestorLinkInfo),
 
-            HierarchicalExpandType.Parents => this.ExpandEnumerable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.ToPath, hierarchicalInfo.DirectedAncestorLinkInfo.FromPath),
+            HierarchicalExpandType.Parents => this.ExpandEnumerable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
 
-            HierarchicalExpandType.All => this.ExpandEnumerable(idents, hierarchicalInfo.UndirectedAncestorLinkInfo.FromPath, hierarchicalInfo.UndirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.All => this.ExpandEnumerable(idents, hierarchicalInfo.UndirectedAncestorLinkInfo),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
@@ -49,15 +49,14 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
     private IEnumerable<TIdent> ExpandEnumerable<TAncestorLink>(
         HashSet<TIdent> idents,
-        Expression<Func<TAncestorLink, TDomainObject>> sourcePath,
-        Expression<Func<TAncestorLink, TDomainObject>> targetPath)
+        AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
         where TAncestorLink : class
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = sourcePath.Select(domainObject => domainObject.Id);
+        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = targetPath.Select(domainObject => domainObject.Id);
+        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
         var containsExpr = ExpressionEvaluateHelper.InlineEvaluate(ee =>
             ExpressionHelper.Create((TAncestorLink ancestorLink) => idents.Contains(ee.Evaluate(fromPathIdExpr, ancestorLink))));
@@ -71,11 +70,11 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => idents,
 
-            HierarchicalExpandType.Children => this.ExpandQueryable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.FromPath, hierarchicalInfo.DirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.Children => this.ExpandQueryable(idents, hierarchicalInfo.DirectedAncestorLinkInfo),
 
-            HierarchicalExpandType.Parents => this.ExpandQueryable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.ToPath, hierarchicalInfo.DirectedAncestorLinkInfo.FromPath),
+            HierarchicalExpandType.Parents => this.ExpandQueryable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
 
-            HierarchicalExpandType.All => this.ExpandQueryable(idents, hierarchicalInfo.UndirectedAncestorLinkInfo.FromPath, hierarchicalInfo.UndirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.All => this.ExpandQueryable(idents, hierarchicalInfo.UndirectedAncestorLinkInfo),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
@@ -83,15 +82,14 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
     private IQueryable<TIdent> ExpandQueryable<TAncestorLink>(
         IQueryable<TIdent> idents,
-        Expression<Func<TAncestorLink, TDomainObject>> sourcePath,
-        Expression<Func<TAncestorLink, TDomainObject>> targetPath)
+        AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
         where TAncestorLink : class
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = sourcePath.Select(domainObject => domainObject.Id);
+        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = targetPath.Select(domainObject => domainObject.Id);
+        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
         var containsExpr = ExpressionEvaluateHelper.InlineEvaluate(ee =>
             ExpressionHelper.Create((TAncestorLink ancestorLink) => idents.Contains(ee.Evaluate(fromPathIdExpr, ancestorLink))));
@@ -105,26 +103,25 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => idents => idents,
 
-            HierarchicalExpandType.Children => this.GetExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo.FromPath, hierarchicalInfo.DirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.Children => this.GetExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo),
 
-            HierarchicalExpandType.Parents => this.GetExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo.ToPath, hierarchicalInfo.DirectedAncestorLinkInfo.FromPath),
+            HierarchicalExpandType.Parents => this.GetExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
 
-            HierarchicalExpandType.All => this.GetExpandExpression(hierarchicalInfo.UndirectedAncestorLinkInfo.FromPath, hierarchicalInfo.UndirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.All => this.GetExpandExpression(hierarchicalInfo.UndirectedAncestorLinkInfo),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
     }
 
     private Expression<Func<IEnumerable<TIdent>, IEnumerable<TIdent>>> GetExpandExpression<TAncestorLink>(
-        Expression<Func<TAncestorLink, TDomainObject>> sourcePath,
-        Expression<Func<TAncestorLink, TDomainObject>> targetPath)
+        AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
         where TAncestorLink : class
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = sourcePath.Select(domainObject => domainObject.Id);
+        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = targetPath.Select(domainObject => domainObject.Id);
+        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
         return ExpressionEvaluateHelper.InlineEvaluate(ee =>
 
@@ -139,26 +136,25 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => null,
 
-            HierarchicalExpandType.Children => this.GetSingleExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo.FromPath, hierarchicalInfo.DirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.Children => this.GetSingleExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo),
 
-            HierarchicalExpandType.Parents => this.GetSingleExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo.ToPath, hierarchicalInfo.DirectedAncestorLinkInfo.FromPath),
+            HierarchicalExpandType.Parents => this.GetSingleExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
 
-            HierarchicalExpandType.All => this.GetSingleExpandExpression(hierarchicalInfo.UndirectedAncestorLinkInfo.FromPath, hierarchicalInfo.UndirectedAncestorLinkInfo.ToPath),
+            HierarchicalExpandType.All => this.GetSingleExpandExpression(hierarchicalInfo.UndirectedAncestorLinkInfo),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
     }
 
     private Expression<Func<TIdent, IEnumerable<TIdent>>> GetSingleExpandExpression<TAncestorLink>(
-        Expression<Func<TAncestorLink, TDomainObject>> sourcePath,
-        Expression<Func<TAncestorLink, TDomainObject>> targetPath)
+        AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
         where TAncestorLink : class
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = sourcePath.Select(domainObject => domainObject.Id);
+        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = targetPath.Select(domainObject => domainObject.Id);
+        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
         var eqIdentsExpr = ExpressionHelper.GetEquality<TIdent>();
 

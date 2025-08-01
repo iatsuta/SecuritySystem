@@ -13,8 +13,6 @@ public class UntypedDependencyDomainSecurityService<TDomainObject, TBaseDomainOb
     : DependencyDomainSecurityServiceBase<TDomainObject, TBaseDomainObject>(
         securityRuleExpander,
         baseDomainSecurityService)
-    where TDomainObject : IIdentityObject<Guid>
-    where TBaseDomainObject : class, IIdentityObject<Guid>
 {
     protected override ISecurityProvider<TDomainObject> CreateDependencySecurityProvider(ISecurityProvider<TBaseDomainObject> baseProvider)
     {
