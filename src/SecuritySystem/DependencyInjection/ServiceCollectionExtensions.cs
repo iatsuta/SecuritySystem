@@ -97,6 +97,7 @@ public static class ServiceCollectionExtensions
 
             .AddSingleton<SecurityAdministratorRuleFactory>()
 
+            .AddSingleton<IIdentityPropertySource, IdentityPropertySource>()
             .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
 
             .AddScoped<ISecurityContextStorage, SecurityContextStorage>()

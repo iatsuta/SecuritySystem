@@ -86,15 +86,10 @@ public class AccessDeniedExceptionService(IIdentityInfoSource identityInfoSource
 
     private object? TryGetId(object domainObject, Type domainObjectType)
     {
-        var identityInfo = identityInfoSource.TryGetIdentityInfo(domainObjectType);
+        var identityInfo = identityInfoSource.GetIdentityInfo(domainObjectType);
 
-        if (identityInfo != null)
-        {
-            return new Func<object, IdentityInfo<object, object>, object?>(this.TryGetId).CreateGenericMethod(domainObjectType, identityInfo.IdentityType)
-                .Invoke<object?>(this, domainObject, identityInfo);
-        }
-
-        return null;
+        return new Func<object, IdentityInfo<object, object>, object?>(this.TryGetId).CreateGenericMethod(domainObjectType, identityInfo.IdentityType)
+            .Invoke<object?>(this, domainObject, identityInfo);
     }
 
     private object? TryGetId<TDomainObject, TIdent>(TDomainObject domainObject, IdentityInfo<TDomainObject, TIdent> identityInfo)

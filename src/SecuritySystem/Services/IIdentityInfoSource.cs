@@ -2,8 +2,11 @@
 
 public interface IIdentityInfoSource
 {
-    IdentityInfo? TryGetIdentityInfo(Type domainObjectType);
+    IdentityInfo GetIdentityInfo(Type domainType);
+}
 
-    IdentityInfo GetIdentityInfo(Type domainObjectType) =>
-        this.TryGetIdentityInfo(domainObjectType) ?? throw new Exception($"{nameof(IdentityInfo)} for {domainObjectType.Name} not found");
+public interface IIdentityInfoSource<TIdent>
+    where TIdent : notnull
+{
+    IdentityInfo<TDomainObject, TIdent> GetIdentityInfo<TDomainObject>();
 }

@@ -15,10 +15,11 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IQueryableSource queryableSource,
+    IIdentityInfoSource identityInfoSource,
     VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo) : IPrincipalSourceService
 
-    where TPrincipal : class, IIdentityObject<Guid>
-    where TPermission : class, IIdentityObject<Guid>
+    where TPrincipal : class
+    where TPermission : class
 {
     private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission>));
 

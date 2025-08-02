@@ -22,8 +22,7 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
     VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
     : IPermissionSystem<TPermission>
 
-    where TPrincipal : IIdentityObject<Guid>
-    where TPermission : class, IIdentityObject<Guid>
+    where TPermission : class
 {
     public Type PermissionType { get; } = typeof(TPermission);
 

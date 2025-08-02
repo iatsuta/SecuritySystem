@@ -5,35 +5,48 @@ using CommonFramework.DictionaryCache;
 
 namespace SecuritySystem.Services;
 
-public class IdentityInfoSource(IServiceProvider serviceProvider) : IIdentityInfoSource
+public class IdentityInfoSource(IIdentityPropertySource identityPropertySource) : IIdentityInfoSource
 {
-    private readonly IDictionaryCache<Type, IdentityInfo?> identityInfoCache = new DictionaryCache<Type, IdentityInfo?>(domainObjectType =>
+    private readonly IDictionaryCache<Type, IdentityInfo> identityInfoCache = new DictionaryCache<Type, IdentityInfo>(domainType =>
     {
-        var baseIdentityInfo = (IdentityInfo?)serviceProvider.GetService(typeof(IdentityInfo<>).MakeGenericType(domainObjectType));
+        var idProperty = identityPropertySource.GetIdentityProperty(domainType);
 
-        if (baseIdentityInfo != null)
-        {
-            return baseIdentityInfo;
-        }
-        
-        var idProperty = domainObjectType.GetProperty("Id");
+        var idPath = idProperty.ToLambdaExpression();
 
-        if (idProperty != null)
-        {
-            var idPath = idProperty.ToLambdaExpression();
-
-            return new Func<Expression<Func<object, object>>, IdentityInfo<object, object>>(CreateIdentityInfo)
-                .CreateGenericMethod(domainObjectType, idProperty.PropertyType)
-                .Invoke<IdentityInfo>(null, idPath);
-        }
-        else
-        {
-            return null;
-        }
+        return new Func<Expression<Func<object, object>>, IdentityInfo<object, object>>(CreateIdentityInfo)
+            .CreateGenericMethod(domainType, idProperty.PropertyType)
+            .Invoke<IdentityInfo>(null, idPath);
 
     }).WithLock();
 
-    public IdentityInfo? TryGetIdentityInfo(Type domainObjectType)
+    public IdentityInfo GetIdentityInfo(Type domainObjectType)
+    {
+        return this.identityInfoCache[domainObjectType];
+    }
+
+    private static IdentityInfo<TDomainObject, TIdent> CreateIdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject, TIdent>> idPath)
+        where TIdent : notnull
+    {
+        return new IdentityInfo<TDomainObject, TIdent>(idPath);
+    }
+}
+
+
+public class IdentityInfoSource<TIdent>(IIdentityInfoSource identityInfoSource) : IIdentityInfoSource
+{
+    private readonly IDictionaryCache<Type, IdentityInfo> identityInfoCache = new DictionaryCache<Type, IdentityInfo>(domainType =>
+    {
+        var idProperty = identityPropertySource.GetIdentityProperty(domainType);
+
+        var idPath = idProperty.ToLambdaExpression();
+
+        return new Func<Expression<Func<object, object>>, IdentityInfo<object, object>>(CreateIdentityInfo)
+            .CreateGenericMethod(domainType, idProperty.PropertyType)
+            .Invoke<IdentityInfo>(null, idPath);
+
+    }).WithLock();
+
+    public IdentityInfo GetIdentityInfo(Type domainObjectType)
     {
         return this.identityInfoCache[domainObjectType];
     }
