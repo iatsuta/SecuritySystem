@@ -8,13 +8,14 @@ using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext>(
+public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
     IPermissionSystem<TPermission> permissionSystem,
-    IHierarchicalObjectExpanderFactory<Guid> hierarchicalObjectExpanderFactory,
+    IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
     : SecurityFilterBuilder<TPermission, TDomainObject>
     where TSecurityContext : class, ISecurityContext
+    where TIdent : notnull
 {
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(
         HierarchicalExpandType expandType)
@@ -25,9 +26,9 @@ public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityCon
             ? permissionSystem.GetGrandAccessExpr<TSecurityContext>()
             : _ => false;
 
-        var getIdents = permissionSystem.GetPermissionRestrictionsExpr(securityContextRestriction?.Filter);
+        var getIdents = permissionSystem.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(securityContextRestriction?.Filter);
 
-        var expander = hierarchicalObjectExpanderFactory.CreateQuery(typeof(TSecurityContext));
+        var expander = hierarchicalObjectExpanderFactory.CreateQuery<TIdent>(typeof(TSecurityContext));
 
         var expandExpression = expander.GetExpandExpression(expandType);
 

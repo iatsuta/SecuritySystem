@@ -2,7 +2,7 @@
 
 public class LegacyRuntimePermissionOptimizationService : IRuntimePermissionOptimizationService
 {
-    public IEnumerable<Dictionary<Type, List<Guid>>> Optimize(IEnumerable<Dictionary<Type, List<Guid>>> permissions)
+    public IEnumerable<Dictionary<Type, Array>> Optimize(IEnumerable<Dictionary<Type, Array>> permissions)
     {
         var cachedPermissions = permissions.ToList();
 
@@ -18,9 +18,9 @@ public class LegacyRuntimePermissionOptimizationService : IRuntimePermissionOpti
 
         var groupedPermissions = groupedPermissionsRequest.ToList();
 
-        var aggregatePermissions = groupedPermissions.Select(pair => new Dictionary<Type, List<Guid>>
+        var aggregatePermissions = groupedPermissions.Select(pair => new Dictionary<Type, Array>
         {
-            { pair.Key, pair.SelectMany(g => g.Values.Single()).Distinct().ToList() }
+            { pair.Key, pair.SelectMany(g => g.Values.AsEnumerable().Single()).Distinct().ToArray() }
         });
 
         var withoutAggregatePermissions = cachedPermissions.Except(groupedPermissions.SelectMany(g => g));

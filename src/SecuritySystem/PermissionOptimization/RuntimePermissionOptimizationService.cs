@@ -4,7 +4,7 @@ namespace SecuritySystem.PermissionOptimization;
 
 public class RuntimePermissionOptimizationService : IRuntimePermissionOptimizationService
 {
-    public IEnumerable<Dictionary<Type, List<Guid>>> Optimize(IEnumerable<Dictionary<Type, List<Guid>>> permissions)
+    public IEnumerable<Dictionary<Type, Array>> Optimize(IEnumerable<Dictionary<Type, Array>> permissions)
     {
         var cachedPermissions = permissions.ToList();
 

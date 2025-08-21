@@ -7,13 +7,14 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.HierarchicalExpand;
 
-public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource, IRealTypeResolver? realTypeResolver = null) : IHierarchicalObjectExpanderFactory<TIdent>
-    where TIdent : struct
+public class HierarchicalObjectExpanderFactory(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource, IRealTypeResolver? realTypeResolver = null)
+    : IHierarchicalObjectExpanderFactory
 {
     private static readonly MethodInfo GenericCreateMethod =
-        typeof(HierarchicalObjectExpanderFactory<TIdent>).GetMethod(nameof(Create), BindingFlags.Public | BindingFlags.Instance)!;
+        typeof(HierarchicalObjectExpanderFactory).GetMethod(nameof(Create), BindingFlags.Public | BindingFlags.Instance)!;
 
-    public virtual IHierarchicalObjectExpander<TIdent> Create<TDomainObject>()
+    public virtual IHierarchicalObjectExpander<TIdent> Create<TDomainObject, TIdent>()
+        where TIdent : struct
     {
         var realType = realTypeResolver?.Resolve(typeof(TDomainObject)) ?? typeof(TDomainObject);
 
@@ -37,22 +38,23 @@ public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceP
             }
             else
             {
-                return this.CreatePlain<TDomainObject>();
+                return this.CreatePlain<TDomainObject, TIdent>();
             }
         }
     }
 
-    protected virtual IHierarchicalObjectExpander<TIdent> CreatePlain<TDomainObject>()
+    protected virtual IHierarchicalObjectExpander<TIdent> CreatePlain<TDomainObject, TIdent>()
+        where TIdent : notnull
     {
         return new PlainHierarchicalObjectExpander<TIdent>();
     }
 
-    IHierarchicalObjectExpander<TIdent> IHierarchicalObjectExpanderFactory<TIdent>.Create(Type domainType)
+    IHierarchicalObjectExpander<TIdent> IHierarchicalObjectExpanderFactory.Create<TIdent>(Type domainType)
     {
         return GenericCreateMethod.MakeGenericMethod(domainType).Invoke<IHierarchicalObjectExpander<TIdent>>(this, []);
     }
 
-    IHierarchicalObjectQueryableExpander<TIdent> IHierarchicalObjectExpanderFactory<TIdent>.CreateQuery(Type domainType)
+    IHierarchicalObjectQueryableExpander<TIdent> IHierarchicalObjectExpanderFactory.CreateQuery<TIdent>(Type domainType)
     {
         return GenericCreateMethod.MakeGenericMethod(domainType).Invoke<IHierarchicalObjectQueryableExpander<TIdent>>(this, []);
     }

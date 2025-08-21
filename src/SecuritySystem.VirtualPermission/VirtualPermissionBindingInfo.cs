@@ -12,7 +12,8 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
     Expression<Func<TPrincipal, string>> PrincipalNamePath,
     IReadOnlyList<LambdaExpression> RestrictionPaths,
     Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter,
-    Expression<Func<TPermission, Period>>? PeriodFilter = null)
+    Expression<Func<TPermission, DateTime>>? StartDateFilter = null,
+    Expression<Func<TPermission, DateTime?>>? EndDateFilter = null)
 {
     public VirtualPermissionBindingInfo(
         SecurityRole securityRole,

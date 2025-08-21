@@ -6,6 +6,7 @@ public record TypedPermission(
     Guid Id,
     bool IsVirtual,
     SecurityRole SecurityRole,
-    Period Period,
+    DateTime StartDate,
+    DateTime? EndDate,
     string Comment,
     IReadOnlyDictionary<Type, IReadOnlyList<Guid>> Restrictions);

@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.HierarchicalExpand;
 
-public interface IHierarchicalObjectExpander<TIdent>
+public interface IHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpander
     where TIdent : notnull
 {
     /// <summary>
@@ -10,4 +10,9 @@ public interface IHierarchicalObjectExpander<TIdent>
     /// <param name="expandType">Тип разворачивания</param>
     /// <returns>HashSet/IQueryable></returns>
     IEnumerable<TIdent> Expand(IEnumerable<TIdent> idents, HierarchicalExpandType expandType);
+}
+
+public interface IHierarchicalObjectExpander
+{
+    Array Expand(Array idents, HierarchicalExpandType expandType);
 }

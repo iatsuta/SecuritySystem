@@ -1,9 +1,10 @@
 ﻿namespace SecuritySystem.HierarchicalExpand;
 
-public interface IHierarchicalObjectExpanderFactory<TIdent>
-    where TIdent : notnull
+public interface IHierarchicalObjectExpanderFactory
 {
-    IHierarchicalObjectExpander<TIdent> Create(Type domainType);
+    IHierarchicalObjectExpander<TIdent> Create<TIdent>(Type domainType)
+        where TIdent : notnull;
 
-    IHierarchicalObjectQueryableExpander<TIdent> CreateQuery(Type domainType);
+    IHierarchicalObjectQueryableExpander<TIdent> CreateQuery<TIdent>(Type domainType)
+        where TIdent : notnull;
 }

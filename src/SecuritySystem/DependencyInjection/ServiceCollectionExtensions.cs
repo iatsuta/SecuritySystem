@@ -93,10 +93,11 @@ public static class ServiceCollectionExtensions
         return services
 
             .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
-            .AddScoped(typeof(IHierarchicalObjectExpanderFactory<>), typeof(HierarchicalObjectExpanderFactory<>))
+            .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
 
             .AddSingleton<SecurityAdministratorRuleFactory>()
 
+            .AddSingleton(new IdentityPropertySourceSettings("Id"))
             .AddSingleton<IIdentityPropertySource, IdentityPropertySource>()
             .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
 

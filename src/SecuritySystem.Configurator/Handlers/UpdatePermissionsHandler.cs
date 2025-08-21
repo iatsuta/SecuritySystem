@@ -52,7 +52,8 @@ public class UpdatePermissionsHandler(
             string.IsNullOrWhiteSpace(permission.PermissionId) ? Guid.Empty : new Guid(permission.PermissionId),
             permission.IsVirtual,
             securityRoleSource.GetSecurityRole(new Guid(permission.RoleId)),
-            new Period(permission.StartDate, permission.EndDate),
+            permission.StartDate,
+            permission.EndDate,
             permission.Comment,
             permission.Contexts.ToDictionary(
                 pair => securityContextInfoSource.GetSecurityContextInfo(new Guid(pair.Id)).Type,

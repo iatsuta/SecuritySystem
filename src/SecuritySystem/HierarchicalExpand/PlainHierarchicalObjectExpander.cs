@@ -19,4 +19,9 @@ public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
     {
         return null;
     }
+
+    public Array Expand(Array idents, HierarchicalExpandType expandType)
+    {
+        return idents;
+    }
 }

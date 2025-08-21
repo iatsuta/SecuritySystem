@@ -164,4 +164,9 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
                 ancestorLinkQueryable.Where(ancestorLink => ee.Evaluate(eqIdentsExpr, ident, ee.Evaluate(fromPathIdExpr, ancestorLink))).Select(toPathIdExpr)));
     }
+
+    public Array Expand(Array idents, HierarchicalExpandType expandType)
+    {
+        return this.Expand((IEnumerable<TIdent>)idents, expandType).ToArray();
+    }
 }

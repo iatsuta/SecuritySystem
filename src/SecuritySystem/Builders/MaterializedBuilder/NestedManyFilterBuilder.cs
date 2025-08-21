@@ -12,7 +12,7 @@ public class NestedManyFilterBuilder<TDomainObject, TNestedObject>(
 {
     private SecurityFilterBuilder<TNestedObject> NestedBuilder { get; } = nestedBuilderFactory.CreateBuilder(securityPath.NestedSecurityPath, securityContextRestrictions);
 
-    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, IEnumerable<Guid>> permission)
+    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, Array> permission)
     {
         var nestedFilterExpression = this.NestedBuilder.GetSecurityFilterExpression(permission);
 

@@ -1,7 +1,4 @@
-﻿
-
-
-namespace SecuritySystem.Builders._Factory;
+﻿namespace SecuritySystem.Builders._Factory;
 
 public interface IFilterFactory<TDomainObject, out TFilter>
 {
