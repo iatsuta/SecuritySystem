@@ -14,7 +14,7 @@ public record HierarchicalInfo<TDomainObject, TDirectedLink, TUndirectedLink>(
 
 public abstract record HierarchicalInfo<TDomainObject>(Expression<Func<TDomainObject, TDomainObject?>> ParentPath) : HierarchicalInfo
 {
-    //public override Type DomainObjectType { get; } = typeof(TDomainObject);
+    //public override Type DomainObjectType { get; } = domainType;
 
     public Func<TDomainObject, TDomainObject?> ParentFunc { get; } = ParentPath.Compile();
 }

@@ -18,12 +18,29 @@ public class LegacyRuntimePermissionOptimizationService : IRuntimePermissionOpti
 
         var groupedPermissions = groupedPermissionsRequest.ToList();
 
-        var aggregatePermissions = groupedPermissions.Select(pair => new Dictionary<Type, Array>
+        var aggregatePermissions = groupedPermissions.Select(pair =>
         {
-            { pair.Key, pair.SelectMany(g => g.Values.AsEnumerable().Single()).Distinct().ToArray() }
+            var arrays = pair.Select(p => p.Values.Single()).ToList();
+
+            var elementType = arrays.First().GetType().GetElementType()
+                              ?? throw new InvalidOperationException("Unknown array element type");
+
+            var combined = arrays
+                .SelectMany(arr => arr.Cast<object>())
+                .Distinct()
+                .ToArray();
+
+            var typedArray = Array.CreateInstance(elementType, combined.Length);
+            combined.CopyTo(typedArray, 0);
+
+            return new Dictionary<Type, Array>
+            {
+                { pair.Key, typedArray }
+            };
         });
 
-        var withoutAggregatePermissions = cachedPermissions.Except(groupedPermissions.SelectMany(g => g));
+        var withoutAggregatePermissions = cachedPermissions
+            .Except(groupedPermissions.SelectMany(g => g));
 
         return aggregatePermissions.Concat(withoutAggregatePermissions);
     }

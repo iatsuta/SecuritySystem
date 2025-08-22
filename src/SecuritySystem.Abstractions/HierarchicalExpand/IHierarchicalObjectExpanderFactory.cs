@@ -2,9 +2,8 @@
 
 public interface IHierarchicalObjectExpanderFactory
 {
-    IHierarchicalObjectExpander<TIdent> Create<TIdent>(Type domainType)
-        where TIdent : notnull;
+    IHierarchicalObjectExpander Create(Type domainType);
 
-    IHierarchicalObjectQueryableExpander<TIdent> CreateQuery<TIdent>(Type domainType)
+    IHierarchicalObjectExpander<TIdent> Create<TIdent>(Type domainType)
         where TIdent : notnull;
 }

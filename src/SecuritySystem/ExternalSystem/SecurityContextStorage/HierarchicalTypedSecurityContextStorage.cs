@@ -5,17 +5,19 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
-public class HierarchicalTypedSecurityContextStorage<TSecurityContext>(
+public class HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>(
     IQueryableSource queryableSource,
-    LocalStorage<TSecurityContext> localStorage,
+    LocalStorage<TSecurityContext, TIdent> localStorage,
+    IdentityInfo<TSecurityContext, TIdent> identityInfo,
     ISecurityContextDisplayService<TSecurityContext> displayService,
     HierarchicalInfo<TSecurityContext> hierarchicalInfo)
-    : TypedSecurityContextStorageBase<TSecurityContext>(queryableSource, localStorage)
+    : TypedSecurityContextStorageBase<TSecurityContext, TIdent>(queryableSource, localStorage, identityInfo)
     where TSecurityContext : class, ISecurityContext
+    where TIdent : notnull
 {
-    protected override SecurityContextData CreateSecurityContextData(TSecurityContext securityContext) =>
+    protected override SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext) =>
 
-        new(securityContext.Id, displayService.ToString(securityContext), hierarchicalInfo.ParentFunc(securityContext).Maybe(v => v.Id));
+        new(identityInfo.IdFunc(securityContext), displayService.ToString(securityContext), hierarchicalInfo.ParentFunc(securityContext).Maybe(identityInfo.IdFunc));
 
     protected override IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject)
     {

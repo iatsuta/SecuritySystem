@@ -1,12 +1,12 @@
 ﻿namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
-public interface ITypedSecurityContextStorage
+public interface ITypedSecurityContextStorage;
+
+public interface ITypedSecurityContextStorage<TIdent> : ITypedSecurityContextStorage
 {
-    IEnumerable<SecurityContextData> GetSecurityContexts();
+    IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts();
 
-    IEnumerable<SecurityContextData> GetSecurityContextsByIdents(IEnumerable<Guid> securityContextIdents);
+    IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> securityContextIdents);
 
-    IEnumerable<SecurityContextData> GetSecurityContextsWithMasterExpand(Guid startSecurityContextId);
-
-    bool IsExists (Guid securityContextId);
+    bool IsExists (TIdent securityContextId);
 }

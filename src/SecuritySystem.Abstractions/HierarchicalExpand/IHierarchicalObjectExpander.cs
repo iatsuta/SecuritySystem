@@ -1,4 +1,6 @@
-﻿namespace SecuritySystem.HierarchicalExpand;
+﻿using System.Linq.Expressions;
+
+namespace SecuritySystem.HierarchicalExpand;
 
 public interface IHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpander
     where TIdent : notnull
@@ -10,6 +12,10 @@ public interface IHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
     /// <param name="expandType">Тип разворачивания</param>
     /// <returns>HashSet/IQueryable></returns>
     IEnumerable<TIdent> Expand(IEnumerable<TIdent> idents, HierarchicalExpandType expandType);
+    
+    Expression<Func<IEnumerable<TIdent>, IEnumerable<TIdent>>> GetExpandExpression(HierarchicalExpandType expandType);
+
+    Expression<Func<TIdent, IEnumerable<TIdent>>>? TryGetSingleExpandExpression(HierarchicalExpandType expandType);
 }
 
 public interface IHierarchicalObjectExpander

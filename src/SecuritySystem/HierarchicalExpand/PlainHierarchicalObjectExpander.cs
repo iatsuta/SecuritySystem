@@ -2,7 +2,7 @@
 
 namespace SecuritySystem.HierarchicalExpand;
 
-public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpander<TIdent>, IHierarchicalObjectQueryableExpander<TIdent>
+public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpander<TIdent>
     where TIdent : notnull
 {
     public IEnumerable<TIdent> Expand(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)

@@ -5,40 +5,34 @@ namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 public static class TypedSecurityContextStorageExtensions
 {
-    public static ITypedSecurityContextStorage WithCache(this ITypedSecurityContextStorage source)
+    public static ITypedSecurityContextStorage<TIdent> WithCache<TIdent>(this ITypedSecurityContextStorage<TIdent> source)
+        where TIdent : notnull
     {
-        return new TypedSecurityEntitySource(source);
+        return new TypedSecurityEntitySource<TIdent>(source);
     }
 
-    private class TypedSecurityEntitySource(ITypedSecurityContextStorage baseSource) : ITypedSecurityContextStorage
+    private class TypedSecurityEntitySource<TIdent>(ITypedSecurityContextStorage<TIdent> baseSource) : ITypedSecurityContextStorage<TIdent>
+        where TIdent : notnull
     {
-        private readonly Lazy<SecurityContextData[]> lazySecurityContexts = LazyHelper.Create(() => baseSource.GetSecurityContexts().ToArray());
+        private readonly Lazy<SecurityContextData<TIdent>[]> lazySecurityContexts = LazyHelper.Create(() => baseSource.GetSecurityContexts().ToArray());
 
-        private readonly IDictionaryCache<Guid[], SecurityContextData[]> securityEntitiesByIdentsCache = new DictionaryCache<Guid[], SecurityContextData[]>(
+        private readonly IDictionaryCache<TIdent[], SecurityContextData<TIdent>[]> securityEntitiesByIdentsCache = new DictionaryCache<TIdent[], SecurityContextData<TIdent>[]>(
                 securityEntityIdents => baseSource.GetSecurityContextsByIdents(securityEntityIdents).ToArray(),
-                ArrayComparer<Guid>.Default);
+                ArrayComparer<TIdent>.Default);
 
-        private readonly IDictionaryCache<Guid, SecurityContextData[]> securityEntitiesWithMasterExpandCache = new DictionaryCache<Guid, SecurityContextData[]>(
-                startSecurityEntityId => baseSource.GetSecurityContextsWithMasterExpand(startSecurityEntityId).ToArray());
+        private readonly IDictionaryCache<TIdent, bool> existsCache = new DictionaryCache<TIdent, bool>(baseSource.IsExists);
 
-        private readonly IDictionaryCache<Guid, bool> existsCache = new DictionaryCache<Guid, bool>(baseSource.IsExists);
-
-        public IEnumerable<SecurityContextData> GetSecurityContexts()
+        public IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts()
         {
             return this.lazySecurityContexts.Value;
         }
 
-        public IEnumerable<SecurityContextData> GetSecurityContextsByIdents(IEnumerable<Guid> securityEntityIdents)
+        public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> securityEntityIdents)
         {
             return this.securityEntitiesByIdentsCache[securityEntityIdents.ToArray()];
         }
 
-        public IEnumerable<SecurityContextData> GetSecurityContextsWithMasterExpand(Guid startSecurityEntityId)
-        {
-            return this.securityEntitiesWithMasterExpandCache[startSecurityEntityId];
-        }
-
-        public bool IsExists(Guid securityEntityId)
+        public bool IsExists(TIdent securityEntityId)
         {
             return this.existsCache[securityEntityId];
         }

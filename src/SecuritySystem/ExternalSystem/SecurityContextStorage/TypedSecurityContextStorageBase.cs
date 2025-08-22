@@ -2,38 +2,43 @@
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
-public abstract class TypedSecurityContextStorageBase<TSecurityContext>(
+public abstract class TypedSecurityContextStorageBase<TSecurityContext, TIdent>(
     IQueryableSource queryableSource,
-    LocalStorage<TSecurityContext> localStorage)
-    : ITypedSecurityContextStorage
+    LocalStorage<TSecurityContext, TIdent> localStorage,
+    IdentityInfo<TSecurityContext, TIdent> identityInfo)
+    : ITypedSecurityContextStorage<TIdent>
     where TSecurityContext : class, ISecurityContext
+    where TIdent : notnull
 {
-    protected abstract SecurityContextData CreateSecurityContextData(TSecurityContext securityContext);
+    protected abstract SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext);
 
-    public IEnumerable<SecurityContextData> GetSecurityContexts()
+    public IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts()
     {
         return queryableSource.GetQueryable<TSecurityContext>().ToList().Select(this.CreateSecurityContextData);
     }
 
-    public IEnumerable<SecurityContextData> GetSecurityContextsByIdents(IEnumerable<Guid> preSecurityEntityIdents)
+    public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> preSecurityEntityIdents)
     {
-        var securityEntityIdents = preSecurityEntityIdents.ToList();
+        var filter = identityInfo.CreateContainsFilter(preSecurityEntityIdents.ToArray());
 
-        return queryableSource.GetQueryable<TSecurityContext>().Where(obj => securityEntityIdents.Contains(obj.Id)).ToList()
-                              .Select(this.CreateSecurityContextData);
+        return queryableSource.GetQueryable<TSecurityContext>().Where(filter).ToList().Select(this.CreateSecurityContextData);
     }
 
-    public IEnumerable<SecurityContextData> GetSecurityContextsWithMasterExpand(Guid startSecurityEntityId)
+    public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsWithMasterExpand(TIdent startSecurityEntityId)
     {
-        var securityObject = queryableSource.GetQueryable<TSecurityContext>().Single(obj => obj.Id == startSecurityEntityId);
+        var filter = identityInfo.CreateContainsFilter([startSecurityEntityId]);
+
+        var securityObject = queryableSource.GetQueryable<TSecurityContext>().Single(filter);
 
         return this.GetSecurityContextsWithMasterExpand(securityObject).Select(this.CreateSecurityContextData);
     }
 
-    public bool IsExists(Guid securityContextId)
+    public bool IsExists(TIdent securityContextId)
     {
+        var filter = identityInfo.CreateContainsFilter([securityContextId]);
+
         return localStorage.IsExists(securityContextId)
-               || queryableSource.GetQueryable<TSecurityContext>().Any(securityContext => securityContext.Id == securityContextId);
+               || queryableSource.GetQueryable<TSecurityContext>().Any(filter);
     }
 
     protected abstract IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject);

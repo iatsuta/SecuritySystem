@@ -11,7 +11,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
     IQueryableSource queryableSource,
     HierarchicalInfo<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink> hierarchicalInfo,
     IdentityInfo<TDomainObject, TIdent> identityInfo)
-    : IHierarchicalObjectExpander<TIdent>, IHierarchicalObjectQueryableExpander<TIdent>
+    : IHierarchicalObjectExpander<TIdent>
 
     where TDirectedAncestorLink : class
     where TUndirectedAncestorLink : class

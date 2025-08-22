@@ -9,7 +9,6 @@ using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
-
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
 public class AccessorsFilterBuilderFactory<TDomainObject>(IServiceProvider serviceProvider, IEnumerable<IPermissionSystem> permissionSystems) :

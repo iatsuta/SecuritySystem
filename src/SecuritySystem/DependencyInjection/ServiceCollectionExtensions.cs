@@ -102,7 +102,7 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
 
             .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
-            .AddScoped(typeof(LocalStorage<>))
+            .AddScoped(typeof(LocalStorage<,>))
 
             .AddScoped<IUserCredentialNameResolver, RootUserCredentialNameResolver>()
 
