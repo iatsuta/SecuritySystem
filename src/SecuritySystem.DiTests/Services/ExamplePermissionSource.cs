@@ -8,7 +8,7 @@ public class ExamplePermissionSource(TestPermissionData data, DomainSecurityRule
 {
     public bool HasAccess() => throw new NotImplementedException();
 
-    public List<Dictionary<Type, List<Guid>>> GetPermissions(IEnumerable<Type> _)
+    public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> _)
     {
         var roles = securityRule.SecurityRoles.ToHashSet();
 
@@ -16,7 +16,7 @@ public class ExamplePermissionSource(TestPermissionData data, DomainSecurityRule
 
                       where roles.Contains(permission.SecurityRole)
 
-                      select permission.Restrictions.ChangeValue(idents => idents.ToList());
+                      select permission.Restrictions.ChangeValue(idents => (Array)idents.ToArray());
 
         return request.ToList();
     }

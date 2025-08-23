@@ -1,8 +1,6 @@
-﻿using SecuritySystem.DiTests.DomainObjects._Base;
+﻿namespace SecuritySystem.DiTests.DomainObjects;
 
-namespace SecuritySystem.DiTests.DomainObjects;
-
-public class BusinessUnitAncestorLink : PersistentDomainObjectBase
+public class BusinessUnitAncestorLink
 {
     public BusinessUnit Ancestor { get; set; } = null!;
 

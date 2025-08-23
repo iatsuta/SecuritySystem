@@ -5,6 +5,7 @@ using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
 using SecuritySystem.DiTests.Services;
 using SecuritySystem.DomainServices;
+using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Providers;
 using SecuritySystem.Services;
 

@@ -1,8 +1,7 @@
-﻿using CommonFramework;
+﻿using CommonFramework.DictionaryCache;
 
-using System.Reflection;
-using CommonFramework.DictionaryCache;
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.HierarchicalExpand;
@@ -23,7 +22,7 @@ public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFact
         this.cache = new DictionaryCache<Type, IHierarchicalObjectExpander>(this.CreateInternal);
     }
 
-    public IHierarchicalObjectExpander CreateInternal(Type domainType)
+    private IHierarchicalObjectExpander CreateInternal(Type domainType)
     {
         var realType = realTypeResolver?.Resolve(domainType) ?? domainType;
 

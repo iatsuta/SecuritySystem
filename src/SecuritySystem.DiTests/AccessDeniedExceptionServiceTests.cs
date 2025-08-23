@@ -1,16 +1,17 @@
-﻿using SecuritySystem.DiTests.DomainObjects;
+﻿using Microsoft.Extensions.DependencyInjection;
+using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
 using SecuritySystem.Providers;
 
 namespace SecuritySystem.DiTests;
 
-public class AccessDeniedExceptionServiceTests
+public class AccessDeniedExceptionServiceTests : TestBase
 {
     [Fact]
     public void CreateNewObject_AccessDeniedMessage_IsValid()
     {
         // Arrange
-        var service = new AccessDeniedExceptionService();
+        var service = this.RootServiceProvider.GetRequiredService<IAccessDeniedExceptionService>();
         var employee = new Employee();
 
         // Act
@@ -25,7 +26,7 @@ public class AccessDeniedExceptionServiceTests
     public void ChangeExistObject_AccessDeniedMessage_IsValid()
     {
         // Arrange
-        var service = new AccessDeniedExceptionService();
+        var service = this.RootServiceProvider.GetRequiredService<IAccessDeniedExceptionService>();
         var employee = new Employee() { Id = Guid.NewGuid() };
 
         // Act
@@ -40,7 +41,7 @@ public class AccessDeniedExceptionServiceTests
     public void CreateNewObjectWithOperation_AccessDeniedMessage_IsValid()
     {
         // Arrange
-        var service = new AccessDeniedExceptionService();
+        var service = this.RootServiceProvider.GetRequiredService<IAccessDeniedExceptionService>();
         var employee = new Employee();
         var securityRule = ExampleSecurityOperation.EmployeeView;
 
@@ -56,7 +57,7 @@ public class AccessDeniedExceptionServiceTests
     public void ChangeExistObjectWithOperation_AccessDeniedMessage_IsValid()
     {
         // Arrange
-        var service = new AccessDeniedExceptionService();
+        var service = this.RootServiceProvider.GetRequiredService<IAccessDeniedExceptionService>();
         var employee = new Employee() { Id = Guid.NewGuid() };
         var securityRule = ExampleSecurityOperation.EmployeeView;
 

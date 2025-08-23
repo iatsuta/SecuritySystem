@@ -56,7 +56,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
         var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
 
         var containsExpr = ExpressionEvaluateHelper.InlineEvaluate(ee =>
             ExpressionHelper.Create((TAncestorLink ancestorLink) => idents.Contains(ee.Evaluate(fromPathIdExpr, ancestorLink))));
@@ -89,7 +89,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
         var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
 
         var containsExpr = ExpressionEvaluateHelper.InlineEvaluate(ee =>
             ExpressionHelper.Create((TAncestorLink ancestorLink) => idents.Contains(ee.Evaluate(fromPathIdExpr, ancestorLink))));
@@ -121,7 +121,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
         var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
 
         return ExpressionEvaluateHelper.InlineEvaluate(ee =>
 
@@ -154,7 +154,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
         var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
-        var toPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
 
         var eqIdentsExpr = ExpressionHelper.GetEquality<TIdent>();
 
@@ -167,6 +167,6 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
     public Array Expand(Array idents, HierarchicalExpandType expandType)
     {
-        return this.Expand((IEnumerable<TIdent>)idents, expandType).ToArray();
+        return this.Expand(idents.Cast<TIdent>(), expandType).ToArray();
     }
 }
