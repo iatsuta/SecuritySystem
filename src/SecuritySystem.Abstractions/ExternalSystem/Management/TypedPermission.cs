@@ -1,6 +1,4 @@
-﻿using CommonFramework;
-
-namespace SecuritySystem.ExternalSystem.Management;
+﻿namespace SecuritySystem.ExternalSystem.Management;
 
 public record TypedPermission(
     Guid Id,

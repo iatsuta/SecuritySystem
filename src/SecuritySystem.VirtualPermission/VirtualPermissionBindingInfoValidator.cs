@@ -4,18 +4,18 @@ namespace SecuritySystem.VirtualPermission;
 
 public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityRoleSource) : IVirtualPermissionBindingInfoValidator
 {
-    private readonly HashSet<Guid> validated = [];
+    private readonly HashSet<object> validated = new (ReferenceEqualityComparer.Instance);
 
     public void Validate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
     {
-        if (this.validated.Contains(bindingInfo.Id))
+        if (this.validated.Contains(bindingInfo))
         {
             return;
         }
 
         this.InternalValidate(bindingInfo);
 
-        this.validated.Add(bindingInfo.Id);
+        this.validated.Add(bindingInfo);
     }
 
     private void InternalValidate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)

@@ -17,14 +17,16 @@ public interface IPermissionSystem<TPermission> : IPermissionSystem
 {
     Expression<Func<TPermission, IEnumerable<TIdent>>> GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
-        where TSecurityContext : class, ISecurityContext;
+        where TSecurityContext : class, ISecurityContext
+        where TIdent : notnull;
 
     Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext>()
         where TSecurityContext : class, ISecurityContext;
 
     Expression<Func<TPermission, bool>> GetContainsIdentsExpr<TSecurityContext, TIdent>(IEnumerable<TIdent> idents,
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
-        where TSecurityContext : class, ISecurityContext =>
+        where TSecurityContext : class, ISecurityContext
+        where TIdent : notnull =>
         this.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(restrictionFilterInfo)
             .Select(restrictionIdents => restrictionIdents.Any(restrictionIdent => idents.Contains(restrictionIdent)));
 

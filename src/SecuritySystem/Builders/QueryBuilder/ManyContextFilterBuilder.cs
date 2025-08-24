@@ -33,7 +33,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
 
         var expandExpression = expander.GetExpandExpression(expandType);
 
-		return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
+        return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
         {
             var expandExpressionQ =
 
@@ -41,46 +41,45 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
 
                 select ee.Evaluate(expandExpression, idents);
 
-            throw new NotImplementedException();
 
-            //         if (securityPath.SecurityPathQ != null)
-            //{
-            //	if (securityPath.Required)
-            //             {
-            //                 return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+            if (securityPath.SecurityPathQ != null)
+            {
+                if (securityPath.Required)
+                {
+                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
-            //                                                      || ee.Evaluate(securityPath.SecurityPathQ, domainObject)
-            //                                                          .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(item.Id));
-            //	}
-            //             else
-            //             {
-            //		return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                                                         || ee.Evaluate(securityPath.SecurityPathQ, domainObject)
+                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                }
+                else
+                {
+                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
-            //                                                      || !ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any()
+                                                                  || !ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any()
 
-            //                                                      || ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any(item =>
-            //                                                          ee.Evaluate(getIdents, permission).Contains(item.Id));
-            //	}
-            //         }
-            //         else
-            //{
-            //	if (securityPath.Required)
-            //             {
-            //                 return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                                                                  || ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any(item =>
+                                                                      ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                }
+            }
+            else
+            {
+                if (securityPath.Required)
+                {
+                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
-            //                                                      || ee.Evaluate(securityPath.Expression, domainObject)
-            //                                                          .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(item.Id));
-            //	}
-            //             else
-            //             {
-            //                 return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                                                         || ee.Evaluate(securityPath.Expression, domainObject)
+                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                }
+                else
+                {
+                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
-            //                                                      || !ee.Evaluate(securityPath.Expression, domainObject).Any()
+                                                         || !ee.Evaluate(securityPath.Expression, domainObject).Any()
 
-            //                                                      || ee.Evaluate(securityPath.Expression, domainObject).Any(item =>
-            //                                                          ee.Evaluate(getIdents, permission).Contains(item.Id));
-            //	}
-            //}
+                                                         || ee.Evaluate(securityPath.Expression, domainObject).Any(item =>
+                                                             ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                }
+            }
         });
     }
 }
