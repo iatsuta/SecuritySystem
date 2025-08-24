@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
+
 using CommonFramework;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.RelativeDomainPathInfo;
 
 namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
@@ -13,7 +16,7 @@ internal class DomainSecurityServiceRootBuilder : IDomainSecurityServiceRootBuil
 
     public IDomainSecurityServiceRootBuilder Add<TDomainObject>(Action<IDomainSecurityServiceBuilder<TDomainObject>> setup)
     {
-        return new Func<Action<IDomainSecurityServiceBuilder<IIdentityObject<Guid>>>, IDomainSecurityServiceRootBuilder>(this.AddInternal)
+        return new Func<Action<IDomainSecurityServiceBuilder<object>>, IDomainSecurityServiceRootBuilder>(this.AddInternal)
                .CreateGenericMethod(typeof(TDomainObject))
                .Invoke<IDomainSecurityServiceRootBuilder>(this, setup);
     }
@@ -28,13 +31,11 @@ internal class DomainSecurityServiceRootBuilder : IDomainSecurityServiceRootBuil
 
     private IDomainSecurityServiceRootBuilder AddMetadataInternal<TMetadata, TDomainObject>()
         where TMetadata : IDomainSecurityServiceMetadata<TDomainObject>
-        where TDomainObject : IIdentityObject<Guid>
     {
         return this.AddInternal<TDomainObject>(b => b.Override<TMetadata>().Pipe(TMetadata.Setup));
     }
 
     private IDomainSecurityServiceRootBuilder AddInternal<TDomainObject>(Action<IDomainSecurityServiceBuilder<TDomainObject>> setup)
-        where TDomainObject : IIdentityObject<Guid>
     {
         var builder = new DomainSecurityServiceBuilder<TDomainObject>();
 

@@ -6,7 +6,7 @@ public class EmptyPermissionSource<TPermission> : IPermissionSource<TPermission>
 {
     public bool HasAccess() => false;
 
-    public List<Dictionary<Type, List<Guid>>> GetPermissions(IEnumerable<Type> _) => [];
+    public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> _) => [];
 
     public IQueryable<TPermission> GetPermissionQuery() => Enumerable.Empty<TPermission>().AsQueryable();
 

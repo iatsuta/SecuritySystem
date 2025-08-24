@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.VirtualPermission;
 
 public class VirtualPermissionSystemFactory<TPrincipal, TPermission> : IPermissionSystemFactory
-    where TPrincipal : IIdentityObject<Guid>
-    where TPermission : class, IIdentityObject<Guid>
+    where TPermission : class
 {
     private readonly IServiceProvider serviceProvider;
 

@@ -1,7 +1,10 @@
-﻿using CommonFramework.DictionaryCache;
+﻿using CommonFramework;
+using CommonFramework.DictionaryCache;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.HierarchicalExpand;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
@@ -9,22 +12,17 @@ public class SecurityContextStorage : ISecurityContextStorage
 {
     private readonly IServiceProvider serviceProvider;
 
-    private readonly ISecurityContextInfoSource securityContextInfoSource;
+    private readonly IIdentityInfoSource identityInfoSource;
 
     private readonly IDictionaryCache<Type, ITypedSecurityContextStorage> typedCache;
 
 
-    public SecurityContextStorage(IServiceProvider serviceProvider, ISecurityContextInfoSource securityContextInfoSource)
+    public SecurityContextStorage(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource)
     {
         this.serviceProvider = serviceProvider;
-        this.securityContextInfoSource = securityContextInfoSource;
+        this.identityInfoSource = identityInfoSource;
 
         this.typedCache = new DictionaryCache<Type, ITypedSecurityContextStorage>(this.GetTypedInternal);
-    }
-
-    public ITypedSecurityContextStorage GetTyped(Guid securityContextTypeId)
-    {
-        return this.GetTyped(this.securityContextInfoSource.GetSecurityContextInfo(securityContextTypeId).Type);
     }
 
     public ITypedSecurityContextStorage GetTyped(Type securityContextType)
@@ -34,20 +32,28 @@ public class SecurityContextStorage : ISecurityContextStorage
 
     private ITypedSecurityContextStorage GetTypedInternal(Type securityContextType)
     {
-        var hierarchicalInfo = this.serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(securityContextType));
+        var identityType = identityInfoSource.GetIdentityInfo(securityContextType).IdentityType;
 
-        var authorizationTypedExternalSourceType =
+        return new Func<ITypedSecurityContextStorage>(this.GetTypedInternal<ISecurityContext, Ignore>).CreateGenericMethod(securityContextType, identityType)
+            .Invoke<ITypedSecurityContextStorage>(this);
+    }
 
-            hierarchicalInfo != null
+    private ITypedSecurityContextStorage<TIdent> GetTypedInternal<TSecurityContext, TIdent>()
+        where TSecurityContext : class, ISecurityContext
+        where TIdent : notnull
+    {
+        var hierarchicalInfo = this.serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(typeof(TSecurityContext)));
 
-            ? typeof(HierarchicalTypedSecurityContextStorage<>)
-            : typeof(PlainTypedSecurityContextStorage<>);
+        var untypedSecurityContextStorageType =
 
-        var authorizationTypedExternalSourceImplType = authorizationTypedExternalSourceType.MakeGenericType(securityContextType);
+            hierarchicalInfo == null
 
-        var result = (ITypedSecurityContextStorage)
-            ActivatorUtilities.CreateInstance(this.serviceProvider, authorizationTypedExternalSourceImplType);
+                ? ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(PlainTypedSecurityContextStorage<TSecurityContext, TIdent>))
 
-        return result.WithCache();
+                : ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>), hierarchicalInfo);
+
+        var typedSecurityContextStorage = (ITypedSecurityContextStorage<TIdent>)untypedSecurityContextStorageType;
+
+        return typedSecurityContextStorage.WithCache();
     }
 }

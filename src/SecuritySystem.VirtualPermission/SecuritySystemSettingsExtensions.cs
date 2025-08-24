@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
 using SecuritySystem.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
 
@@ -11,8 +13,8 @@ public static class SecuritySystemSettingsExtensions
     public static ISecuritySystemSettings AddVirtualPermission<TPrincipal, TPermission>(
         this ISecuritySystemSettings securitySystemSettings,
         VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
-        where TPrincipal : class, IIdentityObject<Guid>
-        where TPermission : class, IIdentityObject<Guid> =>
+        where TPrincipal : class
+        where TPermission : class =>
         securitySystemSettings
 
             .AddPermissionSystem(
@@ -32,8 +34,8 @@ public static class SecuritySystemSettingsExtensions
         Expression<Func<TPermission, TPrincipal>> principalPath,
         Expression<Func<TPrincipal, string>> principalNamePath,
         Func<VirtualPermissionBindingInfo<TPrincipal, TPermission>, VirtualPermissionBindingInfo<TPrincipal, TPermission>>? initFunc = null)
-        where TPrincipal : class, IIdentityObject<Guid>
-        where TPermission : class, IIdentityObject<Guid>
+        where TPrincipal : class
+        where TPermission : class
     {
         var bindingInfo =
             (initFunc ?? (v => v)).Invoke(

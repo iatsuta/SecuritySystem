@@ -38,7 +38,7 @@ public static class InlineEvaluateExpressionExtensions
 
                    where EvalMethods.Any(evalMethod => node.Method.IsGenericMethodImplementation(evalMethod))
 
-                   from evalLambda in node.Arguments.First().GetMemberConstValue<LambdaExpression>()
+                   from evalLambda in node.Arguments.First().GetDeepMemberConstValue<LambdaExpression>()
 
                    select node.Arguments.Skip(1)
                               .ZipStrong(evalLambda.Parameters, (arg, param) => new { arg, param })

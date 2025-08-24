@@ -1,8 +1,6 @@
-﻿using SecuritySystem.DiTests.DomainObjects._Base;
+﻿namespace SecuritySystem.DiTests.DomainObjects;
 
-namespace SecuritySystem.DiTests.DomainObjects;
-
-public class BusinessUnitToAncestorChildView : PersistentDomainObjectBase
+public class BusinessUnitToAncestorChildView
 {
     public virtual BusinessUnit ChildOrAncestor { get; set; } = null!;
 

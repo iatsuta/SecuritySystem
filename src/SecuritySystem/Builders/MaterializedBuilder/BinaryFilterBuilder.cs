@@ -17,7 +17,7 @@ public abstract class BinaryFilterBuilder<TDomainObject, TSecurityPath>(
         Expression<Func<TArg, bool>> arg1,
         Expression<Func<TArg, bool>> arg2);
 
-    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, IEnumerable<Guid>> permission)
+    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, Array> permission)
     {
         var leftFilter = this.LeftBuilder.GetSecurityFilterExpression(permission);
 

@@ -8,13 +8,15 @@ using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext>(
+public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
     IPermissionSystem<TPermission> permissionSystem,
-    IHierarchicalObjectExpanderFactory<Guid> hierarchicalObjectExpanderFactory,
+    IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
-    SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
+    SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
+    IdentityInfo<TSecurityContext, TIdent> identityInfo)
     : SecurityFilterBuilder<TPermission, TDomainObject>
     where TSecurityContext : class, ISecurityContext
+    where TIdent : notnull
 {
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(
         HierarchicalExpandType expandType)
@@ -25,11 +27,13 @@ public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityCon
             ? permissionSystem.GetGrandAccessExpr<TSecurityContext>()
             : _ => false;
 
-        var getIdents = permissionSystem.GetPermissionRestrictionsExpr(securityContextRestriction?.Filter);
+        var getIdents = permissionSystem.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(securityContextRestriction?.Filter);
 
-        var expander = hierarchicalObjectExpanderFactory.CreateQuery(typeof(TSecurityContext));
+        var expander = hierarchicalObjectExpanderFactory.Create<TIdent>(typeof(TSecurityContext));
 
         var expandExpression = expander.GetExpandExpression(expandType);
+
+        var fullIdPath = securityPath.Expression!.Select(identityInfo.IdPath);
 
         return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
         {
@@ -46,7 +50,7 @@ public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityCon
                     ee.Evaluate(grandAccessExpr, permission)
 
                     || ee.Evaluate(expandExpressionQ, permission).Contains(
-                        ee.Evaluate(securityPath.Expression, domainObject)!.Id);
+                        ee.Evaluate(fullIdPath, domainObject));
             }
             else
             {
@@ -57,7 +61,7 @@ public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityCon
                     || ee.Evaluate(securityPath.Expression, domainObject) == null
 
                     || ee.Evaluate(expandExpressionQ, permission).Contains(
-                        ee.Evaluate(securityPath.Expression, domainObject)!.Id);
+                        ee.Evaluate(fullIdPath, domainObject));
             }
         });
     }

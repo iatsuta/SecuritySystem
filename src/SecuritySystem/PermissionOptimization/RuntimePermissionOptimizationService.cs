@@ -1,199 +1,151 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace SecuritySystem.PermissionOptimization;
+﻿namespace SecuritySystem.PermissionOptimization;
 
 public class RuntimePermissionOptimizationService : IRuntimePermissionOptimizationService
 {
-    public IEnumerable<Dictionary<Type, List<Guid>>> Optimize(IEnumerable<Dictionary<Type, List<Guid>>> permissions)
+    public IEnumerable<Dictionary<Type, Array>> Optimize(IEnumerable<Dictionary<Type, Array>> permissions)
     {
         var cachedPermissions = permissions.ToList();
 
-        // Data for first grouping probably have maximum length
-        // So first grouping keys are created from contexts with minimal data to optimize key comparing
-        var orderedTypes = cachedPermissions.SelectMany(p => p)
-                                            .GroupBy(p => p.Key)
-                                            .Select(g =>
-                                                        new { g.Key, Count = g.SelectMany(p => p.Value).Distinct().Count() })
-                                            .OrderByDescending(p => p.Count)
-                                            .Select(p => p.Key)
-                                            .ToList();
+        //if (cachedPermissions.All(permission => permission.Values.All(arr => arr.GetType().GetElementType() == typeof(Guid))))
+        //{
+        //    var guidPermissions = cachedPermissions.Select(permission => permission.ChangeValue(arr => ((Guid[])arr).ToList()));
+
+        //    var optimized = new RuntimeGuidPermissionOptimizationService().Optimize(guidPermissions);
+
+        //    return optimized.Select(permission => permission.ChangeValue(Array (list) => list.ToArray()));
+        //}
+
+        var orderedTypes = cachedPermissions
+            .SelectMany(p => p)
+            .GroupBy(p => p.Key)
+            .OrderByDescending(g => g.SelectMany(p => p.Value.Cast<object>()).Distinct().Count())
+            .Select(g => g.Key)
+            .ToList();
 
         if (orderedTypes.Count == 0)
-        {
             return cachedPermissions;
-        }
 
-        // Same as cachedPermissions but in this algorithm used HashSet not List as in input parameter.
-        // And to avoid conversions from List to HashSet and back used temporary variable.
-        // Conversion to HashSet from the begining is not optimal because at least one List will be used as Enumerable.
-        IEnumerable<Dictionary<Type, HashSet<Guid>>>? cachedPermissions2 = null;
+        IEnumerable<Dictionary<Type, HashSet<object>>>? current = null;
 
-        foreach (var currentType in orderedTypes)
+        foreach (var type in orderedTypes)
         {
-            // Group permissions by all exising context except one and create Dictionary (for best performance)
-            var groupedPermissions =
-                GetGroupable(cachedPermissions2, cachedPermissions, currentType)
-                    .GroupBy(z => z.Key)
-                    .ToDictionary(
-                        g => g.Key,
-                        gr =>
-                        {
-                            var values = new HashSet<Guid>();
+            var grouped = GetGroupable(current, cachedPermissions, type)
+                .GroupBy(item => item.Key)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.SelectMany(i => i.Value ?? Enumerable.Empty<object>())
+                          .ToHashSet()
+                );
 
-                            foreach (var currentValues in gr.Select(z => z.Value))
-                            {
-                                if (currentValues == null)
-                                {
-                                    return [];
-                                }
-
-                                values.UnionWith(currentValues);
-                            }
-
-                            return values;
-                        });
-
-            // In case of existing permissions with only one context other permissions can be refined
-            if (groupedPermissions.ContainsKey(GroupKey.Empty))
+            if (grouped.TryGetValue(GroupKey.Empty, out var baseSet))
             {
-                var removeItems = groupedPermissions[GroupKey.Empty];
+                if (baseSet.Count == 0)
+                    return [new Dictionary<Type, Array>()];
 
-                // When exists permission without context only this one is necessary
-                if (removeItems.Count == 0)
-                {
-                    return new List<Dictionary<Type, List<Guid>>> { new() };
-                }
+                grouped.Remove(GroupKey.Empty);
 
-                groupedPermissions.Remove(GroupKey.Empty);
+                var toRemove = RefineGroupedPermissions(grouped, baseSet);
+                foreach (var k in toRemove)
+                    grouped.Remove(k);
 
-                var removedKeys = RefineGroupedPermissions(groupedPermissions, removeItems);
-
-                foreach (var key in removedKeys)
-                {
-                    groupedPermissions.Remove(key);
-                }
-
-                groupedPermissions.Add(GroupKey.Empty, removeItems);
+                grouped[GroupKey.Empty] = baseSet;
             }
 
-            // Back conversion key(few HashSets) and value(single HashSet) to dictionary of HashSets
-            // Each groupedPermission equivalent to one permission item and looks like can be converted
-            //  to GroupableItem directly. But looks like this conversation is more slow then the current one.
-            cachedPermissions2 = groupedPermissions.Select(
-                p =>
-                    new Dictionary<Type, HashSet<Guid>>(
-                        p.Key.GetKeyPairs()
-                         .Concat(
-                             p.Value.Count > 0
-                                 ? new[] { KeyValuePair.Create(currentType, p.Value) }
-                                 : Array.Empty<KeyValuePair<Type, HashSet<Guid>>>())));
+            current = grouped.Select(g =>
+                g.Key.GetKeyPairs()
+                     .Concat(g.Value.Count > 0 ? [KeyValuePair.Create(type, g.Value)] : Array.Empty<KeyValuePair<Type, HashSet<object>>>())
+                     .ToDictionary(p => p.Key, p => p.Value)
+            );
         }
 
-        return cachedPermissions2?.Select(
-                   d =>
-                       new Dictionary<Type, List<Guid>>(
-                           d.Select(p => KeyValuePair.Create(p.Key, p.Value.ToList()))))
-               ?? [];
+        return current?.Select(d => d.ToDictionary(
+            p => p.Key,
+            p =>
+            {
+                var elementType = GetElementType(d, p.Key);
+                var arr = Array.CreateInstance(elementType, p.Value.Count);
+                p.Value.ToArray().CopyTo(arr, 0);
+                return arr;
+            }))
+            ?? [];
     }
+
 
     private static IEnumerable<GroupableItem> GetGroupable(
-        IEnumerable<Dictionary<Type, HashSet<Guid>>>? main,
-        IEnumerable<Dictionary<Type, List<Guid>>> additional,
+        IEnumerable<Dictionary<Type, HashSet<object>>>? main,
+        IEnumerable<Dictionary<Type, Array>> additional,
         Type currentType) =>
-        main?.Select(
-            p =>
-                new GroupableItem(
-                    new GroupKey(p, currentType),
-                    p.ContainsKey(currentType) ? p[currentType] : null))
-        ?? additional.Select(
-            p =>
-                new GroupableItem(
-                    new GroupKey(p, currentType),
-                    p.ContainsKey(currentType) ? p[currentType].ToHashSet() : null));
+        main?.Select(p => new GroupableItem(new GroupKey(p, currentType), p.ContainsKey(currentType) ? p[currentType] : null))
+        ?? additional.Select(p => new GroupableItem(new GroupKey(p, currentType), p.ContainsKey(currentType) ? p[currentType].Cast<object>().ToHashSet() : null));
 
-    [SuppressMessage("SonarQube", "S3242", Justification = "More general type is not necessary here")]
     private static List<GroupKey> RefineGroupedPermissions(
-        Dictionary<GroupKey, HashSet<Guid>> groupedPermissions,
-        HashSet<Guid> removeItems)
+        Dictionary<GroupKey, HashSet<object>> grouped,
+        HashSet<object> removeItems)
     {
-        // This method is executed when exist permission with single current context
-        var result = new List<GroupKey>();
-
-        foreach (var pair in groupedPermissions)
+        var removed = new List<GroupKey>();
+        foreach (var pair in grouped)
         {
-            // When permission have no current context, it must be kept as is.
             if (pair.Value.Count == 0)
-            {
                 continue;
-            }
 
-            // Items, which exist in single context permission, must be removed from all other permissions
             pair.Value.ExceptWith(removeItems);
-
-            // In case of all items was removed from current permission, it means that current permission is subset for
-            // single context permission. And current permission can be 'optimized' (removed)
             if (pair.Value.Count == 0)
-            {
-                result.Add(pair.Key);
-            }
+                removed.Add(pair.Key);
         }
-
-        return result;
+        return removed;
     }
 
-    private record GroupableItem(GroupKey Key, HashSet<Guid>? Value);
+    private static Type GetElementType(Dictionary<Type, HashSet<object>> d, Type key)
+    {
+        if (d.TryGetValue(key, out var set) && set.Count > 0)
+            return set.First()!.GetType();
+        return typeof(object);
+    }
+
+    private record GroupableItem(GroupKey Key, HashSet<object>? Value);
 
     private sealed class GroupKey : IEquatable<GroupKey>
     {
         private readonly int hashCode;
+        private readonly IDictionary<Type, HashSet<object>> keyData;
 
-        private readonly IDictionary<Type, HashSet<Guid>> keyData;
+        public static readonly GroupKey Empty = new(new Dictionary<Type, Array>(), typeof(GroupKey));
 
-        public static readonly GroupKey Empty = new(new Dictionary<Type, List<Guid>>(), typeof(GroupKey));
-
-        public GroupKey(Dictionary<Type, List<Guid>> dataItem, Type excludedType)
+        public GroupKey(Dictionary<Type, Array> dataItem, Type excludedType)
         {
-            this.keyData = new Dictionary<Type, HashSet<Guid>>(dataItem.Count);
+            keyData = new Dictionary<Type, HashSet<object>>(dataItem.Count);
             foreach (var pair in dataItem)
             {
                 if (pair.Key == excludedType)
-                {
                     continue;
-                }
 
-                var hashSet = new HashSet<Guid>(pair.Value.Count);
-                for (var i = 0; i < pair.Value.Count; i++)
-                {
-                    hashSet.Add(pair.Value[i]);
-                }
+                var set = new HashSet<object>();
+                foreach (var el in pair.Value)
+                    set.Add(el!);
 
-                this.keyData.Add(pair.Key, hashSet);
+                keyData.Add(pair.Key, set);
             }
-
-            this.hashCode = this.CalculateHashCode();
+            hashCode = CalculateHashCode();
         }
 
-        public GroupKey(Dictionary<Type, HashSet<Guid>> dataItem, Type excludedType)
+        public GroupKey(Dictionary<Type, HashSet<object>> dataItem, Type excludedType)
         {
-            this.keyData = new Dictionary<Type, HashSet<Guid>>(dataItem.Where(pair => pair.Key != excludedType));
-            this.hashCode = this.CalculateHashCode();
+            keyData = new Dictionary<Type, HashSet<object>>(dataItem.Where(pair => pair.Key != excludedType));
+            hashCode = CalculateHashCode();
         }
 
-        public IEnumerable<KeyValuePair<Type, HashSet<Guid>>> GetKeyPairs() => this.keyData;
+        public IEnumerable<KeyValuePair<Type, HashSet<object>>> GetKeyPairs() => keyData;
+        public override int GetHashCode() => hashCode;
 
-        public override int GetHashCode() => this.hashCode;
-
-        public bool Equals(GroupKey? other) => this.Equals((object?)other);
+        public bool Equals(GroupKey? other) => Equals((object?)other);
 
         public override bool Equals(object? obj) =>
-            !ReferenceEquals(null, obj)
-            && (ReferenceEquals(this, obj)
-                || (obj.GetType() == this.GetType() && this.DataEquals((GroupKey)obj)));
+            obj is GroupKey gk && DataEquals(gk);
 
         private int CalculateHashCode()
         {
             var result = 0;
-            foreach (var pair in this.keyData)
+            foreach (var pair in keyData)
             {
                 result ^= pair.Key.GetHashCode();
                 foreach (var val in pair.Value)
@@ -201,39 +153,22 @@ public class RuntimePermissionOptimizationService : IRuntimePermissionOptimizati
                     result ^= val.GetHashCode();
                 }
             }
-
             return result;
         }
 
         private bool DataEquals(GroupKey other)
         {
-            if (this.keyData.Count != other.keyData.Count)
-            {
+            if (keyData.Count != other.keyData.Count)
                 return false;
-            }
 
-            foreach (var pair in this.keyData)
+            foreach (var pair in keyData)
             {
-                if (!other.keyData.ContainsKey(pair.Key))
-                {
+                if (!other.keyData.TryGetValue(pair.Key, out var otherSet))
                     return false;
-                }
 
-                var otherKeyData = other.keyData[pair.Key];
-                if (otherKeyData.Count != pair.Value.Count)
-                {
+                if (!pair.Value.SetEquals(otherSet))
                     return false;
-                }
-
-                foreach (var id in pair.Value)
-                {
-                    if (!otherKeyData.Contains(id))
-                    {
-                        return false;
-                    }
-                }
             }
-
             return true;
         }
     }

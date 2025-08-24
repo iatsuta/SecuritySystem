@@ -45,8 +45,8 @@ public class GetPrincipalHandler(
                            Role = typedPermission.SecurityRole.Name,
                            RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Id,
                            Comment = typedPermission.Comment,
-                           StartDate = typedPermission.Period.StartDate,
-                           EndDate = typedPermission.Period.EndDate,
+                           StartDate = typedPermission.StartDate,
+                           EndDate = typedPermission.EndDate,
                            Contexts = typedPermission
                                       .Restrictions
                                       .SelectMany(
@@ -64,21 +64,25 @@ public class GetPrincipalHandler(
 
     private Dictionary<Guid, ContextItem> GetContextsAsync(IEnumerable<PermissionDetails> permissions)
     {
-        var request = from permission in permissions
+        var request =
+            
+            from permission in permissions
 
-                      from securityContext in permission.Contexts
+            from securityContext in permission.Contexts
 
-                      group securityContext.Value by securityContext.Key
+            group securityContext.Value by securityContext.Key
 
-                      into g
+            into g
 
-                      let securityContextTypeInfo = securityContextInfoSource.GetSecurityContextInfo(g.Key)
+            let securityContextTypeInfo = securityContextInfoSource.GetSecurityContextInfo(g.Key)
 
-                      let entities = securityContextStorage.GetTyped(g.Key)
-                                                   .GetSecurityContextsByIdents(g.Distinct().ToList())
-                                                   .ToDictionary(e => e.Id, e => e.Name)
+            let typedSecurityContextStorage = (ITypedSecurityContextStorage<Guid>)securityContextStorage.GetTyped(securityContextTypeInfo.Type)
 
-                      select (securityContextTypeInfo.Id, new ContextItem { Context = securityContextTypeInfo.Name, Entities = entities });
+            let entities = typedSecurityContextStorage
+                .GetSecurityContextsByIdents(g.Distinct().ToList())
+                .ToDictionary(e => e.Id, e => e.Name)
+
+            select (securityContextTypeInfo.Id, new ContextItem { Context = securityContextTypeInfo.Name, Entities = entities });
 
         return request.ToDictionary();
     }

@@ -10,6 +10,7 @@ namespace SecuritySystem.Configurator.Handlers;
 
 public class GetBusinessRoleContextEntitiesHandler(
     ISecurityContextStorage securityContextStorage,
+    ISecurityContextInfoSource securityContextInfoSource,
     [CurrentUserWithoutRunAs]ISecuritySystem securitySystem)
     : BaseReadHandler, IGetBusinessRoleContextEntitiesHandler
 {
@@ -18,9 +19,13 @@ public class GetBusinessRoleContextEntitiesHandler(
         if (!securitySystem.IsSecurityAdministrator()) return new List<EntityDto>();
 
         var securityContextTypeId = new Guid((string)context.Request.RouteValues["id"]!);
+        var securityContextType = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeId).Type;
+        
         var searchToken = context.Request.Query["searchToken"];
 
-        var entities = securityContextStorage.GetTyped(securityContextTypeId).GetSecurityContexts();
+        var typedSecurityContextStorage = (ITypedSecurityContextStorage<Guid>)securityContextStorage.GetTyped(securityContextType);
+
+        var entities = typedSecurityContextStorage.GetSecurityContexts();
 
         if (!string.IsNullOrWhiteSpace(searchToken))
             entities = entities.Where(p => p.Name.Contains(searchToken!, StringComparison.OrdinalIgnoreCase));

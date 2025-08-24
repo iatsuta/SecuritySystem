@@ -1,16 +1,20 @@
 ﻿using System.Linq.Expressions;
+
 using CommonFramework;
+
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext>(
+public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
     IPermissionSystem<TPermission> permissionSystem,
-    IHierarchicalObjectExpanderFactory<Guid> hierarchicalObjectExpanderFactory,
+    IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     IContextSecurityPath contextSecurityPath,
-    SecurityContextRestriction<TSecurityContext>? securityContextRestriction) : AccessorsFilterBuilder<TPermission, TDomainObject>
+    SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
+    IdentityInfo<TSecurityContext, TIdent> identityInfo) : AccessorsFilterBuilder<TPermission, TDomainObject>
     where TSecurityContext : class, ISecurityContext
+    where TIdent : notnull
 {
     public override Expression<Func<TPermission, bool>> GetAccessorsFilter(
         TDomainObject domainObject,
@@ -27,8 +31,8 @@ public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurit
         if (securityObjects.Any())
         {
             var securityIdents = hierarchicalObjectExpanderFactory
-                                 .Create(typeof(TSecurityContext))
-                                 .Expand(securityObjects.Select(securityObject => securityObject.Id), expandType.Reverse());
+                                 .Create<TIdent>(typeof(TSecurityContext))
+                                 .Expand(securityObjects.Select(identityInfo.IdFunc), expandType.Reverse());
 
             return grandAccessExpr.BuildOr(permissionSystem.GetContainsIdentsExpr(securityIdents, securityContextRestriction?.Filter));
         }

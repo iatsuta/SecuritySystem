@@ -2,16 +2,18 @@
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
-public class PlainTypedSecurityContextStorage<TSecurityContext>(
+public class PlainTypedSecurityContextStorage<TSecurityContext, TIdent>(
     IQueryableSource queryableSource,
-    LocalStorage<TSecurityContext> localStorage,
+    LocalStorage<TSecurityContext, TIdent> localStorage,
+    IIdentityInfoSource identityInfoSource,
     ISecurityContextDisplayService<TSecurityContext> displayService)
-    : TypedSecurityContextStorageBase<TSecurityContext>(queryableSource, localStorage)
+    : TypedSecurityContextStorageBase<TSecurityContext, TIdent>(queryableSource, identityInfoSource, localStorage)
     where TSecurityContext : class, ISecurityContext
+    where TIdent : notnull
 {
-    protected override SecurityContextData CreateSecurityContextData(TSecurityContext securityContext) =>
+    protected override SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext) =>
 
-        new (securityContext.Id, displayService.ToString(securityContext), Guid.Empty);
+        new(this.IdentityInfo.IdFunc(securityContext), displayService.ToString(securityContext), default);
 
     protected override IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject)
     {

@@ -2,7 +2,7 @@
 
 namespace SecuritySystem.HierarchicalExpand;
 
-public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpander<TIdent>, IHierarchicalObjectQueryableExpander<TIdent>
+public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpander<TIdent>
     where TIdent : notnull
 {
     public IEnumerable<TIdent> Expand(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
@@ -18,5 +18,10 @@ public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
     public Expression<Func<TIdent, IEnumerable<TIdent>>>? TryGetSingleExpandExpression(HierarchicalExpandType expandType)
     {
         return null;
+    }
+
+    public Array Expand(Array idents, HierarchicalExpandType expandType)
+    {
+        return idents;
     }
 }

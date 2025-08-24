@@ -6,15 +6,17 @@ using SecuritySystem.ExpressionEvaluate;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.PermissionOptimization;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
 public class SecurityFilterBuilderFactory<TDomainObject>(
-    IExpressionEvaluatorStorage expressionEvaluatorStorage,
+    IIdentityInfoSource identityInfoSource,
+	IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IEnumerable<IPermissionSystem> permissionSystems,
-    IHierarchicalObjectExpanderFactory<Guid> hierarchicalObjectExpanderFactory,
+    IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     IRuntimePermissionOptimizationService permissionOptimizationService) :
-    FilterBuilderFactoryBase<TDomainObject, SecurityFilterBuilder<TDomainObject>>,
+    FilterBuilderFactoryBase<TDomainObject, SecurityFilterBuilder<TDomainObject>>(identityInfoSource),
     ISecurityFilterFactory<TDomainObject>
 {
     private readonly IExpressionEvaluator expressionEvaluator =
@@ -54,18 +56,20 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
         return new ConditionFilterBuilder<TDomainObject>(securityPath);
     }
 
-    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext>(
+    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
         SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
-        SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
+        SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
+        IdentityInfo<TSecurityContext, TIdent> identityInfo)
     {
-        return new SingleContextFilterBuilder<TDomainObject, TSecurityContext>(securityPath, securityContextRestriction);
+        return new SingleContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>(securityPath, securityContextRestriction, identityInfo);
     }
 
-    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext>(
+    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
         SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
-        SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
+        SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
+        IdentityInfo<TSecurityContext, TIdent> identityInfo)
     {
-        return new ManyContextFilterBuilder<TDomainObject, TSecurityContext>(securityPath, securityContextRestriction);
+        return new ManyContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>(securityPath, securityContextRestriction, identityInfo);
     }
 
     protected override SecurityFilterBuilder<TDomainObject> CreateBuilder(SecurityPath<TDomainObject>.OrSecurityPath securityPath, IReadOnlyList<SecurityContextRestriction> securityContextRestrictions)
@@ -83,6 +87,7 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
         IReadOnlyList<SecurityContextRestriction> securityContextRestrictions)
     {
         var nestedBuilderFactory = new SecurityFilterBuilderFactory<TNestedObject>(
+            identityInfoSource,
             expressionEvaluatorStorage,
             permissionSystems,
             hierarchicalObjectExpanderFactory,
@@ -91,8 +96,8 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
         return new NestedManyFilterBuilder<TDomainObject, TNestedObject>(nestedBuilderFactory, securityPath, securityContextRestrictions);
     }
 
-    private Dictionary<Type, IEnumerable<Guid>> TryExpandPermission(
-        Dictionary<Type, List<Guid>> permission,
+    private Dictionary<Type, Array> TryExpandPermission(
+        Dictionary<Type, Array> permission,
         HierarchicalExpandType expandType)
     {
         return permission.ToDictionary(

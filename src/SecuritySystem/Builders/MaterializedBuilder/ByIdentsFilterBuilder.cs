@@ -2,22 +2,23 @@
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
-public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext>(SecurityContextRestriction<TSecurityContext>? securityContextRestriction) : SecurityFilterBuilder<TDomainObject>
+public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TIdent>(SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
+    : SecurityFilterBuilder<TDomainObject>
     where TSecurityContext : class, ISecurityContext
 {
-    public sealed override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, IEnumerable<Guid>> permission)
+    public sealed override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, Array> permission)
     {
-        var allowGrandAccess = securityContextRestriction?.Required != true;
-
         if (permission.TryGetValue(typeof(TSecurityContext), out var securityIdents))
         {
-            return this.GetSecurityFilterExpression(securityIdents);
+            return this.GetSecurityFilterExpression((TIdent[])securityIdents);
         }
         else
         {
+            var allowGrandAccess = securityContextRestriction?.Required != true;
+
             return _ => allowGrandAccess;
         }
     }
 
-    protected abstract Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<Guid> securityIdents);
+    protected abstract Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(TIdent[] permissionIdents);
 }

@@ -11,6 +11,7 @@ namespace SecuritySystem.VirtualPermission;
 public class VirtualPermissionSource<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
+    IIdentityInfoSource identityInfoSource,
     IUserNameResolver userNameResolver,
     IQueryableSource queryableSource,
     TimeProvider timeProvider,
@@ -25,7 +26,7 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 
     public bool HasAccess() => this.GetPermissionQuery().Any();
 
-    public List<Dictionary<Type, List<Guid>>> GetPermissions(IEnumerable<Type> securityContextTypes)
+    public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
     {
         var permissions = this.GetPermissionQuery(null).ToList();
 
@@ -38,18 +39,14 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 
     private IQueryable<TPermission> GetPermissionQuery(SecurityRuleCredential? customSecurityRuleCredential)
     {
+        var lazyToday = LazyHelper.Create(() => timeProvider.GetLocalNow().Date);
+
         //TODO: inject SecurityContextRestrictionFilterInfo
         return queryableSource
             .GetQueryable<TPermission>()
             .Where(bindingInfo.GetFilter(serviceProvider))
-            .PipeMaybe(
-                bindingInfo.PeriodFilter,
-                (q, filter) =>
-                {
-                    var today = timeProvider.GetLocalNow().Date;
-
-                    return q.Where(filter.Select(period => period.StartDate <= today && (period.EndDate == null || today <= period.EndDate)));
-                })
+            .PipeMaybe(bindingInfo.StartDateFilter, (q, filter) => q.Where(filter.Select(startDate => startDate <= lazyToday.Value)))
+            .PipeMaybe(bindingInfo.EndDateFilter, (q, filter) => q.Where(filter.Select(endDate => endDate == null || lazyToday.Value <= endDate)))
             .PipeMaybe(
                 userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),
                 (q, principalName) => q.Where(this.fullNamePath.Select(name => name == principalName)));
@@ -58,7 +55,7 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
     public IEnumerable<string> GetAccessors(Expression<Func<TPermission, bool>> permissionFilter) =>
         this.GetPermissionQuery(new SecurityRuleCredential.AnyUserCredential()).Where(permissionFilter).Select(this.fullNamePath);
 
-    private Dictionary<Type, List<Guid>> ConvertPermission(
+    private Dictionary<Type, Array> ConvertPermission(
         TPermission permission,
         IEnumerable<Type> securityContextTypes,
         IReadOnlyCollection<SecurityContextRestrictionFilterInfo> filterInfoList)
@@ -71,7 +68,11 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 
                 var pureFilter = filter?.GetBasePureFilter(serviceProvider);
 
-                return this.expressionEvaluator.Evaluate(bindingInfo.GetRestrictionsExpr(securityContextType, pureFilter), permission).ToList();
+                var identityInfo = identityInfoSource.GetIdentityInfo(securityContextType);
+
+                var getIdentsArrayExpr = bindingInfo.GetRestrictionsArrayExpr(identityInfo, pureFilter);
+
+                return expressionEvaluator.Evaluate(getIdentsArrayExpr, permission);
             });
     }
 }

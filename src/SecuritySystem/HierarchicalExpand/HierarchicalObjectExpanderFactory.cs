@@ -1,58 +1,66 @@
-﻿using CommonFramework;
-
-using System.Reflection;
+﻿using CommonFramework.DictionaryCache;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using SecuritySystem.Services;
+
 namespace SecuritySystem.HierarchicalExpand;
 
-public class HierarchicalObjectExpanderFactory<TIdent>(IServiceProvider serviceProvider, IRealTypeResolver? realTypeResolver = null) : IHierarchicalObjectExpanderFactory<TIdent>
-    where TIdent : struct
+public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFactory
 {
-    private static readonly MethodInfo GenericCreateMethod =
-        typeof(HierarchicalObjectExpanderFactory<TIdent>).GetMethod(nameof(Create), BindingFlags.Public | BindingFlags.Instance)!;
+    private readonly IServiceProvider serviceProvider;
+    private readonly IIdentityInfoSource identityInfoSource;
+    private readonly IRealTypeResolver? realTypeResolver;
+    private readonly IDictionaryCache<Type, IHierarchicalObjectExpander> cache;
 
-    public virtual IHierarchicalObjectExpander<TIdent> Create<TDomainObject>()
-        where TDomainObject : class, IIdentityObject<TIdent>
+    public HierarchicalObjectExpanderFactory(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource, IRealTypeResolver? realTypeResolver = null)
     {
-        var realType = realTypeResolver?.Resolve(typeof(TDomainObject)) ?? typeof(TDomainObject);
+        this.serviceProvider = serviceProvider;
+        this.identityInfoSource = identityInfoSource;
+        this.realTypeResolver = realTypeResolver;
 
-        if (realType != typeof(TDomainObject))
+        this.cache = new DictionaryCache<Type, IHierarchicalObjectExpander>(this.CreateInternal);
+    }
+
+    private IHierarchicalObjectExpander CreateInternal(Type domainType)
+    {
+        var realType = realTypeResolver?.Resolve(domainType) ?? domainType;
+
+        if (realType != domainType)
         {
-            return GenericCreateMethod.MakeGenericMethod(realType).Invoke<IHierarchicalObjectExpander<TIdent>>(this, []);
+            return this.cache[realType];
         }
         else
         {
-            var hierarchicalInfo = serviceProvider.GetService<HierarchicalInfo<TDomainObject>>();
+            var hierarchicalInfo = (HierarchicalInfo?)serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(domainType));
+
+            var identityInfo = identityInfoSource.GetIdentityInfo(domainType);
 
             if (hierarchicalInfo != null)
             {
                 var expanderType = typeof(HierarchicalObjectAncestorLinkExpander<,,,>)
-                    .MakeGenericType(typeof(TDomainObject), hierarchicalInfo.DirectedLinkType, hierarchicalInfo.UndirectedLinkType, typeof(TIdent));
-
-                return (IHierarchicalObjectExpander<TIdent>)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, hierarchicalInfo);
+                    .MakeGenericType(domainType, hierarchicalInfo.DirectedLinkType, hierarchicalInfo.UndirectedLinkType, identityInfo.IdentityType);
+                
+                return (IHierarchicalObjectExpander)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, hierarchicalInfo, identityInfo);
 
             }
             else
             {
-                return this.CreatePlain<TDomainObject>();
+                var expanderType = typeof(PlainHierarchicalObjectExpander<>).MakeGenericType(identityInfo.IdentityType);
+
+                return (IHierarchicalObjectExpander)ActivatorUtilities.CreateInstance(serviceProvider, expanderType);
             }
         }
     }
 
-    protected virtual IHierarchicalObjectExpander<TIdent> CreatePlain<TDomainObject>()
-        where TDomainObject : class, IIdentityObject<TIdent>
+    public IHierarchicalObjectExpander Create(Type domainType)
     {
-        return new PlainHierarchicalObjectExpander<TIdent>();
+        return this.cache[domainType];
     }
 
-    IHierarchicalObjectExpander<TIdent> IHierarchicalObjectExpanderFactory<TIdent>.Create(Type domainType)
+    public IHierarchicalObjectExpander<TIdent> Create<TIdent>(Type domainType)
+        where TIdent : notnull
     {
-        return GenericCreateMethod.MakeGenericMethod(domainType).Invoke<IHierarchicalObjectExpander<TIdent>>(this, []);
-    }
-
-    IHierarchicalObjectQueryableExpander<TIdent> IHierarchicalObjectExpanderFactory<TIdent>.CreateQuery(Type domainType)
-    {
-        return GenericCreateMethod.MakeGenericMethod(domainType).Invoke<IHierarchicalObjectQueryableExpander<TIdent>>(this, []);
+        return (IHierarchicalObjectExpander<TIdent>)this.Create(domainType);
     }
 }

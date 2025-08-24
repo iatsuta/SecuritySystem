@@ -1,6 +1,4 @@
-﻿
-
-namespace SecuritySystem.ExternalSystem;
+﻿namespace SecuritySystem.ExternalSystem;
 
 public interface IPermissionSystemFactory
 {
