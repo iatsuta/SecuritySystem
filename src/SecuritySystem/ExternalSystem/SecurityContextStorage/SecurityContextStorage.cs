@@ -2,6 +2,7 @@
 using CommonFramework.DictionaryCache;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
@@ -23,7 +24,7 @@ public class SecurityContextStorage : ISecurityContextStorage
 
         this.typedCache = new DictionaryCache<Type, ITypedSecurityContextStorage>(this.GetTypedInternal);
     }
-    
+
     public ITypedSecurityContextStorage GetTyped(Type securityContextType)
     {
         return this.typedCache[securityContextType];
@@ -43,14 +44,15 @@ public class SecurityContextStorage : ISecurityContextStorage
     {
         var hierarchicalInfo = this.serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(typeof(TSecurityContext)));
 
-        var typedSecurityContextStorageType =
+        var untypedSecurityContextStorageType =
 
-            hierarchicalInfo != null
+            hierarchicalInfo == null
 
-                ? typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>)
-                : typeof(PlainTypedSecurityContextStorage<TSecurityContext, TIdent>);
+                ? ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(PlainTypedSecurityContextStorage<TSecurityContext, TIdent>))
 
-        var typedSecurityContextStorage = (ITypedSecurityContextStorage<TIdent>)ActivatorUtilities.CreateInstance(this.serviceProvider, typedSecurityContextStorageType);
+                : ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>), hierarchicalInfo);
+
+        var typedSecurityContextStorage = (ITypedSecurityContextStorage<TIdent>)untypedSecurityContextStorageType;
 
         return typedSecurityContextStorage.WithCache();
     }

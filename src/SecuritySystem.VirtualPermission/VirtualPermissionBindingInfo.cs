@@ -1,6 +1,5 @@
 ﻿using CommonFramework;
 using SecuritySystem.ExpressionEvaluate;
-using System.Dynamic;
 using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission;
@@ -94,41 +93,43 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
         where TSecurityContext : ISecurityContext where TIdent : notnull
     {
         return this.RestrictionPaths.Select(restrictionPath =>
-
-            ExpressionEvaluateHelper.InlineEvaluate(ee =>
             {
-                if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
+                return ExpressionEvaluateHelper.InlineEvaluate(ee =>
                 {
-                    if (pureFilter == null)
+                    if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
                     {
-                        return singlePath.Select(securityContext =>
-                            securityContext != null ? (IEnumerable<TIdent>)new[] { ee.Evaluate(identityInfo.IdPath, securityContext) } : Array.Empty<TIdent>());
+                        if (pureFilter == null)
+                        {
+                            return singlePath.Select(IEnumerable<TIdent> (securityContext) =>
+                                securityContext != null ? new[] { ee.Evaluate(identityInfo.IdPath, securityContext) } : Array.Empty<TIdent>());
+                        }
+                        else
+                        {
+                            return singlePath.Select(IEnumerable<TIdent> (securityContext) =>
+                                securityContext != null && ee.Evaluate(pureFilter, securityContext)
+                                    ? new[] { ee.Evaluate(identityInfo.IdPath, securityContext) }
+                                    : Array.Empty<TIdent>());
+                        }
+                    }
+                    else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
+                    {
+                        if (pureFilter == null)
+                        {
+                            return manyPath.Select(securityContexts => securityContexts.Select(securityContext => ee.Evaluate(identityInfo.IdPath, securityContext)));
+                        }
+                        else
+                        {
+                            return manyPath.Select(securityContexts => securityContexts
+                                .Where(securityContext => ee.Evaluate(pureFilter, securityContext))
+                                .Select(securityContext => ee.Evaluate(identityInfo.IdPath, securityContext)));
+                        }
                     }
                     else
                     {
-                        return singlePath.Select(securityContext =>
-                            securityContext != null && ee.Evaluate(pureFilter, securityContext)
-                                ? (IEnumerable<TIdent>)new[] { ee.Evaluate(identityInfo.IdPath, securityContext) }
-                                : Array.Empty<TIdent>());
+                        throw new NotImplementedException();
                     }
-                }
-                else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
-                {
-                    if (pureFilter == null)
-                    {
-                        return manyPath.Select(securityContexts => securityContexts.Select(securityContext => ee.Evaluate(identityInfo.IdPath, securityContext)));
-                    }
-                    else
-                    {
-                        return manyPath.Select(securityContexts => securityContexts
-                            .Where(securityContext => ee.Evaluate(pureFilter, securityContext))
-                            .Select(securityContext => ee.Evaluate(identityInfo.IdPath, securityContext)));
-                    }
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-            }));
+                });
+            }
+        );
     }
 }

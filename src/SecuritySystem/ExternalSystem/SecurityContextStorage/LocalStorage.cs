@@ -1,9 +1,13 @@
-﻿namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
+﻿using SecuritySystem.Services;
 
-public class LocalStorage<TSecurityContext, TIdent>(IdentityInfo<TSecurityContext, TIdent> identityInfo)
+namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
+
+public class LocalStorage<TSecurityContext, TIdent>(IIdentityInfoSource identityInfoSource)
     where TSecurityContext : ISecurityContext
     where TIdent : notnull
 {
+    private readonly IdentityInfo<TSecurityContext, TIdent> identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TIdent>();
+
     private readonly HashSet<TSecurityContext> items = [];
 
     public bool IsExists(TIdent securityEntityId)

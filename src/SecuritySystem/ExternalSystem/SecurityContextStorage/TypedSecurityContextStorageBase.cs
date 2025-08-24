@@ -4,12 +4,14 @@ namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 public abstract class TypedSecurityContextStorageBase<TSecurityContext, TIdent>(
     IQueryableSource queryableSource,
-    LocalStorage<TSecurityContext, TIdent> localStorage,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo)
+    IIdentityInfoSource identityInfoSource,
+    LocalStorage<TSecurityContext, TIdent> localStorage)
     : ITypedSecurityContextStorage<TIdent>
     where TSecurityContext : class, ISecurityContext
     where TIdent : notnull
 {
+    protected readonly IdentityInfo<TSecurityContext, TIdent> IdentityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TIdent>();
+
     protected abstract SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext);
 
     public IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts()
@@ -19,14 +21,14 @@ public abstract class TypedSecurityContextStorageBase<TSecurityContext, TIdent>(
 
     public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> preSecurityEntityIdents)
     {
-        var filter = identityInfo.CreateContainsFilter(preSecurityEntityIdents.ToArray());
+        var filter = this.IdentityInfo.CreateContainsFilter(preSecurityEntityIdents.ToArray());
 
         return queryableSource.GetQueryable<TSecurityContext>().Where(filter).ToList().Select(this.CreateSecurityContextData);
     }
 
     public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsWithMasterExpand(TIdent startSecurityEntityId)
     {
-        var filter = identityInfo.CreateContainsFilter([startSecurityEntityId]);
+        var filter = this.IdentityInfo.CreateContainsFilter([startSecurityEntityId]);
 
         var securityObject = queryableSource.GetQueryable<TSecurityContext>().Single(filter);
 
@@ -35,7 +37,7 @@ public abstract class TypedSecurityContextStorageBase<TSecurityContext, TIdent>(
 
     public bool IsExists(TIdent securityContextId)
     {
-        var filter = identityInfo.CreateContainsFilter([securityContextId]);
+        var filter = this.IdentityInfo.CreateContainsFilter([securityContextId]);
 
         return localStorage.IsExists(securityContextId)
                || queryableSource.GetQueryable<TSecurityContext>().Any(filter);

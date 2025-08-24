@@ -64,7 +64,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
                 cancellationToken),
 
             UserCredential.IdentUserCredential { Id: var principalId } => this.TryGetPrincipalAsync(
-                principal => principalIdentityInfo.IdFunc(principal) == principalId,
+                principalIdentityInfo.IdPath.Select(id => principalId == id),
                 cancellationToken),
 
             _ => throw new ArgumentOutOfRangeException(nameof(userCredential))
