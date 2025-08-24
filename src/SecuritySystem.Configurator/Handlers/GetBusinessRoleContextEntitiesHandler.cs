@@ -23,7 +23,9 @@ public class GetBusinessRoleContextEntitiesHandler(
         
         var searchToken = context.Request.Query["searchToken"];
 
-        var entities = securityContextStorage.GetTyped(securityContextType).GetSecurityContexts();
+        var typedSecurityContextStorage = (ITypedSecurityContextStorage<Guid>)securityContextStorage.GetTyped(securityContextType);
+
+        var entities = typedSecurityContextStorage.GetSecurityContexts();
 
         if (!string.IsNullOrWhiteSpace(searchToken))
             entities = entities.Where(p => p.Name.Contains(searchToken!, StringComparison.OrdinalIgnoreCase));
