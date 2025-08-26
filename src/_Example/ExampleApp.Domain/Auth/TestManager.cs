@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-
 using ExampleWebApp.Domain._Base;
 
 namespace ExampleWebApp.Domain.Auth;
@@ -7,7 +6,9 @@ namespace ExampleWebApp.Domain.Auth;
 [Table(nameof(TestManager), Schema = "auth")]
 public class TestManager : PersistentDomainObjectBase
 {
-    public virtual Employee Employee { get; set; } = null!;
+    public virtual required Employee Employee { get; set; }
 
-    public virtual BusinessUnit BusinessUnit { get; set; } = null!;
+    public virtual required BusinessUnit BusinessUnit { get; set; }
+
+    public virtual required Location Location { get; set; }
 }

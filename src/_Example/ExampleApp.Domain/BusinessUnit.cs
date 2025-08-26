@@ -1,13 +1,15 @@
 ﻿using ExampleWebApp.Domain._Base;
 
-using System.ComponentModel.DataAnnotations.Schema;
-
 using SecuritySystem;
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExampleWebApp.Domain;
 
 [Table(nameof(BusinessUnit), Schema = "app")]
 public class BusinessUnit : PersistentDomainObjectBase, ISecurityContext
 {
-    public string Name { get; set; } = null!;
+    [MaxLength(255)]
+    public required string Name { get; set; }
 }

@@ -21,6 +21,8 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 
         modelBuilder.Entity<TestManager>();
 
+        modelBuilder.Entity<Location>();
+
         base.OnModelCreating(modelBuilder);
     }
 }

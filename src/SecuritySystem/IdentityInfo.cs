@@ -15,18 +15,11 @@ public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject,
     {
         return this.IdPath.Select(ident => idents.Contains(ident));
     }
-
-    public override Expression<Func<TDomainObject, bool>> CreateBaseContainsFilter(Array idents)
-    {
-        return this.CreateContainsFilter((TIdent[])idents);
-    }
 }
 
 public abstract record IdentityInfo<TDomainObject> : IdentityInfo
 {
     public override Type DomainObjectType { get; } = typeof(TDomainObject);
-
-    public abstract Expression<Func<TDomainObject, bool>> CreateBaseContainsFilter(Array idents);
 }
 
 public abstract record IdentityInfo

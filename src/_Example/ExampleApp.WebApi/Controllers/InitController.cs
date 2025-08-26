@@ -30,16 +30,18 @@ public class InitController(
 
         foreach (var index in Enumerable.Range(1, 2))
         {
-            var testBu = new BusinessUnit() { Name = $"TestBu{index}" };
+            var testLocation = new Location { Name = $"Test{nameof(Location)}{index}" };
+
+            var testBu = new BusinessUnit() { Name = $"Test{nameof(BusinessUnit)}{index}" };
             dbContext.Add(testBu);
 
-            var testEmployee = new Employee { Login = $"TestEmployee{index}" };
+            var testEmployee = new Employee { Login = $"Test{nameof(Employee)}{index}" };
             dbContext.Add(testEmployee);
 
-            var testObj = new TestObject { BusinessUnit = testBu };
+            var testObj = new TestObject { BusinessUnit = testBu, Location = testLocation };
             dbContext.Add(testObj);
 
-            var testPermission = new TestManager { BusinessUnit = testBu, Employee = testEmployee };
+            var testPermission = new TestManager { BusinessUnit = testBu, Employee = testEmployee, Location = testLocation };
             dbContext.Add(testPermission);
         }
 

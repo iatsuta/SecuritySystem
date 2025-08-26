@@ -6,7 +6,8 @@ using ExampleWebApp.Infrastructure.Services;
 using GenericQueryable.EntityFramework;
 
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
 using SecuritySystem.VirtualPermission;

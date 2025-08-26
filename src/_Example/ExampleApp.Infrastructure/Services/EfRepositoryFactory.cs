@@ -1,5 +1,7 @@
 ﻿using ExampleWebApp.Application;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem;
 using SecuritySystem.DomainServices;
 
