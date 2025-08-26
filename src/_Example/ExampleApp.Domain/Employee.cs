@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using ExampleWebApp.Domain._Base;
-
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ExampleWebApp.Domain;
+using ExampleApp.Domain._Base;
+
+namespace ExampleApp.Domain;
 
 [Table(nameof(Employee), Schema = "app")]
 public class Employee : PersistentDomainObjectBase

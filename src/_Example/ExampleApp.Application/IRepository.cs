@@ -1,4 +1,4 @@
-﻿namespace ExampleWebApp.Application;
+﻿namespace ExampleApp.Application;
 
 public interface IRepository<TDomainObject>
 {

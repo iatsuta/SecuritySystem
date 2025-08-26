@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ExampleWebApp.Domain._Base;
+namespace ExampleApp.Domain._Base;
 
 public abstract class PersistentDomainObjectBase
 {

@@ -1,9 +1,8 @@
-﻿using ExampleWebApp.Application;
-
+﻿using ExampleApp.Application;
 using SecuritySystem;
 using SecuritySystem.Providers;
 
-namespace ExampleWebApp.Infrastructure.Services;
+namespace ExampleApp.Infrastructure.Services;
 
 public class EfRepository<TDomainObject>(
     TestDbContext dbContext,

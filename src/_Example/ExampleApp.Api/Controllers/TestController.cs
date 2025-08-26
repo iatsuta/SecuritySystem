@@ -1,6 +1,5 @@
-﻿using ExampleWebApp.Application;
-using ExampleWebApp.Domain;
-
+﻿using ExampleApp.Application;
+using ExampleApp.Domain;
 using GenericQueryable;
 
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,6 @@
 ﻿using SecuritySystem.PersistStorage;
 
-namespace ExampleWebApp.Infrastructure.Services;
+namespace ExampleApp.Infrastructure.Services;
 
 public class EfStorageWriter(TestDbContext dbContext) : IStorageWriter
 {

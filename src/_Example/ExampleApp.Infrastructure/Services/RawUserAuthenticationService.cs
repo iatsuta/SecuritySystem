@@ -2,7 +2,7 @@
 
 using SecuritySystem.Services;
 
-namespace ExampleWebApp.Infrastructure.Services;
+namespace ExampleApp.Infrastructure.Services;
 
 public class RawUserAuthenticationService(IHttpContextAccessor httpContextAccessor) : IRawUserAuthenticationService
 {

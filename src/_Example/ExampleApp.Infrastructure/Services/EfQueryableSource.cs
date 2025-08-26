@@ -1,6 +1,6 @@
 ﻿using SecuritySystem.Services;
 
-namespace ExampleWebApp.Infrastructure.Services;
+namespace ExampleApp.Infrastructure.Services;
 
 public class EfQueryableSource(TestDbContext dbContext) : IQueryableSource
 {

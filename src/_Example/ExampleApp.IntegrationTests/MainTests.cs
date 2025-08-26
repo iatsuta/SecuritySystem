@@ -1,11 +1,13 @@
 ﻿using CommonFramework.DependencyInjection;
+using ExampleApp.Domain;
+using ExampleApp.Infrastructure.DependencyInjection;
 using ExampleWebApp.Controllers;
-using ExampleWebApp.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Services;
 
-namespace SecuritySystem.DiTests;
+namespace ExampleApp.IntegrationTests;
 
 public class MainTests : IAsyncLifetime
 {
@@ -51,7 +53,6 @@ public class MainTests : IAsyncLifetime
         var runAsManager = scopeSp.GetRequiredService<IRunAsManager>();
         await runAsManager.StartRunAsUserAsync(runAs);
 
-
         // Act
         var currentUserLogin = await testController.GetCurrentUserLogin();
         var testObjects = await testController.GetTestObjects();
@@ -65,8 +66,8 @@ public class MainTests : IAsyncLifetime
 
     public static IEnumerable<object?[]> GetTestData()
     {
-        yield return ["TestRootUser", new[] { "TestBu1", "TestBu2" }];
-        yield return ["TestEmployee1", new[] { "TestBu1" }];
-        yield return ["TestEmployee2", new[] { "TestBu2" }];
+        yield return ["TestRootUser", new[] { $"Test{nameof(BusinessUnit)}1", $"Test{nameof(BusinessUnit)}2" }];
+        yield return ["TestEmployee1", new[] { $"Test{nameof(BusinessUnit)}1" }];
+        yield return ["TestEmployee2", new[] { $"Test{nameof(BusinessUnit)}2" }];
     }
 }

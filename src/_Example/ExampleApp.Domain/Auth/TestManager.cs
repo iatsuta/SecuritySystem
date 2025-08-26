@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using ExampleWebApp.Domain._Base;
 
-namespace ExampleWebApp.Domain.Auth;
+using ExampleApp.Domain._Base;
+
+namespace ExampleApp.Domain.Auth;
 
 [Table(nameof(TestManager), Schema = "auth")]
 public class TestManager : PersistentDomainObjectBase

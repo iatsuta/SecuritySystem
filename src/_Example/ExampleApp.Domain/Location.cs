@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ExampleWebApp.Domain;
+namespace ExampleApp.Domain;
 
 [Table(nameof(Location), Schema = "app")]
 public class Location

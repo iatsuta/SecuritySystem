@@ -1,11 +1,11 @@
-﻿using ExampleWebApp.Domain._Base;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+using ExampleApp.Domain._Base;
 
 using SecuritySystem;
 
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace ExampleWebApp.Domain;
+namespace ExampleApp.Domain;
 
 [Table(nameof(BusinessUnit), Schema = "app")]
 public class BusinessUnit : PersistentDomainObjectBase, ISecurityContext

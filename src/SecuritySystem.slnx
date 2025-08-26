@@ -4,7 +4,7 @@
     <Project Path="_Example/ExampleApp.Domain/ExampleApp.Domain.csproj" />
     <Project Path="_Example/ExampleApp.Infrastructure/ExampleApp.Infrastructure.csproj" />
     <Project Path="_Example/ExampleApp.IntegrationTests/ExampleApp.IntegrationTests.csproj" />
-    <Project Path="_Example/ExampleApp.WebApi/ExampleApp.WebApi.csproj" />
+    <Project Path="_Example/ExampleApp.Api/ExampleApp.Api.csproj" />
   </Folder>
 
   <Folder Name="/__SolutionItems/">

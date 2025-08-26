@@ -1,7 +1,5 @@
 ﻿using CommonFramework.DependencyInjection;
-
-using ExampleWebApp.Infrastructure.DependencyInjection;
-
+using ExampleApp.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 

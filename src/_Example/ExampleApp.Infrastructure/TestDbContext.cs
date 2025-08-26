@@ -1,9 +1,8 @@
-﻿using ExampleWebApp.Domain;
-using ExampleWebApp.Domain.Auth;
-
+﻿using ExampleApp.Domain;
+using ExampleApp.Domain.Auth;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExampleWebApp.Infrastructure;
+namespace ExampleApp.Infrastructure;
 
 public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
 {

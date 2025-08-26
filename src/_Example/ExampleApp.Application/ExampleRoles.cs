@@ -1,6 +1,6 @@
 ﻿using SecuritySystem;
 
-namespace ExampleWebApp.Application;
+namespace ExampleApp.Application;
 
 public static class ExampleRoles
 {

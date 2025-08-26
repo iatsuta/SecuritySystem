@@ -1,18 +1,19 @@
-﻿using ExampleWebApp.Application;
-using ExampleWebApp.Domain;
-using ExampleWebApp.Domain.Auth;
-using ExampleWebApp.Infrastructure.Services;
+﻿using ExampleApp.Application;
+using ExampleApp.Domain;
+using ExampleApp.Domain.Auth;
+using ExampleApp.Infrastructure.Services;
 
 using GenericQueryable.EntityFramework;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
 using SecuritySystem.VirtualPermission;
 
-namespace ExampleWebApp.Infrastructure.DependencyInjection;
+namespace ExampleApp.Infrastructure.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {

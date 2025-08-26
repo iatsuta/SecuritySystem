@@ -1,11 +1,10 @@
-﻿using ExampleWebApp.Application;
-
+﻿using ExampleApp.Application;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem;
 using SecuritySystem.DomainServices;
 
-namespace ExampleWebApp.Infrastructure.Services;
+namespace ExampleApp.Infrastructure.Services;
 
 public class EfRepositoryFactory<TDomainObject>(IServiceProvider serviceProvider, IDomainSecurityService<TDomainObject> domainSecurityService)
     : IRepositoryFactory<TDomainObject> where TDomainObject : class

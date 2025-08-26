@@ -1,7 +1,6 @@
-﻿using ExampleWebApp.Domain;
-using ExampleWebApp.Domain.Auth;
-using ExampleWebApp.Infrastructure;
-
+﻿using ExampleApp.Domain;
+using ExampleApp.Domain.Auth;
+using ExampleApp.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
 using SecuritySystem.Services;
