@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using SecuritySystem;
+
 namespace ExampleApp.Domain;
 
 [Table(nameof(Location), Schema = "app")]
-public class Location
+public class Location : ISecurityContext
 {
     [Key]
     public int MyId { get; set; }

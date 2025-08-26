@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Linq.Expressions;
+using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.HierarchicalExpand;
 
@@ -14,6 +15,8 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 
     private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
 
+    private IdentityInfo? customIdentityInfo;
+
     public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
     {
         this.name = newName;
@@ -24,6 +27,14 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
     public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> newDisplayFunc)
     {
         this.displayFunc = newDisplayFunc;
+
+        return this;
+    }
+
+    public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
+        where TIdent : struct
+    {
+        this.customIdentityInfo = new IdentityInfo<TSecurityContext, TIdent>(identityPath);
 
         return this;
     }
@@ -42,6 +53,11 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
         services.AddSingleton(securityContextInfo);
         services.AddSingleton<SecurityContextInfo>(securityContextInfo);
         services.AddSingleton<ISecurityContextDisplayService<TSecurityContext>>(new SecurityContextDisplayService<TSecurityContext>(this.displayFunc));
+
+        if (this.customIdentityInfo != null)
+        {
+            services.AddSingleton(this.customIdentityInfo);
+        }
 
         if (this.hierarchicalInfo != null)
         {
