@@ -248,3 +248,6 @@ ModelManifest.xml
 /src/ExampleWebApp/test.db
 /src/ExampleWebApp/test.db-shm
 /src/ExampleWebApp/test.db-wal
+/src/_Example/ExampleApp.Api/test.db
+/src/_Example/ExampleApp.Api/test.db-shm
+/src/_Example/ExampleApp.Api/test.db-wal
