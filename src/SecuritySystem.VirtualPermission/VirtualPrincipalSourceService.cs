@@ -96,14 +96,15 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
 
     private TypedPermission ToTypedPermission(TPermission permission)
     {
-        var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictions), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var restrictions = bindingInfo
             .GetSecurityContextTypes()
-            .Select(securityContextType => (securityContextType, getRestrictionsMethod
-                .MakeGenericMethod(securityContextType)
-                .Invoke<IEnumerable<Guid>>(this, permission)
-                .ToReadOnlyListI()))
+            .Select(identityInfoSource.GetIdentityInfo)
+            .Select(identityInfo => 
+                (identityInfo.DomainObjectType, getRestrictionsMethod
+                .MakeGenericMethod(identityInfo.DomainObjectType, identityInfo.IdentityType)
+                .Invoke<Array>(this, permission, identityInfo)))
             .ToDictionary();
 
         return new TypedPermission(
@@ -133,12 +134,17 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
             return [];
         }
     }
-
-    private IEnumerable<Guid> GetRestrictions<TSecurityContext>(TPermission permission)
+    private Array GetRestrictionArray<TSecurityContext, TIdent>(TPermission permission, IdentityInfo<TSecurityContext, TIdent> identityInfo)
         where TSecurityContext : ISecurityContext
+        where TIdent : notnull
     {
-        var securityContextIdentityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
+        return this.GetRestrictionIdents(permission, identityInfo).ToArray();
+    }
 
+    private IEnumerable<TIdent> GetRestrictionIdents<TSecurityContext, TIdent>(TPermission permission, IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        where TSecurityContext : ISecurityContext
+        where TIdent : notnull
+    {
         foreach (var restrictionPath in bindingInfo.RestrictionPaths)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
@@ -147,14 +153,14 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
 
                 if (securityContext != null)
                 {
-                    yield return securityContextIdentityInfo.IdFunc(securityContext);
+                    yield return identityInfo.IdFunc(securityContext);
                 }
             }
             else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
             {
                 foreach (var securityContext in this.expressionEvaluator.Evaluate(manyPath, permission))
                 {
-                    yield return securityContextIdentityInfo.IdFunc(securityContext);
+                    yield return identityInfo.IdFunc(securityContext);
                 }
             }
         }

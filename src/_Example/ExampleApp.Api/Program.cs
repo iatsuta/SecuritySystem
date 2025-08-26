@@ -1,11 +1,13 @@
 ﻿using CommonFramework.DependencyInjection;
+
 using ExampleApp.Infrastructure.DependencyInjection;
+
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 
 using SecuritySystem.Configurator;
 
-namespace ExampleWebApp;
+namespace ExampleApp.Api;
 
 public static class Program
 {

@@ -1,11 +1,12 @@
 ﻿using ExampleApp.Domain;
 using ExampleApp.Domain.Auth;
 using ExampleApp.Infrastructure;
+
 using Microsoft.AspNetCore.Mvc;
 
 using SecuritySystem.Services;
 
-namespace ExampleWebApp.Controllers;
+namespace ExampleApp.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]

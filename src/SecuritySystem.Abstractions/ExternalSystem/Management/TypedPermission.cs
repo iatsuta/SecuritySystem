@@ -7,4 +7,4 @@ public record TypedPermission(
     DateTime StartDate,
     DateTime? EndDate,
     string Comment,
-    IReadOnlyDictionary<Type, IReadOnlyList<Guid>> Restrictions);
+    IReadOnlyDictionary<Type, Array> Restrictions);

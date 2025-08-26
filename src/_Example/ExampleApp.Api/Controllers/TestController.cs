@@ -1,5 +1,6 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain;
+
 using GenericQueryable;
 
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using SecuritySystem;
 using SecuritySystem.UserSource;
 
-namespace ExampleWebApp.Controllers;
+namespace ExampleApp.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]

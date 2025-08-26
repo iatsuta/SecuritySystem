@@ -1,12 +1,7 @@
 ﻿namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
-public record SecurityContextData<TIdent>(TIdent Id, string Name, TIdent? ParentId) : ISecurityContextData<TIdent>;
-
-public interface ISecurityContextData<out T>
+public record SecurityContextData<TIdent>(TIdent Id, string Name, TIdent? ParentId)
+    where TIdent : notnull
 {
-    T Id { get; }
-
-    string Name { get; }
-
-    T? ParentId { get; }
+    public SecurityContextData<object> UpCast() => new(this.Id, this.Name, this.ParentId);
 }

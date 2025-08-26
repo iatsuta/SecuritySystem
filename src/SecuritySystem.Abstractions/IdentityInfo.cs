@@ -5,7 +5,7 @@ using CommonFramework;
 namespace SecuritySystem;
 
 public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject, TIdent>> IdPath) : IdentityInfo<TDomainObject>
-    where TIdent: notnull
+    where TIdent : notnull
 {
     public Func<TDomainObject, TIdent> IdFunc { get; } = IdPath.Compile();
 

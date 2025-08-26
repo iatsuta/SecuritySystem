@@ -1,8 +1,8 @@
 ﻿namespace SecuritySystem.Configurator.Models;
 
-public class EntityDto
+public class RestrictionDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = null!;
 
     public string Name { get; set; } = null!;
 }

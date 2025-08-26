@@ -1,7 +1,9 @@
 ﻿using CommonFramework.DependencyInjection;
+
+using ExampleApp.Api.Controllers;
 using ExampleApp.Domain;
 using ExampleApp.Infrastructure.DependencyInjection;
-using ExampleWebApp.Controllers;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
