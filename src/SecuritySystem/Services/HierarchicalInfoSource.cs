@@ -5,17 +5,26 @@ using CommonFramework.DictionaryCache;
 
 namespace SecuritySystem.Services;
 
-public class IdentityInfoSource(IIdentityPropertySource identityPropertySource) : IIdentityInfoSource
+public class IdentityInfoSource(IIdentityPropertySource identityPropertySource, IEnumerable<IdentityInfo> customIdentityInfoList) : IIdentityInfoSource
 {
     private readonly IDictionaryCache<Type, IdentityInfo> identityInfoCache = new DictionaryCache<Type, IdentityInfo>(domainType =>
     {
-        var idProperty = identityPropertySource.GetIdentityProperty(domainType);
+        var customIdentityInfo = customIdentityInfoList.SingleOrDefault(identityInfo => identityInfo.DomainObjectType == domainType);
 
-        var idPath = idProperty.ToLambdaExpression();
+        if (customIdentityInfo != null)
+        {
+            return customIdentityInfo;
+        }
+        else
+        {
+            var idProperty = identityPropertySource.GetIdentityProperty(domainType);
 
-        return new Func<Expression<Func<object, object>>, IdentityInfo<object, object>>(CreateIdentityInfo)
-            .CreateGenericMethod(domainType, idProperty.PropertyType)
-            .Invoke<IdentityInfo>(null, idPath);
+            var idPath = idProperty.ToLambdaExpression();
+
+            return new Func<Expression<Func<object, object>>, IdentityInfo<object, object>>(CreateIdentityInfo)
+                .CreateGenericMethod(domainType, idProperty.PropertyType)
+                .Invoke<IdentityInfo>(null, idPath);
+        }
 
     }).WithLock();
 

@@ -6,6 +6,7 @@ using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.Configurator.Handlers;
 
@@ -14,6 +15,7 @@ public class UpdatePermissionsHandler(
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IPrincipalManagementService principalManagementService,
+    IIdentityInfoSource identityInfoSource,
     IConfiguratorIntegrationEvents? configuratorIntegrationEvents = null) : BaseWriteHandler, IUpdatePermissionsHandler
 {
     public async Task Execute(HttpContext context, CancellationToken cancellationToken)
@@ -48,6 +50,19 @@ public class UpdatePermissionsHandler(
 
     private TypedPermission ToTypedPermission(RequestBodyDto permission)
     {
+        var restrictionsRequest =
+
+            from restriction in permission.Contexts
+
+            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(new Guid(restriction.Id)).Type
+
+            let identityType = identityInfoSource.GetIdentityInfo(securityContextType).IdentityType
+
+            let idents = new Func<IEnumerable<string>, Array>(ParseIdents<int>).CreateGenericMethod(identityType).Invoke<Array>(null, restriction.Entities)
+
+            select (securityContextType, idents);
+
+
         return new TypedPermission(
             string.IsNullOrWhiteSpace(permission.PermissionId) ? Guid.Empty : new Guid(permission.PermissionId),
             permission.IsVirtual,
@@ -55,9 +70,13 @@ public class UpdatePermissionsHandler(
             permission.StartDate,
             permission.EndDate,
             permission.Comment,
-            permission.Contexts.ToDictionary(
-                pair => securityContextInfoSource.GetSecurityContextInfo(new Guid(pair.Id)).Type,
-                pair => pair.Entities.Select(e => new Guid(e)).ToReadOnlyListI()));
+            restrictionsRequest.ToDictionary());
+    }
+
+    private static Array ParseIdents<TIdent>(IEnumerable<string> untypedIdents)
+        where TIdent : IParsable<TIdent>
+    {
+        return untypedIdents.Select(ident => TIdent.Parse(ident, null)).ToArray();
     }
 
     private class RequestBodyDto

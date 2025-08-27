@@ -36,5 +36,15 @@ public static class TypedSecurityContextStorageExtensions
         {
             return this.existsCache[securityEntityId];
         }
+
+        IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContextsByIdents(Array securityContextIdents)
+        {
+            return this.GetSecurityContextsByIdents(securityContextIdents.Cast<TIdent>()).Select(scd => scd.UpCast());
+        }
+
+        IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContexts()
+        {
+            return this.GetSecurityContexts().Select(scd => scd.UpCast());
+        }
     }
 }

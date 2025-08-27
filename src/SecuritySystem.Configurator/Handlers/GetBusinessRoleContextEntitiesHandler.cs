@@ -23,7 +23,7 @@ public class GetBusinessRoleContextEntitiesHandler(
         
         var searchToken = context.Request.Query["searchToken"];
 
-        var typedSecurityContextStorage = (ITypedSecurityContextStorage<Guid>)securityContextStorage.GetTyped(securityContextType);
+        var typedSecurityContextStorage = securityContextStorage.GetTyped(securityContextType);
 
         var entities = typedSecurityContextStorage.GetSecurityContexts();
 
@@ -31,7 +31,7 @@ public class GetBusinessRoleContextEntitiesHandler(
             entities = entities.Where(p => p.Name.Contains(searchToken!, StringComparison.OrdinalIgnoreCase));
 
         return entities
-               .Select(x => new EntityDto { Id = x.Id, Name = x.Name })
+               .Select(x => new RestrictionDto { Id = x.Id.ToString()!, Name = x.Name })
                .OrderByDescending(x => x.Name.Equals(searchToken, StringComparison.OrdinalIgnoreCase))
                .ThenBy(x => x.Name)
                .Take(70)

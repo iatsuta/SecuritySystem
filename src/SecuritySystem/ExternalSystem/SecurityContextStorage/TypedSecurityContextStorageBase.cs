@@ -44,4 +44,14 @@ public abstract class TypedSecurityContextStorageBase<TSecurityContext, TIdent>(
     }
 
     protected abstract IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject);
+
+    IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContextsByIdents(Array securityContextIdents)
+    {
+        return this.GetSecurityContextsByIdents(securityContextIdents.Cast<TIdent>()).Select(scd => scd.UpCast());
+    }
+
+    IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContexts()
+    {
+        return this.GetSecurityContexts().Select(scd => scd.UpCast());
+    }
 }
