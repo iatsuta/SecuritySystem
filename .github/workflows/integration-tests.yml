@@ -34,4 +34,4 @@ jobs:
 
       - name: Integration Tests
         run: |
-          dotnet test --blame src/SecuritySystem.IntegrationTests --no-build --verbosity normal;
+          dotnet test --blame src/_Example/ExampleApp.IntegrationTests --no-build --verbosity normal;
