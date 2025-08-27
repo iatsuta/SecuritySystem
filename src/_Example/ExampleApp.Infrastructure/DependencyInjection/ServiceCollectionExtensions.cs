@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
 using SecuritySystem.VirtualPermission;
-using System.Threading;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 
