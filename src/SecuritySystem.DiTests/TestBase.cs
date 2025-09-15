@@ -20,7 +20,8 @@ public abstract class TestBase
         this.lazyRootServiceProvider = LazyHelper.Create<IServiceProvider>(() =>
 
             this.CreateServices(new ServiceCollection())
-                .ValidateDuplicateDeclaration()
+                .AddValidator<DuplicateServiceUsageValidator>()
+                .Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true }));
     }
 

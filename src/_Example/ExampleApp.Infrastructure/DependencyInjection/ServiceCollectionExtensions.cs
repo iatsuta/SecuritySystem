@@ -64,9 +64,6 @@ public static class ServiceCollectionExtensions
                             .AddRestriction(domainObject => domainObject.Location))
 
                     .AddVirtualPermission<Employee, Administrator>(
-                        SecurityRole.Administrator, domainObject => domainObject.Employee, employee => employee.Login)
-
-                    
-            );
+                        SecurityRole.Administrator, domainObject => domainObject.Employee, employee => employee.Login));
     }
 }

@@ -1,6 +1,5 @@
 ﻿using CommonFramework;
-
-using SecuritySystem.ExpressionEvaluate;
+using CommonFramework.ExpressionEvaluate;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 

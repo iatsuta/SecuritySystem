@@ -8,7 +8,6 @@ using SecuritySystem.Credential;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.DomainServices;
 using SecuritySystem.Expanders;
-using SecuritySystem.ExpressionEvaluate;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
@@ -22,6 +21,9 @@ using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
+
+using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.DependencyInjection;

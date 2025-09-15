@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
-
-using SecuritySystem.ExpressionEvaluate;
+using CommonFramework.ExpressionEvaluate;
 
 namespace SecuritySystem.UserSource;
 
