@@ -1,12 +1,12 @@
 ﻿using CommonFramework;
 
 using SecuritySystem.Credential;
-using SecuritySystem.ExpressionEvaluate;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 using System.Reflection;
+using CommonFramework.ExpressionEvaluate;
 using GenericQueryable;
 
 namespace SecuritySystem.VirtualPermission;

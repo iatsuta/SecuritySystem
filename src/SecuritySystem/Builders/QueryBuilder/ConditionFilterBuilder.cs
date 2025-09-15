@@ -1,6 +1,6 @@
-﻿using SecuritySystem.ExpressionEvaluate;
-using SecuritySystem.HierarchicalExpand;
+﻿using SecuritySystem.HierarchicalExpand;
 using System.Linq.Expressions;
+using CommonFramework.ExpressionEvaluate;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 

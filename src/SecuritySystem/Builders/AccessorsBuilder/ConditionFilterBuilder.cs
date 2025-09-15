@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
-
-using SecuritySystem.ExpressionEvaluate;
+using CommonFramework.ExpressionEvaluate;
 using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;

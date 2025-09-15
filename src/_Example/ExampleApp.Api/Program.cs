@@ -45,7 +45,9 @@ public static class Program
 
         builder.Services.AddControllers(x => x.EnableEndpointRouting = false);
 
-        builder.Services.ValidateDuplicateDeclaration(typeof(ILoggerFactory));
+        builder.Services
+            .AddValidator(new DuplicateServiceUsageValidator([typeof(ILoggerFactory)]))
+            .Validate();
 
         var app = builder.Build();
 

@@ -1,10 +1,8 @@
 ﻿using CommonFramework.ExpressionComparers;
 
 using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.ExpressionEvaluate;
-
 using System.Linq.Expressions;
+using CommonFramework.ExpressionEvaluate;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;

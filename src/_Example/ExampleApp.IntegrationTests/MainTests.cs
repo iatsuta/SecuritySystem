@@ -22,11 +22,12 @@ public class MainTests : IAsyncLifetime
         this.rootServiceProvider =
             new ServiceCollection()
                 .AddInfrastructure(configuration)
-                .ValidateDuplicateDeclaration()
                 .AddScoped<InitController>()
                 .AddScoped<TestController>()
                 .AddSingleton(TimeProvider.System)
                 .ReplaceScoped<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
+                .AddValidator<DuplicateServiceUsageValidator>()
+                .Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 
