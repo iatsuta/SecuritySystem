@@ -14,5 +14,7 @@ public interface ITypedSecurityContextStorage<TIdent> : ITypedSecurityContextSto
 
     IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> securityContextIdents);
 
+    IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsWithMasterExpand(TIdent startSecurityEntityId);
+
     bool IsExists (TIdent securityContextId);
 }

@@ -6,7 +6,9 @@ using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 using System.Reflection;
+
 using CommonFramework.ExpressionEvaluate;
+
 using GenericQueryable;
 
 namespace SecuritySystem.VirtualPermission;

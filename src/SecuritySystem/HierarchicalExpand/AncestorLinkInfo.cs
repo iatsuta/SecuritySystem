@@ -7,4 +7,8 @@ public record AncestorLinkInfo<TDomainObject, TAncestorLink>(
     Expression<Func<TAncestorLink, TDomainObject>> ToPath)
 {
     public AncestorLinkInfo<TDomainObject, TAncestorLink> Reverse() => new(this.ToPath, this.FromPath);
+
+    public Func<TAncestorLink, TDomainObject> FromFunc { get; } = FromPath.Compile();
+
+    public Func<TAncestorLink, TDomainObject> ToFunc { get; } = ToPath.Compile();
 }

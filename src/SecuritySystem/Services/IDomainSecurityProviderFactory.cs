@@ -8,3 +8,5 @@ public interface IDomainSecurityProviderFactory<TDomainObject>
         DomainSecurityRule securityRule,
         SecurityPath<TDomainObject> securityPath);
 }
+
+

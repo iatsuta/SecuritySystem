@@ -57,10 +57,4 @@ public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFact
     {
         return this.cache[domainType];
     }
-
-    public IHierarchicalObjectExpander<TIdent> Create<TIdent>(Type domainType)
-        where TIdent : notnull
-    {
-        return (IHierarchicalObjectExpander<TIdent>)this.Create(domainType);
-    }
 }

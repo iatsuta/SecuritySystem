@@ -20,6 +20,9 @@ public static class TypedSecurityContextStorageExtensions
                 securityEntityIdents => baseSource.GetSecurityContextsByIdents(securityEntityIdents).ToArray(),
                 ArrayComparer<TIdent>.Default);
 
+        private readonly IDictionaryCache<TIdent, SecurityContextData<TIdent>[]> securityEntitiesWithMasterExpandCache = new DictionaryCache<TIdent, SecurityContextData<TIdent>[]>(
+            startSecurityEntityId => baseSource.GetSecurityContextsWithMasterExpand(startSecurityEntityId).ToArray());
+
         private readonly IDictionaryCache<TIdent, bool> existsCache = new DictionaryCache<TIdent, bool>(baseSource.IsExists);
 
         public IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts()
@@ -30,6 +33,10 @@ public static class TypedSecurityContextStorageExtensions
         public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> securityEntityIdents)
         {
             return this.securityEntitiesByIdentsCache[securityEntityIdents.ToArray()];
+        }
+        public IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsWithMasterExpand(TIdent startSecurityEntityId)
+        {
+            return this.securityEntitiesWithMasterExpandCache[startSecurityEntityId];
         }
 
         public bool IsExists(TIdent securityEntityId)

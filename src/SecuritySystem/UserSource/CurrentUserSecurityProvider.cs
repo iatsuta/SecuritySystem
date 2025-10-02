@@ -47,10 +47,10 @@ public class CurrentUserSecurityProvider<TDomainObject>(
 }
 
 public class CurrentUserSecurityProvider<TDomainObject, TUser>(
-    IExpressionEvaluator expressionEvaluator,
+    IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
     UserPathInfo<TUser> userPathInfo,
-    ICurrentUser currentUser) : SecurityProvider<TDomainObject>(expressionEvaluator)
+    ICurrentUser currentUser) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
     where TUser : class
 {
     public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
@@ -61,6 +61,6 @@ public class CurrentUserSecurityProvider<TDomainObject, TUser>(
     {
         var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
 
-        return SecurityAccessorData.Return(users.Select(user => expressionEvaluator.Evaluate(userPathInfo.NamePath, user)));
+        return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(userPathInfo.NamePath, user)));
     }
 }
