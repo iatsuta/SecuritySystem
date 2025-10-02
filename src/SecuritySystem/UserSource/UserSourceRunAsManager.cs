@@ -1,7 +1,6 @@
 ﻿using CommonFramework;
 
 using SecuritySystem.Credential;
-using SecuritySystem.PersistStorage;
 
 using SecuritySystem.Services;
 
@@ -13,7 +12,7 @@ public class UserSourceRunAsManager<TUser>(
     IUserSource<TUser> userSource,
     IUserSourceRunAsAccessor<TUser> accessor,
     UserPathInfo<TUser> userPathInfo,
-    IStorageWriter storageWriter) : RunAsManager(rawUserAuthenticationService, securitySystemFactory)
+    IGenericRepository genericRepository) : RunAsManager(rawUserAuthenticationService, securitySystemFactory)
     where TUser : class
 {
     private readonly Lazy<Func<TUser, User>> lazyToDefaultUserFunc = LazyHelper.Create(() => userPathInfo.ToDefaultUserExpr.Compile());
@@ -32,7 +31,7 @@ public class UserSourceRunAsManager<TUser>(
         {
             accessor.SetRunAs(this.currentUser, newRunAsUser);
 
-            await storageWriter.SaveAsync(this.currentUser, cancellationToken);
+            await genericRepository.SaveAsync(this.currentUser, cancellationToken);
         }
     }
 }

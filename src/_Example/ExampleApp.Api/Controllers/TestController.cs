@@ -2,7 +2,6 @@
 using ExampleApp.Domain;
 
 using GenericQueryable;
-
 using Microsoft.AspNetCore.Mvc;
 
 using SecuritySystem;
@@ -14,7 +13,8 @@ namespace ExampleApp.Api.Controllers;
 [ApiController]
 public class TestController(
     ICurrentUserSource<Employee> currentUserSource,
-    IRepositoryFactory<TestObject> testObjectRepositoryFactory) : ControllerBase
+    IRepositoryFactory<TestObject> testObjectRepositoryFactory,
+    IRepositoryFactory<Employee> employeeRepositoryFactory) : ControllerBase
 {
     [HttpGet]
     public async Task<IEnumerable<TestObjectDto>> GetTestObjects(CancellationToken cancellationToken = default)
@@ -31,6 +31,13 @@ public class TestController(
     {
         return currentUserSource.CurrentUser.Login;
     }
-}
 
-public record TestObjectDto(Guid Id, string BuName);
+    [HttpGet]
+    public async Task<string> GetCurrentUserLoginByEmployee(CancellationToken cancellationToken = default)
+    {
+        return await employeeRepositoryFactory.Create(SecurityRule.View)
+            .GetQueryable()
+            .Select(employee => employee.Login)
+            .GenericSingleAsync(cancellationToken);
+    }
+}

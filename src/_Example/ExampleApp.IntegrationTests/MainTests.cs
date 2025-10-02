@@ -49,11 +49,10 @@ public class MainTests : IAsyncLifetime
     {
         // Arrange
         await using var scope = this.rootServiceProvider.CreateAsyncScope();
-        var scopeSp = scope.ServiceProvider;
 
-        var testController = scopeSp.GetRequiredService<TestController>();
+        var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
-        var runAsManager = scopeSp.GetRequiredService<IRunAsManager>();
+        var runAsManager = scope.ServiceProvider.GetRequiredService<IRunAsManager>();
         await runAsManager.StartRunAsUserAsync(runAs);
 
         // Act

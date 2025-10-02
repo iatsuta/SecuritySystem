@@ -24,4 +24,19 @@ public class PlainHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
     {
         return idents;
     }
+
+    public Dictionary<TIdent, TIdent?> ExpandWithParents(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
+    {
+        return this.ExpandWithParentsImplementation(idents, expandType);
+    }
+
+    public Dictionary<TIdent, TIdent?> ExpandWithParents(IQueryable<TIdent> idents, HierarchicalExpandType expandType)
+    {
+        return this.ExpandWithParentsImplementation(idents, expandType);
+    }
+
+    public Dictionary<TIdent, TIdent?> ExpandWithParentsImplementation(IEnumerable<TIdent> idents, HierarchicalExpandType _)
+    {
+        return idents.ToDictionary(id => id, _ => default(TIdent?));
+    }
 }

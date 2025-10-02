@@ -10,9 +10,19 @@ namespace SecuritySystem.Providers
     {
         private readonly Lazy<Func<TDomainObject, bool>> lazyHasAccessFunc;
 
+        private readonly Lazy<IExpressionEvaluator> lazyExpressionEvaluator;
 
-        protected SecurityProvider(IExpressionEvaluator expressionEvaluator) => this.lazyHasAccessFunc = LazyHelper.Create(() => expressionEvaluator.Compile(this.SecurityFilter));
-        
+
+        protected SecurityProvider(IExpressionEvaluatorStorage expressionEvaluatorStorage)
+        {
+            this.lazyExpressionEvaluator = LazyHelper.Create(() => expressionEvaluatorStorage.GetForType(this.GetType()));
+
+            this.lazyHasAccessFunc = LazyHelper.Create(() => this.ExpressionEvaluator.Compile(this.SecurityFilter));
+        }
+
+        protected IExpressionEvaluator ExpressionEvaluator => this.lazyExpressionEvaluator.Value;
+
+
         public abstract Expression<Func<TDomainObject, bool>> SecurityFilter { get; }
         
         public virtual IQueryable<TDomainObject> InjectFilter(IQueryable<TDomainObject> queryable) => queryable.Where(this.SecurityFilter);

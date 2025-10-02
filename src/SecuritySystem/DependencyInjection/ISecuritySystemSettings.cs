@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.PersistStorage;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
@@ -68,6 +67,6 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService;
 
-    ISecuritySystemSettings SetStorageWriter<TStorageWriter>()
-        where TStorageWriter : class, IStorageWriter;
+    ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
+        where TGenericRepository : class, IGenericRepository;
 }

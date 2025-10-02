@@ -13,8 +13,6 @@ using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
 
-using SecuritySystem.PersistStorage;
-
 namespace SecuritySystem.DependencyInjection;
 
 public class SecuritySystemSettings : ISecuritySystemSettings
@@ -31,7 +29,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
     private Action<IServiceCollection>? registerRawUserAuthenticationServiceAction;
 
-    private Action<IServiceCollection>? registerStorageWriterAction;
+    private Action<IServiceCollection>? registerGenericRepositoryAction;
 
     private SecurityRuleCredential defaultSecurityRuleCredential = new SecurityRuleCredential.CurrentUserWithRunAsCredential();
 
@@ -147,9 +145,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
                                             if (runAsPath != null)
                                             {
-                                                if (this.registerStorageWriterAction == null)
+                                                if (this.registerGenericRepositoryAction == null)
                                                 {
-                                                    throw new InvalidOperationException("StorageWriter must be initialized");
+                                                    throw new InvalidOperationException("GenericRepository must be initialized");
                                                 }
 
                                                 sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(runAsPath));
@@ -225,10 +223,10 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetStorageWriter<TStorageWriter>()
-        where TStorageWriter : class, IStorageWriter
+    public ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
+        where TGenericRepository : class, IGenericRepository
     {
-        this.registerStorageWriterAction = sc => sc.AddScoped<IStorageWriter, TStorageWriter>();
+        this.registerGenericRepositoryAction = sc => sc.AddScoped<IGenericRepository, TGenericRepository>();
 
         return this;
     }
@@ -239,7 +237,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
         (this.registerRawUserAuthenticationServiceAction ?? throw new InvalidOperationException("RawUserAuthenticationService must be initialized")).Invoke(services);
 
-        this.registerStorageWriterAction?.Invoke(services);
+        this.registerGenericRepositoryAction?.Invoke(services);
 
         services.AddSingleton(new SecurityAdministratorRuleInfo(this.securityAdministratorRule));
 

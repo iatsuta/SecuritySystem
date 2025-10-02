@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
                 sss
                     .SetQueryableSource<EfQueryableSource>()
                     .SetRawUserAuthenticationService<RawUserAuthenticationService>()
-                    .SetStorageWriter<EfStorageWriter>()
+                    .SetGenericRepository<EfGenericRepository>()
 
                     .SetUserSource<Employee>(employee => employee.Id, employee => employee.Login, _ => true, employee => employee.RunAs)
 
@@ -52,7 +52,8 @@ public static class ServiceCollectionExtensions
 
                     .AddDomainSecurityServices(rb =>
                         rb.Add<TestObject>(b => b.SetView(ExampleRoles.TestManager)
-                            .SetPath(SecurityPath<TestObject>.Create(testObj => testObj.BusinessUnit).And(testObj => testObj.Location))))
+                            .SetPath(SecurityPath<TestObject>.Create(testObj => testObj.BusinessUnit).And(testObj => testObj.Location)))
+                          .Add<Employee>(b => b.SetView(DomainSecurityRule.CurrentUser)))
 
                     .AddSecurityRole(ExampleRoles.TestManager, new SecurityRoleInfo(new Guid("{72D24BB5-F661-446A-A458-53D301805971}")))
                     .AddSecurityRole(SecurityRole.Administrator, new SecurityRoleInfo(new Guid("{2573CFDC-91CD-4729-AE97-82AB2F235E23}")))

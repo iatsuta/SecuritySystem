@@ -94,6 +94,8 @@ public static class ServiceCollectionExtensions
     {
         return services
 
+            .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
+
             .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
             .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
 

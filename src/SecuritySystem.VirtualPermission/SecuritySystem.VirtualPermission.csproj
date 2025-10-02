@@ -5,10 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IvAt.GenericQueryable" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\SecuritySystem\SecuritySystem.csproj" />
   </ItemGroup>
 
