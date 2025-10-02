@@ -2,7 +2,6 @@
 using ExampleApp.Domain;
 
 using GenericQueryable;
-
 using Microsoft.AspNetCore.Mvc;
 
 using SecuritySystem;
