@@ -64,9 +64,15 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetQueryableSource<TQueryableSource>()
         where TQueryableSource : class, IQueryableSource;
 
+    ISecuritySystemSettings SetQueryableSource(Func<IServiceProvider, IQueryableSource> selector);
+
     ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService;
 
+    ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector);
+
     ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
         where TGenericRepository : class, IGenericRepository;
+
+    ISecuritySystemSettings SetGenericRepository(Func<IServiceProvider, IGenericRepository> selector);
 }
