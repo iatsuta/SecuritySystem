@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.HierarchicalExpand;
@@ -61,6 +62,7 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 
         if (this.hierarchicalInfo != null)
         {
+            services.AddSingleton<HierarchicalInfo>(this.hierarchicalInfo);
             services.AddSingleton(this.hierarchicalInfo);
         }
     }

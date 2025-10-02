@@ -3,7 +3,7 @@
 [assembly: AssemblyProduct("SecuritySystem")]
 [assembly: AssemblyCompany("IvAt")]
 
-[assembly: AssemblyVersion("1.2.4.0")]
+[assembly: AssemblyVersion("1.2.4.1")]
 [assembly: AssemblyInformationalVersion("changes at build")]
 
 #if DEBUG
