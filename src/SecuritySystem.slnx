@@ -8,7 +8,6 @@
   <Project Path="SecuritySystem.Abstractions/SecuritySystem.Abstractions.csproj" />
   <Project Path="SecuritySystem.Configurator/SecuritySystem.Configurator.csproj" />
   <Project Path="SecuritySystem.DiTests/SecuritySystem.DiTests.csproj" />
-  <Project Path="SecuritySystem.IntegrationTests/SecuritySystem.IntegrationTests.csproj" />
   <Project Path="SecuritySystem.VirtualPermission/SecuritySystem.VirtualPermission.csproj" />
 
   <Project Path="SecuritySystem/SecuritySystem.csproj" />
