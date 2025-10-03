@@ -97,7 +97,7 @@ public class MainTests : TestBase
     {
         var queryableSource = Substitute.For<IQueryableSource>();
 
-        queryableSource.GetQueryable<BusinessUnitAncestorLink>()
+        queryableSource.GetQueryable<BusinessUnitDirectAncestorLink>()
                        .Returns(this.GetBusinessUnitAncestorLinkSource(serviceProvider).AsQueryable());
 
         queryableSource.GetQueryable<Employee>().Returns(new[] { this.employee1, this.employee2, this.employee3, this.employee4 }.AsQueryable());
@@ -105,16 +105,16 @@ public class MainTests : TestBase
         return queryableSource;
     }
 
-    private IEnumerable<BusinessUnitAncestorLink> GetBusinessUnitAncestorLinkSource(IServiceProvider serviceProvider)
+    private IEnumerable<BusinessUnitDirectAncestorLink> GetBusinessUnitAncestorLinkSource(IServiceProvider serviceProvider)
     {
         var counter = serviceProvider.GetRequiredService<BusinessUnitAncestorLinkSourceExecuteCounter>();
         counter.Count++;
 
-        yield return new BusinessUnitAncestorLink { Ancestor = this.bu1, Child = this.bu1 };
-        yield return new BusinessUnitAncestorLink { Ancestor = this.bu2, Child = this.bu2 };
-        yield return new BusinessUnitAncestorLink { Ancestor = this.bu3, Child = this.bu3 };
+        yield return new BusinessUnitDirectAncestorLink { Ancestor = this.bu1, Child = this.bu1 };
+        yield return new BusinessUnitDirectAncestorLink { Ancestor = this.bu2, Child = this.bu2 };
+        yield return new BusinessUnitDirectAncestorLink { Ancestor = this.bu3, Child = this.bu3 };
 
-        yield return new BusinessUnitAncestorLink { Ancestor = this.bu1, Child = this.bu2 };
+        yield return new BusinessUnitDirectAncestorLink { Ancestor = this.bu1, Child = this.bu2 };
     }
 
     private class BusinessUnitAncestorLinkSourceExecuteCounter

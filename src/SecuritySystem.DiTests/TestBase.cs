@@ -53,8 +53,8 @@ public abstract class TestBase
                                    .NewGuid(),
                                scb => scb.SetHierarchicalInfo(
                                     bu => bu.Parent,
-                                    new AncestorLinkInfo<BusinessUnit, BusinessUnitAncestorLink>(bu => bu.Ancestor, bu => bu.Child),
-                                    new AncestorLinkInfo<BusinessUnit, BusinessUnitToAncestorChildView>(bu => bu.Source, bu => bu.ChildOrAncestor)))
+                                    new AncestorLinkInfo<BusinessUnit, BusinessUnitDirectAncestorLink>(bu => bu.Ancestor, bu => bu.Child),
+                                    new AncestorLinkInfo<BusinessUnit, BusinessUnitUndirectAncestorLink>(bu => bu.Source, bu => bu.Target)))
 
                            .AddSecurityContext<Location>(Guid.NewGuid())
 

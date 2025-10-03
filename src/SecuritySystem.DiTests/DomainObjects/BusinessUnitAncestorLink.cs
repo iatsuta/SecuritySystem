@@ -1,8 +1,8 @@
 ﻿namespace SecuritySystem.DiTests.DomainObjects;
 
-public class BusinessUnitAncestorLink
+public class BusinessUnitDirectAncestorLink
 {
-    public BusinessUnit Ancestor { get; set; } = null!;
+    public required BusinessUnit Ancestor { get; init; }
 
-    public BusinessUnit Child { get; set; } = null!;
+    public required BusinessUnit Child { get; init; }
 }

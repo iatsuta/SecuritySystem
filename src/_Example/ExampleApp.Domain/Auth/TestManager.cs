@@ -1,12 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿namespace ExampleApp.Domain.Auth;
 
-using ExampleApp.Domain._Base;
-
-namespace ExampleApp.Domain.Auth;
-
-[Table(nameof(TestManager), Schema = "auth")]
-public class TestManager : PersistentDomainObjectBase
+public class TestManager
 {
+    public Guid Id { get; set; }
+
     public virtual required Employee Employee { get; set; }
 
     public virtual required BusinessUnit BusinessUnit { get; set; }

@@ -165,14 +165,14 @@ public class SecurityPathTests : TestBase
     {
         var queryableSource = Substitute.For<IQueryableSource>();
 
-        queryableSource.GetQueryable<BusinessUnitAncestorLink>()
+        queryableSource.GetQueryable<BusinessUnitDirectAncestorLink>()
                        .Returns(this.GetBusinessUnitAncestorLinkSource().AsQueryable());
 
         return queryableSource;
     }
 
-    private IEnumerable<BusinessUnitAncestorLink> GetBusinessUnitAncestorLinkSource()
+    private IEnumerable<BusinessUnitDirectAncestorLink> GetBusinessUnitAncestorLinkSource()
     {
-        yield return new BusinessUnitAncestorLink { Ancestor = this.bu1, Child = this.bu1 };
+        yield return new BusinessUnitDirectAncestorLink { Ancestor = this.bu1, Child = this.bu1 };
     }
 }
