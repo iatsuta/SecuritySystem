@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.HierarchicalExpand;
 
-
 namespace SecuritySystem.DependencyInjection;
 
 public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityContextInfoBuilder<TSecurityContext>
@@ -63,7 +62,11 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
         if (this.hierarchicalInfo != null)
         {
             services.AddSingleton<HierarchicalInfo>(this.hierarchicalInfo);
-            services.AddSingleton(this.hierarchicalInfo);
+            services.AddSingleton<HierarchicalInfo<TSecurityContext>>(this.hierarchicalInfo);
+
+            var directLinkType = typeof(HierarchicalInfo<,>).MakeGenericType(this.hierarchicalInfo.DomainObjectType, this.hierarchicalInfo.DirectedLinkType);
+
+            services.Add(ServiceDescriptor.Singleton(directLinkType, this.hierarchicalInfo));
         }
     }
 }

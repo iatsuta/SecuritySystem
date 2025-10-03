@@ -2,7 +2,7 @@
 
 using SecuritySystem.HierarchicalExpand;
 
-namespace SecuritySystem.Services;
+namespace SecuritySystem.AncestorDenormalization;
 
 public class DenormalizedAncestorsServiceFactory(IServiceProvider serviceProvider) : IDenormalizedAncestorsServiceFactory
 {
@@ -10,9 +10,9 @@ public class DenormalizedAncestorsServiceFactory(IServiceProvider serviceProvide
     {
         var hierarchicalInfo = serviceProvider.GetRequiredService<HierarchicalInfo<TDomainObject>>();
 
-        var denormalizedAncestorsServiceType =
-            typeof(DenormalizedAncestorsService<,>).MakeGenericType(typeof(TDomainObject), hierarchicalInfo.DirectedLinkType);
+        var generics = new[] { typeof(TDomainObject), hierarchicalInfo.DirectedLinkType };
 
-        return (IDenormalizedAncestorsService<TDomainObject>)ActivatorUtilities.CreateInstance(serviceProvider, denormalizedAncestorsServiceType, hierarchicalInfo);
+        return (IDenormalizedAncestorsService<TDomainObject>)
+            serviceProvider.GetRequiredService(typeof(IDenormalizedAncestorsService<,>).MakeGenericType(generics));
     }
 }

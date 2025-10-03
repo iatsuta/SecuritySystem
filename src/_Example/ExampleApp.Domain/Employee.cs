@@ -1,14 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿namespace ExampleApp.Domain;
 
-using ExampleApp.Domain._Base;
+public class Employee
+{ 
+    public Guid Id { get; set; }
 
-namespace ExampleApp.Domain;
-
-[Table(nameof(Employee), Schema = "app")]
-public class Employee : PersistentDomainObjectBase
-{
-    [MaxLength(255)]
     public required string Login { get; set; }
 
     public virtual Employee? RunAs { get; set; }

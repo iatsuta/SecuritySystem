@@ -1,15 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿namespace ExampleApp.Domain;
 
-using ExampleApp.Domain._Base;
-
-using SecuritySystem;
-
-namespace ExampleApp.Domain;
-
-[Table(nameof(BusinessUnit), Schema = "app")]
-public class BusinessUnit : PersistentDomainObjectBase, ISecurityContext
+public class BusinessUnit : SecuritySystem.ISecurityContext
 {
-    [MaxLength(255)]
+    public Guid Id { get; set; }
+
+    public virtual BusinessUnit? Parent { get; set; }
+
     public required string Name { get; set; }
 }

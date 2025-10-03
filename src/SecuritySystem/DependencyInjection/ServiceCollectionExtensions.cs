@@ -25,6 +25,7 @@ using System.Linq.Expressions;
 using CommonFramework.ExpressionEvaluate;
 
 using SecuritySystem.HierarchicalExpand;
+using SecuritySystem.AncestorDenormalization;
 
 namespace SecuritySystem.DependencyInjection;
 
@@ -94,6 +95,8 @@ public static class ServiceCollectionExtensions
     {
         return services
 
+            .AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
+            .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
             .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
 
             .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))

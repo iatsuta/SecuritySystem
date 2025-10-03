@@ -14,6 +14,7 @@ namespace ExampleApp.Api.Controllers;
 public class TestController(
     ICurrentUserSource<Employee> currentUserSource,
     IRepositoryFactory<TestObject> testObjectRepositoryFactory,
+    IRepositoryFactory<BusinessUnit> buRepositoryFactory,
     IRepositoryFactory<Employee> employeeRepositoryFactory) : ControllerBase
 {
     [HttpGet]
@@ -39,5 +40,15 @@ public class TestController(
             .GetQueryable()
             .Select(employee => employee.Login)
             .GenericSingleAsync(cancellationToken);
+    }
+
+    [HttpGet]
+    public async Task<IEnumerable<BuDto>> GetBuList(CancellationToken cancellationToken = default)
+    {
+        return await buRepositoryFactory
+            .Create(SecurityRule.View)
+            .GetQueryable()
+            .Select(bu => new BuDto(bu.Id, bu.Name, bu.Parent == null ? null : bu.Parent.Id))
+            .GenericToListAsync(cancellationToken);
     }
 }

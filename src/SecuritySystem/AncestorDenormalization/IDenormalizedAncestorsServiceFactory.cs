@@ -1,4 +1,4 @@
-﻿namespace SecuritySystem.Services;
+﻿namespace SecuritySystem.AncestorDenormalization;
 
 public interface IDenormalizedAncestorsServiceFactory
 {
