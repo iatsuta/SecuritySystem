@@ -3,8 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="IvAt.CommonFramework" Version="1.2.4" />
-    <PackageVersion Include="IvAt.CommonFramework.DependencyInjection" Version="1.2.4" />
+    <PackageVersion Include="IvAt.CommonFramework" Version="1.2.5" />
+    <PackageVersion Include="IvAt.CommonFramework.DependencyInjection" Version="1.2.5" />
     <PackageVersion Include="IvAt.GenericQueryable" Version="1.1.0" />
     <PackageVersion Include="IvAt.GenericQueryable.EntityFramework" Version="1.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.9" />
