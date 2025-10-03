@@ -32,9 +32,9 @@ public class AncestorLinkExtractor<TDomainObject, TDomainObjectAncestorLink>(
         IEnumerable<TDomainObject> removedDomainObjects,
         CancellationToken cancellationToken)
     {
-        var existsLinkInfos = await updatedDomainObjectsBase.SyncWhenAll(domainObject => GetSyncResult(domainObject, cancellationToken));
+        var existsLinkInfos = await updatedDomainObjectsBase.SyncWhenAll(domainObject => this.GetSyncResult(domainObject, cancellationToken));
 
-        var removedLinks = await removedDomainObjects.SyncWhenAll(domainObject => GetExistsLinks(domainObject, cancellationToken));
+        var removedLinks = await removedDomainObjects.SyncWhenAll(domainObject => this.GetExistsLinks(domainObject, cancellationToken));
 
         var removedLinkInfos = removedLinks.Select(links => new SyncResult<TDomainObject, TDomainObjectAncestorLink>([], links));
 
@@ -43,9 +43,9 @@ public class AncestorLinkExtractor<TDomainObject, TDomainObjectAncestorLink>(
 
     public async Task<SyncResult<TDomainObject, TDomainObjectAncestorLink>> GetSyncResult(TDomainObject domainObject, CancellationToken cancellationToken)
     {
-        var existsLinks = await GetExistsLinks(domainObject, cancellationToken);
+        var existsLinks = await this.GetExistsLinks(domainObject, cancellationToken);
 
-        var expectedLinks = await GetExpectedAncestorLinks(domainObject, cancellationToken);
+        var expectedLinks = await this.GetExpectedAncestorLinks(domainObject, cancellationToken);
 
         var mergeResult = existsLinks.GetMergeResult(expectedLinks, ToInfo, v => v);
 
@@ -73,7 +73,7 @@ public class AncestorLinkExtractor<TDomainObject, TDomainObjectAncestorLink>(
     {
         var parents = domainObject.GetAllElements(hierarchicalInfo.ParentFunc);
 
-        var children = await GetAllChildren(domainObject, cancellationToken);
+        var children = await this.GetAllChildren(domainObject, cancellationToken);
 
         var parentsLinks = parents.Select(parent => new AncestorLinkInfo<TDomainObject>(parent, domainObject));
 

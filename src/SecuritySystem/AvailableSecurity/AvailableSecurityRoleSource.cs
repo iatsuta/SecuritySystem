@@ -9,7 +9,7 @@ public class AvailableSecurityRoleSource(IEnumerable<IPermissionSystem> permissi
 {
     public async Task<List<FullSecurityRole>> GetAvailableSecurityRoles(bool expandChildren, CancellationToken cancellationToken)
     {
-        var allRoles = await Task.WhenAll(permissionSystems.Select(ps => ps.GetAvailableSecurityRoles(cancellationToken)));
+        var allRoles = await permissionSystems.SyncWhenAll(ps => ps.GetAvailableSecurityRoles(cancellationToken));
 
         var roles = allRoles.SelectMany().Distinct().Select(securityRoleSource.GetSecurityRole);
 

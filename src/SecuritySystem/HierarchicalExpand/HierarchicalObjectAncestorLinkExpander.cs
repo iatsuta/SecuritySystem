@@ -2,6 +2,7 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.HierarchicalExpand;
@@ -174,43 +175,34 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
                     .Select(toPathIdExpr)));
     }
 
-    public Dictionary<TIdent, TIdent?> ExpandWithParents(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
+    public Dictionary<TIdent, TIdent> ExpandWithParents(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
     {
         return this.ExpandWithParentsImplementation(idents.ToHashSet(), expandType);
     }
 
-    public Dictionary<TIdent, TIdent?> ExpandWithParents(IQueryable<TIdent> idents, HierarchicalExpandType expandType)
+    public Dictionary<TIdent, TIdent> ExpandWithParents(IQueryable<TIdent> idents, HierarchicalExpandType expandType)
     {
         return this.ExpandWithParentsImplementation(idents, expandType);
     }
-
-    private record struct WithMasterData(TIdent Id, TIdent? ParentId);
-
-    private Dictionary<TIdent, TIdent?> ExpandWithParentsImplementation(IEnumerable<TIdent> idents,
-        HierarchicalExpandType expandType)
+    
+    private Dictionary<TIdent, TIdent> ExpandWithParentsImplementation(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
     {
-        var selector =
-
-            ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, WithMasterData>>(ee =>
-
-                domainObject => new WithMasterData
-                (
-                    ee.Evaluate(identityInfo.IdPath, domainObject),
-
-                    (TIdent?)ee.Evaluate(identityInfo.IdPath,
-                        ee.Evaluate(hierarchicalInfo.ParentPath, domainObject)!)));
-
-
         return this
             .ExpandDomainObject(idents, expandType)
-            .Select(selector)
+            .Select(ExpressionEvaluateHelper.InlineEvaluate(ee =>
+
+                ExpressionHelper.Create((TDomainObject domainObject) => new
+                {
+                    Id = ee.Evaluate(identityInfo.IdPath, domainObject),
+                    ParentId = ee.Evaluate(hierarchicalInfo.ParentPath, domainObject) == null
+                        ? default
+                        : ee.Evaluate(identityInfo.IdPath!, ee.Evaluate(hierarchicalInfo.ParentPath, domainObject))
+                })))
             .Distinct()
-            .ToDictionary(pair => pair.Id, pair => pair.ParentId);
+            .ToDictionary(pair => pair.Id, pair => pair.ParentId!);
     }
 
-    private IQueryable<TDomainObject> ExpandDomainObject(
-        IEnumerable<TIdent> idents,
-        HierarchicalExpandType expandType)
+    private IQueryable<TDomainObject> ExpandDomainObject(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
     {
         switch (expandType)
         {
@@ -238,7 +230,8 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
     private IQueryable<TDomainObject> ExpandDomainObject<TAncestorLink>(
         IEnumerable<TIdent> idents,
-        AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo) where TAncestorLink : class
+        AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
+        where TAncestorLink : class
     {
         var idPath = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
 
