@@ -11,9 +11,9 @@ public interface IHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
 
     Expression<Func<TIdent, IEnumerable<TIdent>>>? TryGetSingleExpandExpression(HierarchicalExpandType expandType);
 
-    Dictionary<TIdent, TIdent?> ExpandWithParents(IEnumerable<TIdent> idents, HierarchicalExpandType expandType);
+    Dictionary<TIdent, TIdent> ExpandWithParents(IEnumerable<TIdent> idents, HierarchicalExpandType expandType);
 
-    Dictionary<TIdent, TIdent?> ExpandWithParents(IQueryable<TIdent> idents, HierarchicalExpandType expandType);
+    Dictionary<TIdent, TIdent> ExpandWithParents(IQueryable<TIdent> idents, HierarchicalExpandType expandType);
 }
 
 public interface IHierarchicalObjectExpander
