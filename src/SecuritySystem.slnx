@@ -1,15 +1,23 @@
 <Solution>
 
+  <Folder Name="/_Example/">
+    <Project Path="_Example/ExampleApp.Application/ExampleApp.Application.csproj" />
+    <Project Path="_Example/ExampleApp.Domain/ExampleApp.Domain.csproj" />
+    <Project Path="_Example/ExampleApp.Infrastructure/ExampleApp.Infrastructure.csproj" />
+    <Project Path="_Example/ExampleApp.IntegrationTests/ExampleApp.IntegrationTests.csproj" />
+    <Project Path="_Example/ExampleApp.Api/ExampleApp.Api.csproj" />
+  </Folder>
+  
   <Folder Name="/__SolutionItems/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="__SolutionItems/CommonAssemblyInfo.cs" />
   </Folder>
+  
+  <Project Path="SecuritySystem/SecuritySystem.csproj" />
   <Project Path="SecuritySystem.Abstractions/SecuritySystem.Abstractions.csproj" />
   <Project Path="SecuritySystem.Configurator/SecuritySystem.Configurator.csproj" />
   <Project Path="SecuritySystem.DiTests/SecuritySystem.DiTests.csproj" />
   <Project Path="SecuritySystem.VirtualPermission/SecuritySystem.VirtualPermission.csproj" />
-
-  <Project Path="SecuritySystem/SecuritySystem.csproj" />
   
 </Solution>
