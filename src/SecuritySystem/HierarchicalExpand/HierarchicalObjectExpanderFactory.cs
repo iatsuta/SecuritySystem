@@ -10,10 +10,10 @@ public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFact
 {
     private readonly IServiceProvider serviceProvider;
     private readonly IIdentityInfoSource identityInfoSource;
-    private readonly IRealTypeResolver? realTypeResolver;
+    private readonly IRealTypeResolver realTypeResolver;
     private readonly IDictionaryCache<Type, IHierarchicalObjectExpander> cache;
 
-    public HierarchicalObjectExpanderFactory(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource, IRealTypeResolver? realTypeResolver = null)
+    public HierarchicalObjectExpanderFactory(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource, IRealTypeResolver realTypeResolver)
     {
         this.serviceProvider = serviceProvider;
         this.identityInfoSource = identityInfoSource;
@@ -24,7 +24,7 @@ public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFact
 
     private IHierarchicalObjectExpander CreateInternal(Type domainType)
     {
-        var realType = realTypeResolver?.Resolve(domainType) ?? domainType;
+        var realType = realTypeResolver.Resolve(domainType);
 
         if (realType != domainType)
         {
@@ -40,7 +40,7 @@ public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFact
             {
                 var expanderType = typeof(HierarchicalObjectAncestorLinkExpander<,,,>)
                     .MakeGenericType(domainType, hierarchicalInfo.DirectedLinkType, hierarchicalInfo.UndirectedLinkType, identityInfo.IdentityType);
-                
+
                 return (IHierarchicalObjectExpander)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, hierarchicalInfo, identityInfo);
 
             }

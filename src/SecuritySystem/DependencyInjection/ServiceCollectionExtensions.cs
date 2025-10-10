@@ -100,6 +100,7 @@ public static class ServiceCollectionExtensions
             .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
 
             .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
+            .AddSingleton<IRealTypeResolver, IdentityRealTypeResolver>()
             .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
 
             .AddSingleton<SecurityAdministratorRuleFactory>()
