@@ -1,7 +1,6 @@
 ﻿using CommonFramework.DependencyInjection;
 
 using ExampleApp.Api.Controllers;
-using ExampleApp.Application;
 using ExampleApp.Domain;
 using ExampleApp.Infrastructure.DependencyInjection;
 using GenericQueryable;

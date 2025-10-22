@@ -1,25 +1,27 @@
 <Project>
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
 
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
 
-        <OutputPath>bin</OutputPath>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-        <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
-        <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
-    </PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <DebugType>None</DebugType>
-        <DebugSymbols>False</DebugSymbols>
-    </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <Compile Include="..\__SolutionItems\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs"/>
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\__SolutionItems\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs"/>
+  </ItemGroup>
 </Project>
