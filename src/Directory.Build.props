@@ -8,9 +8,11 @@
     <OutputPath>bin</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <RepositoryUrl>https://github.com/iatsuta/SecuritySystem</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup>
