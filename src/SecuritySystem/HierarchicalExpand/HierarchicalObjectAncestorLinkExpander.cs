@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections;
+using System.Linq.Expressions;
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
@@ -48,7 +49,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         };
     }
 
-    private IEnumerable<TIdent> ExpandEnumerable<TAncestorLink>(
+    private IQueryable<TIdent> ExpandEnumerable<TAncestorLink>(
         HashSet<TIdent> idents,
         AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
         where TAncestorLink : class
@@ -240,8 +241,8 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         return queryableSource.GetQueryable<TAncestorLink>().Where(filter).Select(ancestorLinkInfo.ToPath);
     }
 
-    public Array Expand(Array idents, HierarchicalExpandType expandType)
+    public IEnumerable Expand(IEnumerable idents, HierarchicalExpandType expandType)
     {
-        return this.Expand(idents.Cast<TIdent>(), expandType).ToArray();
+        return this.Expand(idents.Cast<TIdent>(), expandType);
     }
 }

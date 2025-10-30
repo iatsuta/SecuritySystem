@@ -12,7 +12,7 @@ public class SingleContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>
     where TSecurityContext : class, ISecurityContext
     where TIdent : notnull
 {
-    protected override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(TIdent[] permissionIdents)
+    protected override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TIdent> permissionIdents)
     {
         var singleFilter = identityInfo.CreateContainsFilter(permissionIdents);
 

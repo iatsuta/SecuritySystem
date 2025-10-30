@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.HierarchicalExpand;
 
@@ -18,5 +19,5 @@ public interface IHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
 
 public interface IHierarchicalObjectExpander
 {
-    Array Expand(Array idents, HierarchicalExpandType expandType);
+    IEnumerable Expand(IEnumerable idents, HierarchicalExpandType expandType);
 }

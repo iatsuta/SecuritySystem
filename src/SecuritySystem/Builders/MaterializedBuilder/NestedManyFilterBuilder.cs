@@ -1,7 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections;
+using System.Linq.Expressions;
+
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
-
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
@@ -12,7 +13,7 @@ public class NestedManyFilterBuilder<TDomainObject, TNestedObject>(
 {
     private SecurityFilterBuilder<TNestedObject> NestedBuilder { get; } = nestedBuilderFactory.CreateBuilder(securityPath.NestedSecurityPath, securityContextRestrictions);
 
-    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, Array> permission)
+    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IReadOnlyDictionary<Type, IEnumerable> permission)
     {
         var nestedFilterExpression = this.NestedBuilder.GetSecurityFilterExpression(permission);
 
