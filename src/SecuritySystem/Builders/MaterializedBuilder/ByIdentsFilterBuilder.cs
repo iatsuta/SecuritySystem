@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
@@ -6,11 +7,11 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TId
     : SecurityFilterBuilder<TDomainObject>
     where TSecurityContext : class, ISecurityContext
 {
-    public sealed override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, Array> permission)
+    public sealed override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IReadOnlyDictionary<Type, IEnumerable> permission)
     {
         if (permission.TryGetValue(typeof(TSecurityContext), out var securityIdents))
         {
-            return this.GetSecurityFilterExpression((TIdent[])securityIdents);
+            return this.GetSecurityFilterExpression((IEnumerable<TIdent>)securityIdents);
         }
         else
         {
@@ -20,5 +21,5 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TId
         }
     }
 
-    protected abstract Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(TIdent[] permissionIdents);
+    protected abstract Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TIdent> permissionIdents);
 }

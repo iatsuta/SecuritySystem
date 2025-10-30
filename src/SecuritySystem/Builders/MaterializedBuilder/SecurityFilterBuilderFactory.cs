@@ -1,5 +1,7 @@
-﻿using CommonFramework;
+﻿using System.Collections;
+using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
 using SecuritySystem.ExternalSystem;
@@ -95,8 +97,8 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
         return new NestedManyFilterBuilder<TDomainObject, TNestedObject>(nestedBuilderFactory, securityPath, securityContextRestrictions);
     }
 
-    private Dictionary<Type, Array> TryExpandPermission(
-        Dictionary<Type, Array> permission,
+    private Dictionary<Type, IEnumerable> TryExpandPermission(
+        IReadOnlyDictionary<Type, Array> permission,
         HierarchicalExpandType expandType)
     {
         return permission.ToDictionary(

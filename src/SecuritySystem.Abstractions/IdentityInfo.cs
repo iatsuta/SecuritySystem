@@ -11,7 +11,7 @@ public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject,
 
     public override Type IdentityType { get; } = typeof(TIdent);
 
-    public Expression<Func<TDomainObject, bool>> CreateContainsFilter(TIdent[] idents)
+    public Expression<Func<TDomainObject, bool>> CreateContainsFilter(IEnumerable<TIdent> idents)
     {
         return this.IdPath.Select(ident => idents.Contains(ident));
     }

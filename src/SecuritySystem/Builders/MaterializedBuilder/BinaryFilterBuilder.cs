@@ -1,5 +1,5 @@
-﻿using System.Linq.Expressions;
-
+﻿using System.Collections;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
@@ -17,7 +17,7 @@ public abstract class BinaryFilterBuilder<TDomainObject, TSecurityPath>(
         Expression<Func<TArg, bool>> arg1,
         Expression<Func<TArg, bool>> arg2);
 
-    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(Dictionary<Type, Array> permission)
+    public override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IReadOnlyDictionary<Type, IEnumerable> permission)
     {
         var leftFilter = this.LeftBuilder.GetSecurityFilterExpression(permission);
 
