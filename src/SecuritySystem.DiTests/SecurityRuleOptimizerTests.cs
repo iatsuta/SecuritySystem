@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.DiTests;
