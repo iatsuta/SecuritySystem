@@ -15,6 +15,8 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 
     private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
 
+    private FullAncestorLinkInfo<TSecurityContext>? fullAncestorLinkInfo;
+
     private IdentityInfo? customIdentityInfo;
 
     public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
@@ -39,12 +41,16 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
         return this;
     }
 
-    public ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(HierarchicalInfo<TSecurityContext> newHierarchicalInfo)
+    public ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(
+        HierarchicalInfo<TSecurityContext> newHierarchicalInfo,
+        FullAncestorLinkInfo<TSecurityContext> newFullAncestorLinkInfo)
     {
         this.hierarchicalInfo = newHierarchicalInfo;
+        this.fullAncestorLinkInfo = newFullAncestorLinkInfo;
 
         return this;
     }
+
 
     public void Register(IServiceCollection services)
     {
@@ -61,12 +67,17 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 
         if (this.hierarchicalInfo != null)
         {
-            services.AddSingleton<HierarchicalInfo>(this.hierarchicalInfo);
-            services.AddSingleton<HierarchicalInfo<TSecurityContext>>(this.hierarchicalInfo);
+            services.AddSingleton(this.hierarchicalInfo);
+        }
 
-            var directLinkType = typeof(HierarchicalInfo<,>).MakeGenericType(this.hierarchicalInfo.DomainObjectType, this.hierarchicalInfo.DirectedLinkType);
+        if (this.fullAncestorLinkInfo != null)
+        {
+            services.AddSingleton<FullAncestorLinkInfo>(this.fullAncestorLinkInfo);
+            services.AddSingleton<FullAncestorLinkInfo<TSecurityContext>>(this.fullAncestorLinkInfo);
 
-            services.Add(ServiceDescriptor.Singleton(directLinkType, this.hierarchicalInfo));
+            var directLinkType = typeof(FullAncestorLinkInfo<,>).MakeGenericType(this.fullAncestorLinkInfo.DomainObjectType, this.fullAncestorLinkInfo.DirectedLinkType);
+
+            services.Add(ServiceDescriptor.Singleton(directLinkType, this.fullAncestorLinkInfo));
         }
     }
 }

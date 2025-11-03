@@ -32,16 +32,16 @@ public class HierarchicalObjectExpanderFactory : IHierarchicalObjectExpanderFact
         }
         else
         {
-            var hierarchicalInfo = (HierarchicalInfo?)serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(domainType));
+            var fullAncestorLinkInfo = (FullAncestorLinkInfo?)serviceProvider.GetService(typeof(FullAncestorLinkInfo<>).MakeGenericType(domainType));
 
             var identityInfo = identityInfoSource.GetIdentityInfo(domainType);
 
-            if (hierarchicalInfo != null)
+            if (fullAncestorLinkInfo != null)
             {
                 var expanderType = typeof(HierarchicalObjectAncestorLinkExpander<,,,>)
-                    .MakeGenericType(domainType, hierarchicalInfo.DirectedLinkType, hierarchicalInfo.UndirectedLinkType, identityInfo.IdentityType);
+                    .MakeGenericType(domainType, fullAncestorLinkInfo.DirectedLinkType, fullAncestorLinkInfo.UndirectedLinkType, identityInfo.IdentityType);
 
-                return (IHierarchicalObjectExpander)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, hierarchicalInfo, identityInfo);
+                return (IHierarchicalObjectExpander)ActivatorUtilities.CreateInstance(serviceProvider, expanderType, fullAncestorLinkInfo, identityInfo);
 
             }
             else

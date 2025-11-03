@@ -7,7 +7,7 @@ public interface IHierarchicalObjectExpander<TIdent> : IHierarchicalObjectExpand
     where TIdent : notnull
 {
     IEnumerable<TIdent> Expand(IEnumerable<TIdent> idents, HierarchicalExpandType expandType);
-    
+
     Expression<Func<IEnumerable<TIdent>, IEnumerable<TIdent>>> GetExpandExpression(HierarchicalExpandType expandType);
 
     Expression<Func<TIdent, IEnumerable<TIdent>>>? TryGetSingleExpandExpression(HierarchicalExpandType expandType);

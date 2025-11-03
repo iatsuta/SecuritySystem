@@ -10,7 +10,8 @@ namespace SecuritySystem.HierarchicalExpand;
 
 public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink, TIdent>(
     IQueryableSource queryableSource,
-    HierarchicalInfo<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink> hierarchicalInfo,
+    FullAncestorLinkInfo<TDomainObject, TDirectedAncestorLink, TUndirectedAncestorLink> fullAncestorLinkInfo,
+    HierarchicalInfo<TDomainObject> hierarchicalInfo,
     IdentityInfo<TDomainObject, TIdent> identityInfo)
     : IHierarchicalObjectExpander<TIdent>
 
@@ -39,11 +40,11 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => idents,
 
-            HierarchicalExpandType.Children => this.ExpandEnumerable(idents, hierarchicalInfo.DirectedAncestorLinkInfo),
+            HierarchicalExpandType.Children => this.ExpandEnumerable(idents, fullAncestorLinkInfo.Directed),
 
-            HierarchicalExpandType.Parents => this.ExpandEnumerable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
+            HierarchicalExpandType.Parents => this.ExpandEnumerable(idents, fullAncestorLinkInfo.Directed.Reverse()),
 
-            HierarchicalExpandType.All => this.ExpandEnumerable(idents, hierarchicalInfo.UndirectedAncestorLinkInfo),
+            HierarchicalExpandType.All => this.ExpandEnumerable(idents, fullAncestorLinkInfo.Undirected),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
@@ -72,11 +73,11 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => idents,
 
-            HierarchicalExpandType.Children => this.ExpandQueryable(idents, hierarchicalInfo.DirectedAncestorLinkInfo),
+            HierarchicalExpandType.Children => this.ExpandQueryable(idents, fullAncestorLinkInfo.Directed),
 
-            HierarchicalExpandType.Parents => this.ExpandQueryable(idents, hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
+            HierarchicalExpandType.Parents => this.ExpandQueryable(idents, fullAncestorLinkInfo.Directed.Reverse()),
 
-            HierarchicalExpandType.All => this.ExpandQueryable(idents, hierarchicalInfo.UndirectedAncestorLinkInfo),
+            HierarchicalExpandType.All => this.ExpandQueryable(idents, fullAncestorLinkInfo.Undirected),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
@@ -107,12 +108,12 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             HierarchicalExpandType.None => idents => idents,
 
-            HierarchicalExpandType.Children => this.GetExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo),
+            HierarchicalExpandType.Children => this.GetExpandExpression(fullAncestorLinkInfo.Directed),
 
             HierarchicalExpandType.Parents => this.GetExpandExpression(
-                hierarchicalInfo.DirectedAncestorLinkInfo.Reverse()),
+                fullAncestorLinkInfo.Directed.Reverse()),
 
-            HierarchicalExpandType.All => this.GetExpandExpression(hierarchicalInfo.UndirectedAncestorLinkInfo),
+            HierarchicalExpandType.All => this.GetExpandExpression(fullAncestorLinkInfo.Undirected),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
@@ -144,12 +145,12 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
             HierarchicalExpandType.None => null,
 
             HierarchicalExpandType.Children =>
-                this.GetSingleExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo),
+                this.GetSingleExpandExpression(fullAncestorLinkInfo.Directed),
 
-            HierarchicalExpandType.Parents => this.GetSingleExpandExpression(hierarchicalInfo.DirectedAncestorLinkInfo
+            HierarchicalExpandType.Parents => this.GetSingleExpandExpression(fullAncestorLinkInfo.Directed
                 .Reverse()),
 
-            HierarchicalExpandType.All => this.GetSingleExpandExpression(hierarchicalInfo.UndirectedAncestorLinkInfo),
+            HierarchicalExpandType.All => this.GetSingleExpandExpression(fullAncestorLinkInfo.Undirected),
 
             _ => throw new ArgumentOutOfRangeException(nameof(expandType))
         };
@@ -185,7 +186,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
     {
         return this.ExpandWithParentsImplementation(idents, expandType);
     }
-    
+
     private Dictionary<TIdent, TIdent> ExpandWithParentsImplementation(IEnumerable<TIdent> idents, HierarchicalExpandType expandType)
     {
         return this
@@ -215,14 +216,13 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
             }
 
             case HierarchicalExpandType.Children:
-
-                return this.ExpandDomainObject(idents, hierarchicalInfo.DirectedAncestorLinkInfo);
+                return this.ExpandDomainObject(idents, fullAncestorLinkInfo.Directed);
 
             case HierarchicalExpandType.Parents:
-                return this.ExpandDomainObject(idents, hierarchicalInfo.DirectedAncestorLinkInfo.Reverse());
+                return this.ExpandDomainObject(idents, fullAncestorLinkInfo.Directed.Reverse());
 
             case HierarchicalExpandType.All:
-                return this.ExpandDomainObject(idents, hierarchicalInfo.UndirectedAncestorLinkInfo);
+                return this.ExpandDomainObject(idents, fullAncestorLinkInfo.Undirected);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(expandType));
@@ -243,6 +243,6 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
     public IEnumerable Expand(IEnumerable idents, HierarchicalExpandType expandType)
     {
-        return this.Expand(idents.Cast<TIdent>(), expandType);
+        return this.Expand((IEnumerable<TIdent>)idents, expandType);
     }
 }
