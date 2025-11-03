@@ -77,7 +77,7 @@ public class AncestorLinkExtractorTests
 
             from testCase in new[] { GetMoveCase0(), GetMoveCase1(), GetMoveCase2() }
 
-            select new [] { testCase };
+            select new[] { testCase };
     }
 
     public static MoveTestCase GetMoveCase0()
@@ -272,6 +272,4 @@ public class AncestorLinkExtractorTests
 
         return new MoveTestCase(nodes, existingOldLinks, updateParents, expectedResult);
     }
-
-
 }
