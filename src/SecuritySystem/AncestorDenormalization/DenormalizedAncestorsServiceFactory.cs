@@ -8,9 +8,9 @@ public class DenormalizedAncestorsServiceFactory(IServiceProvider serviceProvide
 {
     public IDenormalizedAncestorsService<TDomainObject> Create<TDomainObject>()
     {
-        var hierarchicalInfo = serviceProvider.GetRequiredService<HierarchicalInfo<TDomainObject>>();
+        var fullAncestorLinkInfo = serviceProvider.GetRequiredService<FullAncestorLinkInfo<TDomainObject>>();
 
-        var generics = new[] { typeof(TDomainObject), hierarchicalInfo.DirectedLinkType };
+        var generics = new[] { typeof(TDomainObject), fullAncestorLinkInfo.DirectedLinkType };
 
         return (IDenormalizedAncestorsService<TDomainObject>)
             serviceProvider.GetRequiredService(typeof(IDenormalizedAncestorsService<,>).MakeGenericType(generics));

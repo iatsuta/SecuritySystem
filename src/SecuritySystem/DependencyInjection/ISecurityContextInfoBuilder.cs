@@ -13,11 +13,15 @@ public interface ISecurityContextInfoBuilder<TSecurityContext>
     ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
         where TIdent : struct;
 
-    ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(HierarchicalInfo<TSecurityContext> hierarchicalInfo);
+    ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(
+        HierarchicalInfo<TSecurityContext> hierarchicalInfo,
+        FullAncestorLinkInfo<TSecurityContext> fullAncestorLinkInfo);
 
     ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo<TDirectedLink, TUndirectedLink>(
         Expression<Func<TSecurityContext, TSecurityContext?>> parentPath,
-        AncestorLinkInfo<TSecurityContext, TDirectedLink> directedAncestorLinkInfo,
-        AncestorLinkInfo<TSecurityContext, TUndirectedLink> undirectedAncestorLinkInfo) =>
-        this.SetHierarchicalInfo(new HierarchicalInfo<TSecurityContext, TDirectedLink, TUndirectedLink>(parentPath, directedAncestorLinkInfo, undirectedAncestorLinkInfo));
+        AncestorLinkInfo<TSecurityContext, TDirectedLink> directed,
+        AncestorLinkInfo<TSecurityContext, TUndirectedLink> undirected) =>
+        this.SetHierarchicalInfo(
+            new HierarchicalInfo<TSecurityContext>(parentPath),
+            new FullAncestorLinkInfo<TSecurityContext, TDirectedLink, TUndirectedLink>(directed, undirected));
 }

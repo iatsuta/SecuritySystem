@@ -103,6 +103,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IRealTypeResolver, IdentityRealTypeResolver>()
             .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
 
+            .AddScoped(typeof(IDomainObjectExpander<>), typeof(DomainObjectExpander<>))
+
             .AddSingleton<SecurityAdministratorRuleFactory>()
 
             .AddSingleton(new IdentityPropertySourceSettings("Id"))

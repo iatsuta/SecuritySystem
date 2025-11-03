@@ -5,18 +5,18 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.AncestorDenormalization;
 
-public class DenormalizedAncestorsService<TDomainObject, TDomainObjectAncestorLink>(
+public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     IGenericRepository genericRepository,
-    HierarchicalInfo<TDomainObject, TDomainObjectAncestorLink> hierarchicalInfo,
-    IAncestorLinkExtractor<TDomainObject, TDomainObjectAncestorLink> ancestorLinkExtractor) : IDenormalizedAncestorsService<TDomainObject, TDomainObjectAncestorLink>
-    where TDomainObjectAncestorLink : class, new()
+    FullAncestorLinkInfo<TDomainObject, TDirectAncestorLink> fullAncestorLinkInfo,
+    IAncestorLinkExtractor<TDomainObject, TDirectAncestorLink> ancestorLinkExtractor) : IDenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>
+    where TDirectAncestorLink : class, new()
     where TDomainObject : class
 {
-    private readonly Action<TDomainObjectAncestorLink, TDomainObject> setFromAction =
-        hierarchicalInfo.DirectedAncestorLinkInfo.FromPath.ToSetLambdaExpression().Compile();
+    private readonly Action<TDirectAncestorLink, TDomainObject> setFromAction =
+        fullAncestorLinkInfo.Directed.FromPath.ToSetLambdaExpression().Compile();
 
-    private readonly Action<TDomainObjectAncestorLink, TDomainObject> setToAction =
-        hierarchicalInfo.DirectedAncestorLinkInfo.ToPath.ToSetLambdaExpression().Compile();
+    private readonly Action<TDirectAncestorLink, TDomainObject> setToAction =
+        fullAncestorLinkInfo.Directed.ToPath.ToSetLambdaExpression().Compile();
 
     public async Task SyncUpAsync(TDomainObject domainObject, CancellationToken cancellationToken)
     {
@@ -42,7 +42,7 @@ public class DenormalizedAncestorsService<TDomainObject, TDomainObjectAncestorLi
         await ApplySync(syncResult, cancellationToken);
     }
 
-    private async Task ApplySync(SyncResult<TDomainObject, TDomainObjectAncestorLink> syncResult, CancellationToken cancellationToken)
+    private async Task ApplySync(SyncResult<TDomainObject, TDirectAncestorLink> syncResult, CancellationToken cancellationToken)
     {
         foreach (var addLink in syncResult.Adding)
         {
@@ -55,19 +55,19 @@ public class DenormalizedAncestorsService<TDomainObject, TDomainObjectAncestorLi
         }
     }
 
-    private async Task RemoveAncestor(TDomainObjectAncestorLink domainObjectAncestorLink, CancellationToken cancellationToken)
+    private async Task RemoveAncestor(TDirectAncestorLink domainObjectAncestorLink, CancellationToken cancellationToken)
     {
         await genericRepository.RemoveAsync(domainObjectAncestorLink, cancellationToken);
     }
 
-    private async Task SaveAncestor(TDomainObjectAncestorLink domainObjectAncestorLink, CancellationToken cancellationToken)
+    private async Task SaveAncestor(TDirectAncestorLink domainObjectAncestorLink, CancellationToken cancellationToken)
     {
         await genericRepository.SaveAsync(domainObjectAncestorLink, cancellationToken);
     }
 
-    private TDomainObjectAncestorLink CreateLink(TDomainObject ancestor, TDomainObject child)
+    private TDirectAncestorLink CreateLink(TDomainObject ancestor, TDomainObject child)
     {
-        var link = new TDomainObjectAncestorLink();
+        var link = new TDirectAncestorLink();
 
         setFromAction(link, ancestor);
         setToAction(link, child);
