@@ -18,15 +18,16 @@ public class AncestorLinkExtractor<TDomainObject, TDirectAncestorLink>(
 {
     private readonly AncestorLinkInfo<TDomainObject, TDirectAncestorLink> ancestorLinkInfo = fullAncestorLinkInfo.Directed;
 
+    private readonly FetchRule<TDirectAncestorLink> linkFetchRule =
+        FetchRule<TDirectAncestorLink>.Create(fullAncestorLinkInfo.Directed.FromPath).Fetch(fullAncestorLinkInfo.Directed.ToPath);
+
     public async Task<SyncResult<TDomainObject, TDirectAncestorLink>> GetSyncAllResult(CancellationToken cancellationToken)
     {
         var existsDomainObjects = await queryableSource.GetQueryable<TDomainObject>().GenericToListAsync(cancellationToken);
 
-        var existsLinks = await queryableSource.GetQueryable<TDirectAncestorLink>().GenericToListAsync(cancellationToken);
+        var existsLinks = await queryableSource.GetQueryable<TDirectAncestorLink>().WithFetch(linkFetchRule).GenericToListAsync(cancellationToken);
 
-        var nonExistsDomainObjects = existsLinks
-            .SelectMany(link => new[] { ancestorLinkInfo.FromFunc(link), ancestorLinkInfo.ToFunc(link) })
-            .Except(existsDomainObjects);
+        var nonExistsDomainObjects = existsLinks.Select(this.ToInfo).SelectMany(link => new[] { link.Ancestor, link.Child }).Except(existsDomainObjects);
 
         return await this.GetSyncResult(existsDomainObjects, nonExistsDomainObjects, cancellationToken);
     }
@@ -38,16 +39,25 @@ public class AncestorLinkExtractor<TDomainObject, TDirectAncestorLink>(
     {
         var existsLinkInfos = await updatedDomainObjectsBase.SyncWhenAll(domainObject => this.GetSyncResult(domainObject, cancellationToken));
 
-        var removedLinks = await removedDomainObjects.SyncWhenAll(domainObject => this.GetExistsLinks(domainObject, cancellationToken));
+        var forceRemovedLinks = await this.GetExistsLinks(removedDomainObjects, cancellationToken);
 
-        var removedLinkInfos = removedLinks.Select(links => new SyncResult<TDomainObject, TDirectAncestorLink>([], links));
+        var forceRemovedLinksSyncResult = new SyncResult<TDomainObject, TDirectAncestorLink>([], forceRemovedLinks);
 
-        return existsLinkInfos.Union(removedLinkInfos).Aggregate();
+        return existsLinkInfos.Union([forceRemovedLinksSyncResult]).Aggregate();
     }
 
     public async Task<SyncResult<TDomainObject, TDirectAncestorLink>> GetSyncResult(TDomainObject domainObject, CancellationToken cancellationToken)
     {
-        var existsLinks = await this.GetExistsLinks(domainObject, cancellationToken);
+        var children = await domainObjectExpander.GetAllChildren([domainObject], cancellationToken);
+
+        var results = await children.SyncWhenAll(v => this.GetPlainSyncResult(v, cancellationToken));
+
+        return results.Aggregate();
+    }
+
+    private async Task<SyncResult<TDomainObject, TDirectAncestorLink>> GetPlainSyncResult(TDomainObject domainObject, CancellationToken cancellationToken)
+    {
+        var existsLinks = await this.GetExistsLinks([domainObject], cancellationToken);
 
         var expectedLinks = await this.GetExpectedAncestorLinks(domainObject, cancellationToken);
 
@@ -56,17 +66,12 @@ public class AncestorLinkExtractor<TDomainObject, TDirectAncestorLink>(
         return new SyncResult<TDomainObject, TDirectAncestorLink>(mergeResult.AddingItems, mergeResult.RemovingItems);
     }
 
-    private async Task<IEnumerable<TDirectAncestorLink>> GetExistsLinks(TDomainObject domainObject, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<TDirectAncestorLink>> GetExistsLinks(IEnumerable<TDomainObject> domainObjects, CancellationToken cancellationToken)
     {
-        var filter = ancestorLinkInfo.FromPath.Select(fromObj => fromObj == domainObject)
-            .BuildOr(ancestorLinkInfo.ToPath.Select(toObj => toObj == domainObject));
+        var filter = ancestorLinkInfo.FromPath.Select(fromObj => domainObjects.Contains(fromObj))
+            .BuildOr(ancestorLinkInfo.ToPath.Select(toObj => domainObjects.Contains(toObj)));
 
-        return await
-            queryableSource
-                .GetQueryable<TDirectAncestorLink>()
-                .Where(filter)
-                .WithFetch(r => r.Fetch(ancestorLinkInfo.FromPath).Fetch(ancestorLinkInfo.ToPath))
-                .GenericToListAsync(cancellationToken);
+        return await queryableSource.GetQueryable<TDirectAncestorLink>().Where(filter).WithFetch(linkFetchRule).GenericToListAsync(cancellationToken);
     }
 
     private async Task<IEnumerable<AncestorLinkInfo<TDomainObject>>> GetExpectedAncestorLinks(TDomainObject domainObject, CancellationToken cancellationToken)
