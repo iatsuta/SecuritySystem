@@ -1,13 +1,13 @@
 ﻿namespace SecuritySystem.AncestorDenormalization;
 
-public record SyncResult<TDomainObject, TDomainObjectAncestorLink>(
+public record SyncResult<TDomainObject, TDirectAncestorLink>(
     IEnumerable<AncestorLinkInfo<TDomainObject>> Adding,
-    IEnumerable<TDomainObjectAncestorLink> Removing)
+    IEnumerable<TDirectAncestorLink> Removing)
 {
-    public SyncResult<TDomainObject, TDomainObjectAncestorLink> Union(SyncResult<TDomainObject, TDomainObjectAncestorLink> other)
+    public SyncResult<TDomainObject, TDirectAncestorLink> Union(SyncResult<TDomainObject, TDirectAncestorLink> other)
     {
-        return new SyncResult<TDomainObject, TDomainObjectAncestorLink>(Adding.Union(other.Adding), Removing.Union(other.Removing));
+        return new SyncResult<TDomainObject, TDirectAncestorLink>(Adding.Union(other.Adding), Removing.Union(other.Removing));
     }
 
-    public static SyncResult<TDomainObject, TDomainObjectAncestorLink> Empty { get; } = new([], []);
+    public static SyncResult<TDomainObject, TDirectAncestorLink> Empty { get; } = new([], []);
 }
