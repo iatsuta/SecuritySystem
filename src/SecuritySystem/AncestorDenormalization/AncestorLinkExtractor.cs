@@ -66,7 +66,7 @@ public class AncestorLinkExtractor<TDomainObject, TDirectAncestorLink>(
         return new SyncResult<TDomainObject, TDirectAncestorLink>(mergeResult.AddingItems, mergeResult.RemovingItems);
     }
 
-    private async Task<IEnumerable<TDirectAncestorLink>> GetExistsLinks(IEnumerable<TDomainObject> domainObjects, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<TDirectAncestorLink>> GetExistsLinks(IEnumerable<TDomainObject> domainObjects, CancellationToken cancellationToken)
     {
         var filter = ancestorLinkInfo.FromPath.Select(fromObj => domainObjects.Contains(fromObj))
             .BuildOr(ancestorLinkInfo.ToPath.Select(toObj => domainObjects.Contains(toObj)));
