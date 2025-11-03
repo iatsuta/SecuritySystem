@@ -48,6 +48,15 @@ public class AncestorLinkExtractor<TDomainObject, TDirectAncestorLink>(
 
     public async Task<SyncResult<TDomainObject, TDirectAncestorLink>> GetSyncResult(TDomainObject domainObject, CancellationToken cancellationToken)
     {
+        var children = await domainObjectExpander.GetAllChildren([domainObject], cancellationToken);
+
+        var results = await children.SyncWhenAll(v => this.GetPlainSyncResult(v, cancellationToken));
+
+        return results.Aggregate();
+    }
+
+    private async Task<SyncResult<TDomainObject, TDirectAncestorLink>> GetPlainSyncResult(TDomainObject domainObject, CancellationToken cancellationToken)
+    {
         var existsLinks = await this.GetExistsLinks([domainObject], cancellationToken);
 
         var expectedLinks = await this.GetExpectedAncestorLinks(domainObject, cancellationToken);
