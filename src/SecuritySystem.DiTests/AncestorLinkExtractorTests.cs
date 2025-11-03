@@ -199,6 +199,7 @@ public class AncestorLinkExtractorTests
 
         var existingOldLinks = new List<DirectAncestorLink>
         {
+            new() { From = a, To = a },
             new() { From = a, To = a1 },
             new() { From = a, To = a1A },
             new() { From = a, To = a1A1 },
@@ -212,6 +213,8 @@ public class AncestorLinkExtractorTests
             new() { From = a, To = a2A },
             new() { From = a, To = a2A1 },
             new() { From = a, To = a2B },
+
+            new() { From = a1, To = a1 },
             new() { From = a1, To = a1A },
             new() { From = a1, To = a1A1 },
             new() { From = a1, To = a1B },
@@ -220,31 +223,47 @@ public class AncestorLinkExtractorTests
             new() { From = a1, To = a1B1B },
             new() { From = a1, To = a1B1B1 },
             new() { From = a1, To = a1B1C },
+
+            new() { From = a1A, To = a1A },
             new() { From = a1A, To = a1A1 },
+
+            new() { From = a1A1, To = a1A1 },
+
+            new() { From = a1B, To = a1B },
             new() { From = a1B, To = a1B1 },
             new() { From = a1B, To = a1B1A },
             new() { From = a1B, To = a1B1B },
             new() { From = a1B, To = a1B1B1 },
             new() { From = a1B, To = a1B1C },
+
+            new() { From = a1B1, To = a1B1 },
             new() { From = a1B1, To = a1B1A },
             new() { From = a1B1, To = a1B1B },
             new() { From = a1B1, To = a1B1B1 },
             new() { From = a1B1, To = a1B1C },
+
+            new() { From = a1B1A, To = a1B1A },
+            new() { From = a1B1B, To = a1B1B },
             new() { From = a1B1B, To = a1B1B1 },
+            new() { From = a1B1B1, To = a1B1B1 },
+            new() { From = a1B1C, To = a1B1C },
+
+            new() { From = a2, To = a2 },
             new() { From = a2, To = a2A },
             new() { From = a2, To = a2A1 },
             new() { From = a2, To = a2B },
+
+            new() { From = a2A, To = a2A },
             new() { From = a2A, To = a2A1 },
+
+            new() { From = a2A1, To = a2A1 },
+
+            new() { From = a2B, To = a2B }
         };
 
         var expectedResult = new SyncResult<DomainObject, DirectAncestorLink>(
             new[]
             {
-                new AncestorLinkInfo<DomainObject>(a1B1, a1B1),
-                new AncestorLinkInfo<DomainObject>(a1B1A, a1B1A),
-                new AncestorLinkInfo<DomainObject>(a1B1B, a1B1B),
-                new AncestorLinkInfo<DomainObject>(a1B1B1, a1B1B1),
-                new AncestorLinkInfo<DomainObject>(a1B1C, a1B1C),
                 new AncestorLinkInfo<DomainObject>(a2, a1B1),
                 new AncestorLinkInfo<DomainObject>(a2, a1B1A),
                 new AncestorLinkInfo<DomainObject>(a2, a1B1B),
