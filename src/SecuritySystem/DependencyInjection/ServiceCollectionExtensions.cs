@@ -111,6 +111,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IIdentityPropertySource, IdentityPropertySource>()
             .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
 
+            .AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
+
             .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
             .AddScoped(typeof(LocalStorage<,>))
 

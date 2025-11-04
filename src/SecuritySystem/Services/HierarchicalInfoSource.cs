@@ -1,41 +1,18 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-using CommonFramework;
-using CommonFramework.DictionaryCache;
+using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Services;
 
-public class IdentityInfoSource(IIdentityPropertySource identityPropertySource, IEnumerable<IdentityInfo> customIdentityInfoList) : IIdentityInfoSource
+public class HierarchicalInfoSource(IServiceProvider serviceProvider) : IHierarchicalInfoSource
 {
-    private readonly IDictionaryCache<Type, IdentityInfo> identityInfoCache = new DictionaryCache<Type, IdentityInfo>(domainType =>
+    public HierarchicalInfo<TDomainObject> GetHierarchicalInfo<TDomainObject>()
     {
-        var customIdentityInfo = customIdentityInfoList.SingleOrDefault(identityInfo => identityInfo.DomainObjectType == domainType);
-
-        if (customIdentityInfo != null)
-        {
-            return customIdentityInfo;
-        }
-        else
-        {
-            var idProperty = identityPropertySource.GetIdentityProperty(domainType);
-
-            var idPath = idProperty.ToLambdaExpression();
-
-            return new Func<Expression<Func<object, object>>, IdentityInfo<object, object>>(CreateIdentityInfo)
-                .CreateGenericMethod(domainType, idProperty.PropertyType)
-                .Invoke<IdentityInfo>(null, idPath);
-        }
-
-    }).WithLock();
-
-    public IdentityInfo GetIdentityInfo(Type domainObjectType)
-    {
-        return this.identityInfoCache[domainObjectType];
+        return serviceProvider.GetRequiredService<HierarchicalInfo<TDomainObject>>();
     }
 
-    private static IdentityInfo<TDomainObject, TIdent> CreateIdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject, TIdent>> idPath)
-        where TIdent : notnull
+    public bool IsHierarchical(Type domainType)
     {
-        return new IdentityInfo<TDomainObject, TIdent>(idPath);
+        return serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(domainType)) != null;
     }
 }
