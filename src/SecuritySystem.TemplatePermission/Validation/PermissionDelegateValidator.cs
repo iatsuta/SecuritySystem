@@ -1,0 +1,234 @@
+﻿using CommonFramework;
+
+using FluentValidation;
+
+using Framework.Authorization.Domain;
+using Framework.Core;
+
+using SecuritySystem;
+using SecuritySystem.ExternalSystem.SecurityContextStorage;
+using SecuritySystem.Services;
+
+namespace SecuritySystem.TemplatePermission.Validation;
+
+public class PermissionDelegateValidator : AbstractValidator<TPermission>
+{
+    public const string Key = "PermissionDelegate";
+
+    private readonly IHierarchicalInfoSource hierarchicalInfoSource;
+
+    private readonly TimeProvider timeProvider;
+
+    private readonly ISecurityContextStorage securityEntitySource;
+
+    private readonly ISecurityContextInfoSource securityContextInfoSource;
+
+    private readonly ISecurityRoleSource securityRoleSource;
+
+    public PermissionDelegateValidator(
+        IHierarchicalInfoSource hierarchicalInfoSource,
+        TimeProvider timeProvider,
+        ISecurityContextStorage securityEntitySource,
+        ISecurityContextInfoSource securityContextInfoSource,
+        ISecurityRoleSource securityRoleSource)
+    {
+        this.hierarchicalInfoSource = hierarchicalInfoSource;
+        this.timeProvider = timeProvider;
+        this.securityEntitySource = securityEntitySource;
+        this.securityContextInfoSource = securityContextInfoSource;
+        this.securityRoleSource = securityRoleSource;
+
+        this.RuleFor(permission => permission.DelegatedFrom)
+            .Must((permission, delegatedFrom) => delegatedFrom?.Principal != permission.Principal)
+            .WithMessage("TPermission cannot be delegated to the original user");
+
+        this.RuleFor(permission => permission.DelegatedFrom)
+            .Must(
+                (permission, delegatedFrom, context) =>
+                {
+                    try
+                    {
+                        this.Validate(permission, ValidatePermissionDelegateMode.All);
+
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        context.MessageFormatter.AppendArgument("ExceptionMessage", ex.Message);
+
+                        return false;
+                    }
+                })
+            .WithMessage("{ExceptionMessage}");
+    }
+
+    private void Validate(TPermission permission, ValidatePermissionDelegateMode mode)
+    {
+        if (permission.DelegatedFrom != null)
+        {
+            this.ValidatePermissionDelegatedFrom(permission, permission.DelegatedFrom, mode);
+        }
+
+        this.ValidatePermissionDelegatedTo(permission, mode);
+    }
+
+    private void ValidatePermissionDelegatedTo(TPermission permission, ValidatePermissionDelegateMode mode)
+    {
+        if (permission == null) throw new ArgumentNullException(nameof(permission));
+
+        foreach (var subPermission in permission.DelegatedTo)
+        {
+            this.ValidatePermissionDelegatedFrom(subPermission, permission, mode);
+        }
+    }
+
+    private void ValidatePermissionDelegatedFrom(TPermission permission, TPermission delegatedFrom, ValidatePermissionDelegateMode mode)
+    {
+        if (permission == null) throw new ArgumentNullException(nameof(permission));
+        if (delegatedFrom == null) throw new ArgumentNullException(nameof(delegatedFrom));
+
+        if (mode.HasFlag(ValidatePermissionDelegateMode.Role))
+        {
+            if (!this.IsCorrectRoleSubset(permission, delegatedFrom))
+            {
+                throw new ValidationException(
+                    $"Invalid delegated permission role. Selected role \"{permission.Role}\" not subset of \"{delegatedFrom.Role}\"");
+            }
+        }
+
+        if (mode.HasFlag(ValidatePermissionDelegateMode.Period))
+        {
+            if (!this.IsCorrectPeriodSubset(permission, delegatedFrom))
+            {
+                throw new ValidationException(
+                    $"Invalid delegated permission period. Selected period \"{permission.Period}\" not subset of \"{delegatedFrom.Period}\"");
+            }
+        }
+
+        if (mode.HasFlag(ValidatePermissionDelegateMode.SecurityObjects) && this.timeProvider.IsActivePeriod(permission))
+        {
+            var invalidEntityGroups = this.GetInvalidDelegatedPermissionSecurities(permission, delegatedFrom).ToList();
+
+            if (invalidEntityGroups.Any())
+            {
+                throw new ValidationException(
+                    string.Format(
+                        "Can't delegate permission from {0} to {1}, because {0} have no access to objects ({2})",
+                        delegatedFrom.Principal.Name,
+                        permission.Principal.Name,
+                        invalidEntityGroups.Join(
+                            " | ",
+                            g => $"{g.Key.Name}: {g.Value.Join(", ", s => s.Name)}")));
+            }
+        }
+    }
+
+    private bool IsCorrectRoleSubset(TPermission subPermission, TPermission delegatedFrom)
+    {
+        if (subPermission == null) throw new ArgumentNullException(nameof(subPermission));
+        if (delegatedFrom == null) throw new ArgumentNullException(nameof(delegatedFrom));
+
+        return this.securityRoleSource
+                   .GetSecurityRole(delegatedFrom.Role.Id)
+                   .GetAllElements(role => role.Information.Children.Select(subRole => this.securityRoleSource.GetSecurityRole(subRole)))
+                   .Contains(this.securityRoleSource.GetSecurityRole(subPermission.Role.Id));
+    }
+
+    private bool IsCorrectPeriodSubset(TPermission subPermission, TPermission delegatedFrom)
+    {
+        if (subPermission == null) throw new ArgumentNullException(nameof(subPermission));
+        if (delegatedFrom == null) throw new ArgumentNullException(nameof(delegatedFrom));
+
+        return subPermission.Period.IsEmpty || delegatedFrom.Period.Contains(subPermission.Period);
+    }
+
+    private Dictionary<SecurityContextType, IEnumerable<SecurityContextData<Guid>>> GetInvalidDelegatedPermissionSecurities(
+        TPermission subPermission,
+        TPermission delegatedFrom)
+    {
+        if (subPermission == null) throw new ArgumentNullException(nameof(subPermission));
+        if (delegatedFrom == null) throw new ArgumentNullException(nameof(delegatedFrom));
+
+        var allowedEntitiesRequest = from filterItem in delegatedFrom.Restrictions
+
+                                     group filterItem.SecurityContextId by filterItem.SecurityContextType;
+
+        var allowedEntitiesDict = allowedEntitiesRequest.ToDictionary(g => g.Key, g => g.ToList());
+
+        var requiredEntitiesRequest = (from filterItem in subPermission.Restrictions
+
+                                       group filterItem.SecurityContextId by filterItem.SecurityContextType).ToArray();
+
+        var invalidRequest1 = from requiredGroup in requiredEntitiesRequest
+
+                              let securityContextTypeInfo = this.securityContextInfoSource.GetSecurityContextInfo(requiredGroup.Key.Id)
+
+                              let allSecurityContexts = this.securityEntitySource
+                                                            .GetTyped(securityContextTypeInfo.Type)
+                                                            .Pipe(v => (ITypedSecurityContextStorage<Guid>)v)
+                                                            .GetSecurityContexts()
+
+                              let securityContextType = requiredGroup.Key
+
+                              let preAllowedEntities = allowedEntitiesDict.GetValueOrDefault(securityContextType).Maybe(v => v.Distinct())
+
+                              where preAllowedEntities != null // доступны все
+
+                              let allowedEntities = this.IsExpandable(securityContextType)
+                                                        ? preAllowedEntities.Distinct()
+                                                                            .GetAllElements(
+                                                                                allowedEntityId =>
+                                                                                    allSecurityContexts.Where(
+                                                                                            v => v.ParentId == allowedEntityId)
+                                                                                        .Select(v => v.Id))
+                                                                            .Distinct()
+                                                                            .ToList()
+
+                                                        : preAllowedEntities.Distinct().ToList()
+
+                              from securityContextId in requiredGroup
+
+                              let securityObject = allSecurityContexts.SingleOrDefault(v => v.Id == securityContextId)
+
+                              where securityObject != null // Протухшая безопасность
+
+                              let hasAccess = allowedEntities.Contains(securityContextId)
+
+                              where !hasAccess
+
+                              group securityObject by securityContextType
+
+                              into g
+
+                              let key = g.Key
+
+                              let value = (IEnumerable<SecurityContextData<Guid>>)g
+
+                              select (key, value);
+
+        var invalidRequest2 = from securityContextType in allowedEntitiesDict.Keys
+
+                              join requiredGroup in requiredEntitiesRequest on securityContextType equals requiredGroup.Key into g
+
+                              where !g.Any()
+
+                              let key = securityContextType
+
+                              let value = (IEnumerable<SecurityContextData<Guid>>)
+                                  [new SecurityContextData<Guid>(Guid.Empty, "[Not Selected Element]", Guid.Empty)]
+
+                              select (key, value);
+
+        return invalidRequest1.Concat(invalidRequest2).ToDictionary();
+    }
+
+    private SecurityContextInfo GetSecurityContextInfo(SecurityContextType securityContextType)
+    {
+        return this.securityContextInfoSource.GetSecurityContextInfo(securityContextType.Id);
+    }
+
+    private bool IsExpandable(SecurityContextType securityContextType)
+    {
+        return this.hierarchicalInfoSource.IsHierarchical(this.GetSecurityContextInfo(securityContextType).Type);
+    }
+}

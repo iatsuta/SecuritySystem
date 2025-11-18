@@ -1,8 +1,9 @@
 ﻿using CommonFramework.ExpressionComparers;
+using CommonFramework.ExpressionEvaluate;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using System.Linq.Expressions;
-using CommonFramework.ExpressionEvaluate;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
@@ -34,7 +35,6 @@ public record SecurityContextRestrictionFilterInfo<TSecurityContext, TService>(
         ReferenceEquals(this, other)
         || (other is not null
             && ExpressionComparer.Value.Equals(this.Expression, other.Expression));
-
 
     public override Expression<Func<TSecurityContext, bool>> GetPureFilter(IServiceProvider serviceProvider)
     {

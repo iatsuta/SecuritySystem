@@ -1,8 +1,6 @@
-﻿
+﻿using SecuritySystem.HierarchicalExpand;
 
 // ReSharper disable once CheckNamespace
-using SecuritySystem.HierarchicalExpand;
-
 namespace SecuritySystem;
 
 public record SecurityOperationInfo

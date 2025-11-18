@@ -15,25 +15,24 @@ public class CurrentUserSecurityProvider<TDomainObject>(
     IUserPathInfo userPathInfo,
     CurrentUserSecurityProviderRelativeKey? key = null) : ISecurityProvider<TDomainObject>
 {
-    private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerProvider = LazyHelper.Create(
-        () =>
-        {
-            var generics = new[] { typeof(TDomainObject), userPathInfo.UserDomainObjectType };
+    private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerProvider = new(() =>
+    {
+        var generics = new[] { typeof(TDomainObject), userPathInfo.UserDomainObjectType };
 
-            var relativeDomainPathInfoType = typeof(IRelativeDomainPathInfo<,>).MakeGenericType(generics);
+        var relativeDomainPathInfoType = typeof(IRelativeDomainPathInfo<,>).MakeGenericType(generics);
 
-            var relativePathKey = key?.Name;
+        var relativePathKey = key?.Name;
 
-            var relativeDomainPathInfo = relativePathKey == null
-                                             ? serviceProvider.GetRequiredService(relativeDomainPathInfoType)
-                                             : serviceProvider.GetRequiredKeyedService(relativeDomainPathInfoType, relativePathKey);
+        var relativeDomainPathInfo = relativePathKey == null
+            ? serviceProvider.GetRequiredService(relativeDomainPathInfoType)
+            : serviceProvider.GetRequiredKeyedService(relativeDomainPathInfoType, relativePathKey);
 
-            return (ISecurityProvider<TDomainObject>)
-                ActivatorUtilities.CreateInstance(
-                    serviceProvider,
-                    typeof(CurrentUserSecurityProvider<,>).MakeGenericType(generics),
-                    relativeDomainPathInfo);
-        });
+        return (ISecurityProvider<TDomainObject>)
+            ActivatorUtilities.CreateInstance(
+                serviceProvider,
+                typeof(CurrentUserSecurityProvider<,>).MakeGenericType(generics),
+                relativeDomainPathInfo);
+    });
 
     private ISecurityProvider<TDomainObject> InnerProvider => this.lazyInnerProvider.Value;
 
