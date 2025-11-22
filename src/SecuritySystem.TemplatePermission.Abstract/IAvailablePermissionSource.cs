@@ -8,4 +8,3 @@ public interface IAvailablePermissionSource<out TPermission>
 
     IQueryable<TPermission> GetAvailablePermissionsQueryable(AvailablePermissionFilter filter);
 }
-a

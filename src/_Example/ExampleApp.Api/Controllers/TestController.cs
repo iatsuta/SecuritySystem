@@ -3,7 +3,7 @@ using ExampleApp.Domain;
 
 using GenericQueryable;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.EntityFrameworkCore;
 using SecuritySystem;
 using SecuritySystem.UserSource;
 
@@ -24,6 +24,7 @@ public class TestController(
             .Create(SecurityRule.View)
             .GetQueryable()
             .Select(testObj => new TestObjectDto(testObj.Id, testObj.BusinessUnit.Name))
+            .ToDictionaryAsync()
             .GenericToListAsync(cancellationToken);
     }
 

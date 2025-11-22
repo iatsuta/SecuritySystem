@@ -2,23 +2,25 @@
 
 using CommonFramework;
 
-using Framework.Authorization.Domain;
-using Framework.DomainDriven.Repository;
-
 using GenericQueryable.Fetching;
 
-using SecuritySystem;
-using SecuritySystem.Attributes;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationPermissionSource<TPermission>(
-    IAvailablePermissionSource availablePermissionSource,
+public record PermissionSourceInfo<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole>(
+    Expression<Func<TPrincipal, string>> PrincipalNamePath,
+    Expression<Func<TPermission, TPrincipal>> PrincipalPath,
+    Expression<Func<TPermission, IEnumerable<TPermissionRestriction>>> RestrictionPath,
+    Expression<Func<TPermissionRestriction, TSecurityContextType>> SecurityContextTypePath,
+    Expression<Func<TPermission, TSecurityRole>> SecurityRolePath);
+
+public class AuthorizationPermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType>(
+    IAvailablePermissionSource<TPermission> availablePermissionSource,
     IRealTypeResolver realTypeResolver,
-    [DisabledSecurity] IRepository<TPermission> permissionRepository,
+    IQueryableSource queryableSource,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextSource securityContextSource,
     IIdentityInfoSource identityInfoSource,
