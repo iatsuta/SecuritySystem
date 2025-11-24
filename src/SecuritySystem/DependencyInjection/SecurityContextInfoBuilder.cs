@@ -7,77 +7,91 @@ using SecuritySystem.HierarchicalExpand;
 namespace SecuritySystem.DependencyInjection;
 
 public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityContextInfoBuilder<TSecurityContext>
-    where TSecurityContext : ISecurityContext
+	where TSecurityContext : ISecurityContext
 {
-    private string name = typeof(TSecurityContext).Name;
+	private readonly List<Action<IServiceCollection>> extensions = new();
 
-    private Func<TSecurityContext, string> displayFunc = securityContext => securityContext.ToString() ?? typeof(TSecurityContext).Name;
+	private string name = typeof(TSecurityContext).Name;
 
-    private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
+	private Func<TSecurityContext, string> displayFunc = securityContext => securityContext.ToString() ?? typeof(TSecurityContext).Name;
 
-    private FullAncestorLinkInfo<TSecurityContext>? fullAncestorLinkInfo;
+	private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
 
-    private IdentityInfo? customIdentityInfo;
+	private FullAncestorLinkInfo<TSecurityContext>? fullAncestorLinkInfo;
 
-    public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
-    {
-        this.name = newName;
+	private IdentityInfo? customIdentityInfo;
 
-        return this;
-    }
+	public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
+	{
+		this.name = newName;
 
-    public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> newDisplayFunc)
-    {
-        this.displayFunc = newDisplayFunc;
+		return this;
+	}
 
-        return this;
-    }
+	public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> newDisplayFunc)
+	{
+		this.displayFunc = newDisplayFunc;
 
-    public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
-        where TIdent : struct
-    {
-        this.customIdentityInfo = new IdentityInfo<TSecurityContext, TIdent>(identityPath);
+		return this;
+	}
 
-        return this;
-    }
+	public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
+		where TIdent : struct
+	{
+		this.customIdentityInfo = new IdentityInfo<TSecurityContext, TIdent>(identityPath);
 
-    public ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(
-        HierarchicalInfo<TSecurityContext> newHierarchicalInfo,
-        FullAncestorLinkInfo<TSecurityContext> newFullAncestorLinkInfo)
-    {
-        this.hierarchicalInfo = newHierarchicalInfo;
-        this.fullAncestorLinkInfo = newFullAncestorLinkInfo;
+		return this;
+	}
 
-        return this;
-    }
+	public ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(
+		HierarchicalInfo<TSecurityContext> newHierarchicalInfo,
+		FullAncestorLinkInfo<TSecurityContext> newFullAncestorLinkInfo)
+	{
+		this.hierarchicalInfo = newHierarchicalInfo;
+		this.fullAncestorLinkInfo = newFullAncestorLinkInfo;
 
+		return this;
+	}
 
-    public void Register(IServiceCollection services)
-    {
-        var securityContextInfo = new SecurityContextInfo<TSecurityContext>(id, this.name);
+	public ISecurityContextInfoBuilder<TSecurityContext> AddExtension(Action<IServiceCollection> extension)
+	{
+		this.extensions.Add(extension);
 
-        services.AddSingleton(securityContextInfo);
-        services.AddSingleton<SecurityContextInfo>(securityContextInfo);
-        services.AddSingleton<ISecurityContextDisplayService<TSecurityContext>>(new SecurityContextDisplayService<TSecurityContext>(this.displayFunc));
+		return this;
+	}
 
-        if (this.customIdentityInfo != null)
-        {
-            services.AddSingleton(this.customIdentityInfo);
-        }
+	public void Register(IServiceCollection services)
+	{
+		var securityContextInfo = new SecurityContextInfo<TSecurityContext>(id, this.name);
 
-        if (this.hierarchicalInfo != null)
-        {
-            services.AddSingleton(this.hierarchicalInfo);
-        }
+		services.AddSingleton(securityContextInfo);
+		services.AddSingleton<SecurityContextInfo>(securityContextInfo);
+		services.AddSingleton<ISecurityContextDisplayService<TSecurityContext>>(new SecurityContextDisplayService<TSecurityContext>(this.displayFunc));
 
-        if (this.fullAncestorLinkInfo != null)
-        {
-            services.AddSingleton<FullAncestorLinkInfo>(this.fullAncestorLinkInfo);
-            services.AddSingleton<FullAncestorLinkInfo<TSecurityContext>>(this.fullAncestorLinkInfo);
+		if (this.customIdentityInfo != null)
+		{
+			services.AddSingleton(this.customIdentityInfo);
+		}
 
-            var directLinkType = typeof(FullAncestorLinkInfo<,>).MakeGenericType(this.fullAncestorLinkInfo.DomainObjectType, this.fullAncestorLinkInfo.DirectedLinkType);
+		if (this.hierarchicalInfo != null)
+		{
+			services.AddSingleton(this.hierarchicalInfo);
+		}
 
-            services.Add(ServiceDescriptor.Singleton(directLinkType, this.fullAncestorLinkInfo));
-        }
-    }
+		if (this.fullAncestorLinkInfo != null)
+		{
+			services.AddSingleton<FullAncestorLinkInfo>(this.fullAncestorLinkInfo);
+			services.AddSingleton(this.fullAncestorLinkInfo);
+
+			var directLinkType =
+				typeof(FullAncestorLinkInfo<,>).MakeGenericType(this.fullAncestorLinkInfo.DomainObjectType, this.fullAncestorLinkInfo.DirectedLinkType);
+
+			services.Add(ServiceDescriptor.Singleton(directLinkType, this.fullAncestorLinkInfo));
+		}
+
+		foreach (var extension in this.extensions)
+		{
+			extension(services);
+		}
+	}
 }
