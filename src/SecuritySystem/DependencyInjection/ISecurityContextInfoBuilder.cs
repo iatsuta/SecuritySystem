@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.DependencyInjection;
@@ -24,4 +26,6 @@ public interface ISecurityContextInfoBuilder<TSecurityContext>
         this.SetHierarchicalInfo(
             new HierarchicalInfo<TSecurityContext>(parentPath),
             new FullAncestorLinkInfo<TSecurityContext, TDirectedLink, TUndirectedLink>(directed, undirected));
+
+    ISecurityContextInfoBuilder<TSecurityContext> AddExtension(Action<IServiceCollection> extension);
 }
