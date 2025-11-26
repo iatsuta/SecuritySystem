@@ -7,7 +7,7 @@ public class SecurityRolesIdentsResolver(
     ISecurityRoleSource securityRoleSource)
     : ISecurityRolesIdentsResolver
 {
-    public IEnumerable<Guid> Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false)
+    public Array Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false)
     {
         return securityRuleExpander.FullRoleExpand(securityRule)
                                    .SecurityRoles

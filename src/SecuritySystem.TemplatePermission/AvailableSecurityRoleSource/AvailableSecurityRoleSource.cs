@@ -1,8 +1,4 @@
-﻿using GenericQueryable;
-
-using SecuritySystem;
-
-namespace SecuritySystem.TemplatePermission;
+﻿namespace SecuritySystem.TemplatePermission;
 
 public class AuthorizationAvailableSecurityRoleSource(
     IAvailablePermissionSource availablePermissionSource,

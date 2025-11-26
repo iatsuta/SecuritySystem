@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
+
 using System.Linq.Expressions;
 
 namespace SecuritySystem.DependencyInjection;
@@ -14,7 +16,7 @@ public interface ISecuritySystemSettings
 
     ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule);
 
-    ISecuritySystemSettings AddSecurityContext<TSecurityContext>(Guid ident, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
+    ISecuritySystemSettings AddSecurityContext<TSecurityContext>(SecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
         where TSecurityContext : ISecurityContext;
 
     ISecuritySystemSettings AddDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setup);
@@ -41,8 +43,8 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
         where TRunAsManager : class, IRunAsManager;
 
-    ISecuritySystemSettings SetUserSource<TUser>(
-        Expression<Func<TUser, Guid>> idPath,
+    ISecuritySystemSettings SetUserSource<TUser, TIdent>(
+        Expression<Func<TUser, TIdent>> idPath,
         Expression<Func<TUser, string>> namePath,
         Expression<Func<TUser, bool>> filter,
         Expression<Func<TUser, TUser?>>? runAsPath = null)

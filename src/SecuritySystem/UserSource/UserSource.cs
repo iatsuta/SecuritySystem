@@ -15,12 +15,6 @@ public class UserSource<TUser>(IQueryableSource queryableSource, UserPathInfo<TU
     public TUser GetUser(UserCredential userCredential) =>
         this.TryGetUser(userCredential) ?? throw this.GetNotFoundException(userCredential);
 
-    User? IUserSource.TryGetUser(UserCredential userCredential) =>
-        this.GetQueryable(userCredential).Select(userPathInfo.ToDefaultUserExpr).SingleOrDefault();
-
-    User IUserSource.GetUser(UserCredential userCredential) =>
-        ((IUserSource)this).TryGetUser(userCredential) ?? throw this.GetNotFoundException(userCredential);
-
     private IQueryable<TUser> GetQueryable(UserCredential userCredential) =>
         queryableSource
             .GetQueryable<TUser>()

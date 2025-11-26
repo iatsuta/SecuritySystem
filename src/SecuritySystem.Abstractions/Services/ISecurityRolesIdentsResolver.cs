@@ -2,5 +2,5 @@
 
 public interface ISecurityRolesIdentsResolver
 {
-    IEnumerable<Guid> Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false);
+    Array Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false);
 }

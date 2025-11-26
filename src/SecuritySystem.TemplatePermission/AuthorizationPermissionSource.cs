@@ -1,9 +1,6 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
-
-using GenericQueryable.Fetching;
-
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
@@ -52,7 +49,7 @@ public class AuthorizationPermissionSource<TPrincipal, TPermission, TPermissionR
         return this.GetSecurityPermissions(
                        availablePermissionSource.CreateFilter(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() }))
                    .Where(permissionFilter)
-                   .Select(permission => permission.Principal.Name);
+                   .Select(permission => permission.TPrincipal.Name);
     }
 
     private IQueryable<TPermission> GetSecurityPermissions(AvailablePermissionFilter availablePermissionFilter)

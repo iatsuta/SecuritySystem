@@ -1,30 +1,21 @@
-﻿using CommonFramework;
-
-using FluentValidation;
-
-using Framework.Authorization.Domain;
-using SecuritySystem.TemplatePermission.Validation;
-using Framework.DomainDriven.Repository;
-using Framework.Exceptions;
-using Framework.Persistent;
-
+﻿using SecuritySystem.TemplatePermission.Validation;
 using SecuritySystem.Attributes;
 using SecuritySystem.UserSource;
 
 namespace SecuritySystem.TemplatePermission;
 
 public class PrincipalDomainService(
-    [DisabledSecurity] IRepository<Principal> principalRepository,
+    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
     IPrincipalGeneralValidator principalGeneralValidator,
     IUserSource? userSource = null) : IPrincipalDomainService
 {
-    public async Task<Principal> GetOrCreateAsync(string name, CancellationToken cancellationToken)
+    public async Task<TPrincipal> GetOrCreateAsync(string name, CancellationToken cancellationToken)
     {
         var principal = principalRepository.GetQueryable().SingleOrDefault(p => p.Name == name);
 
         if (principal is null)
         {
-            principal = new Principal { Name = name };
+            principal = new TPrincipal { Name = name };
 
             var user = userSource?.TryGetUser(name);
 
@@ -41,18 +32,18 @@ public class PrincipalDomainService(
         return principal;
     }
 
-    public async Task SaveAsync(Principal principal, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken = default)
     {
         await this.ValidateAsync(principal, cancellationToken);
 
         await principalRepository.SaveAsync(principal, cancellationToken);
     }
 
-    public async Task RemoveAsync(Principal principal, bool force, CancellationToken cancellationToken)
+    public async Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken)
     {
         if (force)
         {
-            principal.Permissions.Foreach(p => p.DelegatedTo.Foreach(delP => delP.Principal.RemoveDetail(delP)));
+            principal.Permissions.Foreach(p => p.DelegatedTo.Foreach(delP => delP.TPrincipal.RemoveDetail(delP)));
         }
         else if (principal.Permissions.Any())
         {
@@ -63,7 +54,7 @@ public class PrincipalDomainService(
         await principalRepository.RemoveAsync(principal, cancellationToken);
     }
 
-    public async Task ValidateAsync(Principal principal, CancellationToken cancellationToken)
+    public async Task ValidateAsync(TPrincipal principal, CancellationToken cancellationToken)
     {
         await principalGeneralValidator.ValidateAndThrowAsync(principal, cancellationToken);
     }

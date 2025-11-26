@@ -1,14 +1,5 @@
 ﻿using System.Linq.Expressions;
-
-using CommonFramework;
-
-using Framework.Authorization.Domain;
-using Framework.DomainDriven.Repository;
-
 using GenericQueryable;
-using GenericQueryable.Fetching;
-
-using SecuritySystem;
 using SecuritySystem.Attributes;
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
@@ -16,7 +7,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.TemplatePermission;
 
 public class AuthorizationPrincipalSourceService(
-    [DisabledSecurity] IRepository<Principal> principalRepository,
+    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IAvailablePermissionSource availablePermissionSource) : IPrincipalSourceService
@@ -47,7 +38,7 @@ public class AuthorizationPrincipalSourceService(
             _ => throw new ArgumentOutOfRangeException(nameof(userCredential))
         };
 
-    private async Task<TypedPrincipal?> TryGetPrincipalAsync(Expression<Func<Principal, bool>> filter, CancellationToken cancellationToken)
+    private async Task<TypedPrincipal?> TryGetPrincipalAsync(Expression<Func<TPrincipal, bool>> filter, CancellationToken cancellationToken)
     {
         var principal = await principalRepository.GetQueryable()
                                                  .Where(filter)
@@ -90,7 +81,7 @@ public class AuthorizationPrincipalSourceService(
                          {
                              CustomCredential = new SecurityRuleCredential.AnyUserCredential()
                          })
-                     .Select(permission => permission.Principal.Name)
+                     .Select(permission => permission.TPrincipal.Name)
                      .Distinct()
                      .GenericToListAsync(cancellationToken);
     }

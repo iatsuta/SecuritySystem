@@ -1,10 +1,10 @@
-﻿using Framework.Authorization.Domain;
+﻿
 
 using SecuritySystem.Credential;
 
 namespace SecuritySystem.TemplatePermission;
 
-public interface IPrincipalResolver
+public interface IPrincipalResolver<TPrincipal>
 {
-    Task<Principal> Resolve(UserCredential userCredential, CancellationToken cancellationToken = default);
+    Task<TPrincipal> Resolve(UserCredential userCredential, CancellationToken cancellationToken = default);
 }

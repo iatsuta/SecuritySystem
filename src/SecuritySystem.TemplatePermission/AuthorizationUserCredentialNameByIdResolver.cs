@@ -1,4 +1,4 @@
-﻿using Framework.Authorization.Domain;
+﻿
 
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
@@ -13,6 +13,6 @@ public class AuthorizationUserCredentialNameByIdResolver(IQueryableSource querya
         return this.GetQueryable(id).Select(principal => (string?)principal.Name).SingleOrDefault();
     }
 
-    private IQueryable<Principal> GetQueryable(Guid id) =>
-        queryableSource.GetQueryable<Principal>().Where(principal => principal.Id == id);
+    private IQueryable<TPrincipal> GetQueryable(Guid id) =>
+        queryableSource.GetQueryable<TPrincipal>().Where(principal => principal.Id == id);
 }

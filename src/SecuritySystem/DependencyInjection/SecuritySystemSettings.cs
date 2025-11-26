@@ -48,12 +48,12 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(Guid ident, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
+    public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(SecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
         where TSecurityContext : ISecurityContext
     {
         this.registerActions.Add(sc =>
         {
-            var builder = new SecurityContextInfoBuilder<TSecurityContext>(ident);
+            var builder = new SecurityContextInfoBuilder<TSecurityContext>(identity);
 
             setup?.Invoke(builder);
 
@@ -121,8 +121,8 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetUserSource<TUser>(
-        Expression<Func<TUser, Guid>> idPath,
+    public ISecuritySystemSettings SetUserSource<TUser, TIdent>(
+        Expression<Func<TUser, TIdent>> idPath,
         Expression<Func<TUser, string>> namePath,
         Expression<Func<TUser, bool>> filter,
         Expression<Func<TUser, TUser?>>? runAsPath = null)
@@ -130,18 +130,17 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     {
         this.registerUserSourceAction = sc =>
                                         {
-                                            var info = new UserPathInfo<TUser>(idPath, namePath, filter);
+                                            var info = new UserPathInfo<TUser, TIdent>(idPath, namePath, filter);
                                             sc.AddSingleton(info);
                                             sc.AddSingleton<IUserPathInfo>(info);
 
                                             sc.AddScoped<IUserSource<TUser>, UserSource<TUser>>();
-                                            sc.AddScopedFrom<IUserSource, IUserSource<TUser>>();
 
                                             sc.AddScoped<ICurrentUserSource<TUser>, CurrentUserSource<TUser>>();
 
                                             sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
 
-                                            sc.AddScoped<IUserCredentialNameByIdResolver, UserSourceCredentialNameByIdResolver<TUser>>();
+                                            sc.AddScoped<IUserCredentialNameByIdentityResolver, UserSourceCredentialNameByIdResolver<TUser>>();
 
                                             if (runAsPath != null)
                                             {

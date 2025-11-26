@@ -1,10 +1,4 @@
 ﻿using CommonFramework;
-
-using Framework.Authorization.Domain;
-using Framework.DomainDriven.Repository;
-using Framework.Exceptions;
-using Framework.Persistent;
-using SecuritySystem;
 using SecuritySystem.Attributes;
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
@@ -12,7 +6,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.TemplatePermission;
 
 public class AuthorizationPrincipalManagementService(
-    [DisabledSecurity] IRepository<Principal> principalRepository,
+    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IAvailablePermissionSource availablePermissionSource,
@@ -85,7 +79,7 @@ public class AuthorizationPrincipalManagementService(
     }
 
     private async Task<IReadOnlyList<TPermission>> CreatePermissionsAsync(
-        Principal dbPrincipal,
+        TPrincipal dbPrincipal,
         IEnumerable<TypedPermission> typedPermissions,
         CancellationToken cancellationToken = default)
     {
@@ -94,7 +88,7 @@ public class AuthorizationPrincipalManagementService(
     }
 
     private async Task<TPermission> CreatePermissionAsync(
-        Principal dbPrincipal,
+        TPrincipal dbPrincipal,
         TypedPermission typedPermission,
         CancellationToken cancellationToken = default)
     {
@@ -157,7 +151,7 @@ public class AuthorizationPrincipalManagementService(
     {
         if (securityRoleSource.GetSecurityRole(dbPermission.Role.Id) != typedPermission.SecurityRole)
         {
-            throw new BusinessLogicException("TPermission role can't be changed");
+            throw new SecuritySystemException("TPermission role can't be changed");
         }
 
         var restrictionMergeResult = dbPermission.Restrictions.GetMergeResult(

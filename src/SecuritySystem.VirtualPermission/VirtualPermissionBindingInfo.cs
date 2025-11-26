@@ -1,6 +1,7 @@
 ﻿using CommonFramework;
 
 using System.Linq.Expressions;
+
 using CommonFramework.ExpressionEvaluate;
 
 namespace SecuritySystem.VirtualPermission;
@@ -8,31 +9,28 @@ namespace SecuritySystem.VirtualPermission;
 public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
     SecurityRole SecurityRole,
     Expression<Func<TPermission, TPrincipal>> PrincipalPath,
-    Expression<Func<TPrincipal, string>> PrincipalNamePath,
-    IReadOnlyList<LambdaExpression> RestrictionPaths,
-    Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter,
-    Expression<Func<TPermission, DateTime>>? StartDateFilter = null,
-    Expression<Func<TPermission, DateTime?>>? EndDateFilter = null)
+    Expression<Func<TPrincipal, string>> PrincipalNamePath)
 {
-    public VirtualPermissionBindingInfo(
-        SecurityRole securityRole,
-        Expression<Func<TPermission, TPrincipal>> principalPath,
-        Expression<Func<TPrincipal, string>> principalNamePath)
-        : this(securityRole, principalPath, principalNamePath, [], _ => _ => true)
-    {
-    }
+    public IReadOnlyList<LambdaExpression> Restrictions { get; init; } = [];
 
-    public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
+    public Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter { get; init; } = _ => _ => true;
+
+    public Expression<Func<TPermission, DateTime>>? StartDateFilter { get; init; }
+
+    public Expression<Func<TPermission, DateTime?>>? EndDateFilter { get; init; }
+
+
+	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
         Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
         where TSecurityContext : ISecurityContext =>
 
-        this with { RestrictionPaths = this.RestrictionPaths.Concat([path]).ToList() };
+        this with { Restrictions = this.Restrictions.Concat([path]).ToList() };
 
     public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
         Expression<Func<TPermission, TSecurityContext?>> path)
         where TSecurityContext : ISecurityContext =>
 
-        this with { RestrictionPaths = this.RestrictionPaths.Concat([path]).ToList() };
+        this with { Restrictions = this.Restrictions.Concat([path]).ToList() };
 
     public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddFilter(
         Expression<Func<TPermission, bool>> filter) => this.AddFilter(_ => filter);
@@ -52,8 +50,8 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
 
     public IEnumerable<Type> GetSecurityContextTypes()
     {
-        return this.RestrictionPaths
-            .Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
+        return this.Restrictions
+			.Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
             .Distinct();
     }
 
@@ -93,7 +91,7 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
         IdentityInfo<TSecurityContext, TIdent> identityInfo, Expression<Func<TSecurityContext, bool>>? pureFilter)
         where TSecurityContext : ISecurityContext where TIdent : notnull
     {
-        foreach (var restrictionPath in this.RestrictionPaths)
+        foreach (var restrictionPath in this.Restrictions)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
             {

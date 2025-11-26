@@ -1,11 +1,4 @@
 ﻿using CommonFramework;
-
-using FluentValidation;
-
-using Framework.Authorization.Domain;
-using Framework.Core;
-
-using SecuritySystem;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
 using SecuritySystem.Services;
 
@@ -39,7 +32,7 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
         this.securityRoleSource = securityRoleSource;
 
         this.RuleFor(permission => permission.DelegatedFrom)
-            .Must((permission, delegatedFrom) => delegatedFrom?.Principal != permission.Principal)
+            .Must((permission, delegatedFrom) => delegatedFrom?.TPrincipal != permission.TPrincipal)
             .WithMessage("TPermission cannot be delegated to the original user");
 
         this.RuleFor(permission => permission.DelegatedFrom)
@@ -114,8 +107,8 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
                 throw new ValidationException(
                     string.Format(
                         "Can't delegate permission from {0} to {1}, because {0} have no access to objects ({2})",
-                        delegatedFrom.Principal.Name,
-                        permission.Principal.Name,
+                        delegatedFrom.TPrincipal.Name,
+                        permission.TPrincipal.Name,
                         invalidEntityGroups.Join(
                             " | ",
                             g => $"{g.Key.Name}: {g.Value.Join(", ", s => s.Name)}")));

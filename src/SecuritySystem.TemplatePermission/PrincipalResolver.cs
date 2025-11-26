@@ -1,21 +1,21 @@
-﻿using Framework.Authorization.Domain;
-using Framework.DomainDriven.Repository;
-
-using GenericQueryable;
-
-using SecuritySystem.Attributes;
-using SecuritySystem.Credential;
+﻿using SecuritySystem.Credential;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class PrincipalResolver([DisabledSecurity] IRepository<Principal> principalRepository) : IPrincipalResolver
+public class PrincipalResolver<TPrincipal>(IQueryableSource queryableSource, IIdentityInfoSource identityInfoSource) : IPrincipalResolver<TPrincipal>
+	where TPrincipal : class
 {
-    public async Task<Principal> Resolve(UserCredential userCredential, CancellationToken cancellationToken)
+    private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
+
+    private readonly IdentityInfo<TPrincipal, Guid> principalIdentityInfo = identityInfoSource.GetIdentityInfo<TPrincipal, Guid>();
+
+	public async Task<TPrincipal> Resolve(UserCredential userCredential, CancellationToken cancellationToken)
     {
-        switch (userCredential)
+		switch (userCredential)
         {
             case UserCredential.IdentUserCredential { Id: var id }:
-                return await principalRepository.LoadAsync(id, cancellationToken);
+                return await queryable.Single(v => v.) principalRepository.LoadAsync(id, cancellationToken);
 
             case UserCredential.NamedUserCredential { Name: var name }:
                 return await principalRepository.GetQueryable().GenericSingleAsync(principal => principal.Name == name, cancellationToken);

@@ -12,5 +12,5 @@ public interface IPrincipalManagementService : IPrincipalSourceService
 
     Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken = default);
 
-    Task<MergeResult<object, object>> UpdatePermissionsAsync(Guid principalId, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken = default);
+    Task<MergeResult<object, object>> UpdatePermissionsAsync(SecurityIdentity principalIdentity, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken = default);
 }

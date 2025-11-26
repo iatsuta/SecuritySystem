@@ -1,8 +1,8 @@
 ﻿using CommonFramework;
 
-using Framework.Authorization.Domain;
 
-using Framework.DomainDriven.Repository;
+
+
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Services;
@@ -10,18 +10,18 @@ using SecuritySystem.Services;
 namespace SecuritySystem.TemplatePermission;
 
 public class CurrentPrincipalSource(
-    [DisabledSecurity] IRepository<Principal> principalRepository,
+    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
     IRawUserAuthenticationService userAuthenticationService) : ICurrentPrincipalSource
 {
-    private readonly Lazy<Principal> currentPrincipalLazy = LazyHelper.Create(
+    private readonly Lazy<TPrincipal> currentPrincipalLazy = LazyHelper.Create(
         () =>
         {
             var userName = userAuthenticationService.GetUserName();
 
             return principalRepository
                    .GetQueryable().SingleOrDefault(principal => principal.Name == userName)
-                   ?? new Principal { Name = userName };
+                   ?? new TPrincipal { Name = userName };
         });
 
-    public Principal CurrentPrincipal => this.currentPrincipalLazy.Value;
+    public TPrincipal CurrentPrincipal => this.currentPrincipalLazy.Value;
 }

@@ -1,9 +1,4 @@
 ﻿using CommonFramework;
-
-using Framework.Authorization.Domain;
-
-using Framework.DomainDriven.Repository;
-using SecuritySystem;
 using SecuritySystem.Attributes;
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
@@ -15,12 +10,12 @@ public class AuthorizationRunAsManager(
     IRawUserAuthenticationService userAuthenticationService,
     ISecuritySystemFactory securitySystemFactory,
     ICurrentPrincipalSource currentPrincipalSource,
-    [DisabledSecurity] IRepository<Principal> principalRepository,
+    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
     IPrincipalResolver principalResolver,
     IEnumerable<IRunAsValidator> validators)
     : RunAsManager(userAuthenticationService, securitySystemFactory)
 {
-    private Principal CurrentPrincipal => currentPrincipalSource.CurrentPrincipal;
+    private TPrincipal CurrentPrincipal => currentPrincipalSource.CurrentPrincipal;
 
     public override User? RunAsUser =>
         this.CurrentPrincipal.RunAs.Maybe(runAsPrincipal => new User(runAsPrincipal.Id, runAsPrincipal.Name));

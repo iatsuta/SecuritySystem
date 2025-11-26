@@ -1,11 +1,9 @@
-﻿
+﻿using SecuritySystem.HierarchicalExpand;
 
 // ReSharper disable once CheckNamespace
-using SecuritySystem.HierarchicalExpand;
-
 namespace SecuritySystem;
 
-public record SecurityRoleInfo(Guid Id)
+public record SecurityRoleInfo(SecurityIdentity Identity)
 {
     public HierarchicalExpandType? CustomExpandType { get; init; } = null;
 

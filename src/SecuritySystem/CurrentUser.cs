@@ -9,23 +9,23 @@ public class CurrentUser : ICurrentUser
 {
     private readonly IRunAsManager? runAsManager;
 
-    private readonly Lazy<string> lazyName;
+    private readonly Lazy<string> lazyRawName;
 
-    private readonly Lazy<Guid> lazyId;
+    private readonly Lazy<SecurityIdentity> lazyIdentity;
 
     public CurrentUser(
         IRawUserAuthenticationService rawUserAuthenticationService,
         IRunAsManager? runAsManager = null,
-        IUserSource? userSource = null)
+        IUserSource<User>? userSource = null)
     {
         this.runAsManager = runAsManager;
-        this.lazyName = LazyHelper.Create(rawUserAuthenticationService.GetUserName);
+        this.lazyRawName = LazyHelper.Create(rawUserAuthenticationService.GetUserName);
 
-        this.lazyId = LazyHelper.Create(
-            () => (userSource ?? throw new UserSourceException($"{nameof(UserSource)} not defined")).GetUser(this.Name).Id);
+        this.lazyIdentity = LazyHelper.Create(
+            () => (userSource ?? throw new UserSourceException($"{nameof(UserSource)} not defined")).GetUser(this.Name).Identity);
     }
 
-    public Guid Id => this.lazyId.Value;
+    public SecurityIdentity Identity => this.lazyIdentity.Value;
 
-    public string Name => this.runAsManager?.RunAsUser?.Name ?? this.lazyName.Value;
+    public string Name => this.runAsManager?.RunAsUser?.Name ?? this.lazyRawName.Value;
 }

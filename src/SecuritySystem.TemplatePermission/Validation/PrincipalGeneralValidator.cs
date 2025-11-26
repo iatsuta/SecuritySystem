@@ -1,10 +1,6 @@
-﻿using FluentValidation;
+﻿namespace SecuritySystem.TemplatePermission.Validation;
 
-using Framework.Authorization.Domain;
-
-namespace SecuritySystem.TemplatePermission.Validation;
-
-public class PrincipalGeneralValidator : AbstractValidator<Principal>, IPrincipalGeneralValidator
+public class PrincipalGeneralValidator : AbstractValidator<TPrincipal>, IPrincipalGeneralValidator
 {
     public PrincipalGeneralValidator(
         IPrincipalUniquePermissionValidator uniquePermissionValidator,

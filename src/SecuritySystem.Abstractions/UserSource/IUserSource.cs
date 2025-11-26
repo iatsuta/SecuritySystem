@@ -2,16 +2,9 @@
 
 namespace SecuritySystem.UserSource;
 
-public interface IUserSource<out TUser> : IUserSource
+public interface IUserSource<out TUser>
 {
-    new TUser? TryGetUser(UserCredential userCredential);
+    TUser? TryGetUser(UserCredential userCredential);
 
-    new TUser GetUser(UserCredential userCredential);
-}
-
-public interface IUserSource
-{
-    User? TryGetUser(UserCredential userCredential);
-
-    User GetUser(UserCredential userCredential);
+    TUser GetUser(UserCredential userCredential);
 }

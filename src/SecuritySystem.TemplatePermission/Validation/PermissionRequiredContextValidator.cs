@@ -1,10 +1,4 @@
-﻿using FluentValidation;
-
-using Framework.Authorization.Domain;
-
-using SecuritySystem;
-
-using CommonFramework;
+﻿using CommonFramework;
 
 namespace SecuritySystem.TemplatePermission.Validation;
 
