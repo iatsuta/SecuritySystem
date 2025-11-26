@@ -2,7 +2,7 @@
 
 namespace SecuritySystem.Credential;
 
-public class RootUserCredentialNameResolver(IEnumerable<IUserCredentialNameByIdResolver> resolvers) : IUserCredentialNameResolver
+public class RootUserCredentialNameResolver(IEnumerable<IUserCredentialNameByIdentityResolver> resolvers) : IUserCredentialNameResolver
 {
     public virtual string GetUserName(UserCredential userCredential)
     {
@@ -11,19 +11,19 @@ public class RootUserCredentialNameResolver(IEnumerable<IUserCredentialNameByIdR
             case UserCredential.NamedUserCredential { Name: var name }:
                 return name;
 
-            case UserCredential.IdentUserCredential { Id: var id }:
+            case UserCredential.IdentUserCredential { Identity: var identity }:
             {
                 var request = from resolver in resolvers
 
-                              let userName = resolver.TryGetUserName(id)
+                              let userName = resolver.TryGetUserName(identity)
 
                               where userName != null
 
                               select userName;
 
                 return request.Distinct().Single(
-                    () => new Exception($"{nameof(UserCredential)} with id {id} not found"),
-                    names => new Exception($"More one {nameof(UserCredential)} with id {id}: {names.Join(", ", name => $"\"{name}\"")}"));
+                    () => new Exception($"{nameof(UserCredential)} with id {identity} not found"),
+                    names => new Exception($"More one {nameof(UserCredential)} with id {identity}: {names.Join(", ", name => $"\"{name}\"")}"));
             }
 
             default: throw new ArgumentOutOfRangeException(nameof(userCredential));

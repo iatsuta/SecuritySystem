@@ -15,11 +15,18 @@ public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject,
     {
         return this.IdPath.Select(ident => idents.Contains(ident));
     }
+
+    public override object GetId(TDomainObject domainObject)
+    {
+	    return this.IdFunc(domainObject);
+    }
 }
 
 public abstract record IdentityInfo<TDomainObject> : IdentityInfo
 {
     public override Type DomainObjectType { get; } = typeof(TDomainObject);
+
+    public abstract object GetId(TDomainObject domainObject);
 }
 
 public abstract record IdentityInfo

@@ -1,6 +1,4 @@
-﻿using SecuritySystem;
-
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem;
 

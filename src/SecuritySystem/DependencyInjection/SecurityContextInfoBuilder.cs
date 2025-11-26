@@ -6,7 +6,7 @@ using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.DependencyInjection;
 
-public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityContextInfoBuilder<TSecurityContext>
+public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity identity) : ISecurityContextInfoBuilder<TSecurityContext>
 	where TSecurityContext : ISecurityContext
 {
 	private readonly List<Action<IServiceCollection>> extensions = new();
@@ -62,7 +62,7 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 
 	public void Register(IServiceCollection services)
 	{
-		var securityContextInfo = new SecurityContextInfo<TSecurityContext>(id, this.name);
+		var securityContextInfo = new SecurityContextInfo<TSecurityContext>(identity, this.name);
 
 		services.AddSingleton(securityContextInfo);
 		services.AddSingleton<SecurityContextInfo>(securityContextInfo);

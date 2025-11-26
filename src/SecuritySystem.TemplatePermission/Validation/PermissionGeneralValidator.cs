@@ -1,8 +1,4 @@
-﻿using FluentValidation;
-
-using Framework.Authorization.Domain;
-
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.TemplatePermission.Validation;
 

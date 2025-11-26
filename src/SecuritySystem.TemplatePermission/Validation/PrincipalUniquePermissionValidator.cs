@@ -1,16 +1,9 @@
 ﻿using CommonFramework;
-
-using FluentValidation;
-
-using Framework.Authorization.Domain;
-using Framework.Core;
-
-using SecuritySystem;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 namespace SecuritySystem.TemplatePermission.Validation;
 
-public class PrincipalUniquePermissionValidator : AbstractValidator<Principal>, IPrincipalUniquePermissionValidator
+public class PrincipalUniquePermissionValidator : AbstractValidator<TPrincipal>, IPrincipalUniquePermissionValidator
 {
     private readonly ISecurityContextStorage securityEntitySource;
 
@@ -34,7 +27,7 @@ public class PrincipalUniquePermissionValidator : AbstractValidator<Principal>, 
 
                       return !duplicates.Any();
                   })
-            .WithMessage(principal => $"Principal \"{principal.Name}\" has duplicate permissions: {{{duplicatesVar}}}");
+            .WithMessage(principal => $"TPrincipal \"{principal.Name}\" has duplicate permissions: {{{duplicatesVar}}}");
     }
 
     protected virtual IEnumerable<IGrouping<TPermission, TPermission>> GetDuplicates(IEnumerable<TPermission> permissions)

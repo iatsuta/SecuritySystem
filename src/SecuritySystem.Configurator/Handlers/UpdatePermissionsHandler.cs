@@ -58,7 +58,7 @@ public class UpdatePermissionsHandler(
 
             let identityType = identityInfoSource.GetIdentityInfo(securityContextType).IdentityType
 
-            let idents = new Func<IEnumerable<string>, Array>(ParseIdents<int>).CreateGenericMethod(identityType).Invoke<Array>(null, restriction.Entities)
+            let idents = new Func<IEnumerable<string>, Array>(ParseIdents<int>).CreateGenericMethod(identityType).Invoke<Array>(null!, restriction.Entities)
 
             select (securityContextType, idents);
 

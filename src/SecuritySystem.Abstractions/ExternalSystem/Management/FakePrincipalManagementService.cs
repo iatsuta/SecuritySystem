@@ -36,7 +36,7 @@ public class FakePrincipalManagementService : IPrincipalManagementService
         throw new NotImplementedException();
     }
 
-    public Task<MergeResult<object, object>> UpdatePermissionsAsync(Guid principalId, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken = default)
+    public Task<MergeResult<object, object>> UpdatePermissionsAsync(SecurityIdentity principalIdentity, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

@@ -1,6 +1,4 @@
-﻿using Framework.Core;
-
-namespace SecuritySystem.TemplatePermission;
+﻿namespace SecuritySystem.TemplatePermission;
 
 internal static class TimeProviderExtensions
 {

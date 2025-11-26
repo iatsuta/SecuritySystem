@@ -1,14 +1,4 @@
 ﻿using CommonFramework;
-
-using Framework.Authorization.Domain;
-using Framework.DomainDriven.Repository;
-
-using GenericQueryable;
-
-using SecuritySystem;
-
-using Microsoft.Extensions.Logging;
-
 using SecuritySystem.Attributes;
 
 namespace SecuritySystem.TemplatePermission.Initialize;
