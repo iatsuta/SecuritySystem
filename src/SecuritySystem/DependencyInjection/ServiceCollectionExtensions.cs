@@ -31,168 +31,170 @@ namespace SecuritySystem.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection RegisterDomainSecurityServices(
-        this IServiceCollection services,
-        Action<IDomainSecurityServiceRootBuilder> setupAction)
+    extension(IServiceCollection services)
     {
-        var builder = new DomainSecurityServiceRootBuilder();
+	    public IServiceCollection RegisterDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setupAction)
+	    {
+		    var builder = new DomainSecurityServiceRootBuilder();
 
-        setupAction(builder);
+		    setupAction(builder);
 
-        builder.Register(services);
+		    builder.Register(services);
 
-        return services;
-    }
+		    return services;
+	    }
 
-    public static IServiceCollection AddSecuritySystem(this IServiceCollection services, Action<ISecuritySystemSettings> setupAction)
-    {
-        services.RegisterGeneralSecuritySystem();
+	    public IServiceCollection AddSecuritySystem(Action<ISecuritySystemSettings> setupAction)
+	    {
+		    services.RegisterGeneralSecuritySystem();
 
-        var settings = new SecuritySystemSettings();
+		    var settings = new SecuritySystemSettings();
 
-        setupAction(settings);
+		    setupAction(settings);
 
-        settings.Initialize(services);
+		    settings.Initialize(services);
 
-        return services;
-    }
+		    return services;
+	    }
 
-    public static IServiceCollection AddRelativeDomainPath<TFrom, TTo>(
-        this IServiceCollection services,
-        Expression<Func<TFrom, TTo>> path,
-        string? key = null)
-    {
-        var info = new SingleRelativeDomainPathInfo<TFrom, TTo>(path);
+	    public IServiceCollection AddRelativeDomainPath<TFrom, TTo>(Expression<Func<TFrom, TTo>> path,
+		    string? key = null)
+	    {
+		    var info = new SingleRelativeDomainPathInfo<TFrom, TTo>(path);
 
-        if (key == null)
-        {
-            return services.AddSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(info);
-        }
-        else
-        {
-            return services.AddKeyedSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(key, info);
-        }
-    }
+		    if (key == null)
+		    {
+			    return services.AddSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(info);
+		    }
+		    else
+		    {
+			    return services.AddKeyedSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(key, info);
+		    }
+	    }
 
-    public static IServiceCollection AddRelativeDomainPath<TFrom, TTo>(
-        this IServiceCollection services,
-        Expression<Func<TFrom, IEnumerable<TTo>>> path,
-        string? key = null)
-    {
-        var info = new ManyRelativeDomainPathInfo<TFrom, TTo>(path);
+	    public IServiceCollection AddRelativeDomainPath<TFrom, TTo>(Expression<Func<TFrom, IEnumerable<TTo>>> path,
+		    string? key = null)
+	    {
+		    var info = new ManyRelativeDomainPathInfo<TFrom, TTo>(path);
 
-        if (key == null)
-        {
-            return services.AddSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(info);
-        }
-        else
-        {
-            return services.AddKeyedSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(key, info);
-        }
-    }
+		    if (key == null)
+		    {
+			    return services.AddSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(info);
+		    }
+		    else
+		    {
+			    return services.AddKeyedSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(key, info);
+		    }
+	    }
 
-    private static IServiceCollection RegisterGeneralSecuritySystem(this IServiceCollection services)
-    {
-        return services
+	    private IServiceCollection RegisterGeneralSecuritySystem()
+	    {
+		    return services
 
-            .AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
-            .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
-            .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
+			    .AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
 
-            .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
-            .AddSingleton<IRealTypeResolver, IdentityRealTypeResolver>()
-            .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
+			    .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))
+			    .AddScoped(typeof(IUserSource<>), typeof(UserSource<>))
 
-            .AddScoped(typeof(IDomainObjectExpander<>), typeof(DomainObjectExpander<>))
+			    .AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
+			    .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
+			    .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
 
-            .AddSingleton<SecurityAdministratorRuleFactory>()
+			    .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
+			    .AddSingleton<IRealTypeResolver, IdentityRealTypeResolver>()
+			    .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
 
-            .AddSingleton(new IdentityPropertySourceSettings("Id"))
-            .AddSingleton<IIdentityPropertySource, IdentityPropertySource>()
-            .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
+			    .AddScoped(typeof(IDomainObjectExpander<>), typeof(DomainObjectExpander<>))
 
-            .AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
+			    .AddSingleton<SecurityAdministratorRuleFactory>()
 
-            .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
-            .AddScoped(typeof(LocalStorage<,>))
+			    .AddSingleton(new IdentityPropertySourceSettings("Id"))
+			    .AddSingleton<IIdentityPropertySource, IdentityPropertySource>()
+			    .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
 
-            .AddScoped<IUserCredentialNameResolver, RootUserCredentialNameResolver>()
+			    .AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
 
-            .AddScoped<IRootPrincipalSourceService, RootPrincipalSourceService>()
-            .AddScoped<IPrincipalManagementService, FakePrincipalManagementService>()
+			    .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
+			    .AddScoped(typeof(LocalStorage<,>))
 
-            .AddSingleton<IClientSecurityRuleNameExtractor, ClientSecurityRuleNameExtractor>()
-            .AddSingleton<IClientSecurityRuleInfoSource, RootClientSecurityRuleInfoSource>()
-            .AddKeyedSingleton<IClientSecurityRuleInfoSource, DomainModeClientSecurityRuleInfoSource>(RootClientSecurityRuleInfoSource.ElementKey)
-            .AddSingleton<IClientSecurityRuleResolver, ClientSecurityRuleResolver>()
-            .AddSingleton<IDomainModeSecurityRuleResolver, DomainModeSecurityRuleResolver>()
-            .AddSingleton<IDomainSecurityRoleExtractor, DomainSecurityRoleExtractor>()
+			    .AddScoped<IUserCredentialNameResolver, RootUserCredentialNameResolver>()
 
-            .AddSingleton<ISecurityRuleHeaderExpander, SecurityRuleHeaderExpander>()
-            .AddSingleton<IClientSecurityRuleExpander, ClientSecurityRuleExpander>()
-            .AddSingleton<ISecurityModeExpander, SecurityModeExpander>()
-            .AddSingleton<ISecurityOperationExpander, SecurityOperationExpander>()
-            .AddSingleton<ISecurityRoleExpander, SecurityRoleExpander>()
-            .AddSingleton<IRoleFactorySecurityRuleExpander, RoleFactorySecurityRuleExpander>()
-            .AddSingleton<ISecurityRuleExpander, RootSecurityRuleExpander>()
-            .AddSingleton<ISecurityRoleSource, SecurityRoleSource>()
-            .AddSingleton<ISecurityOperationInfoSource, SecurityOperationInfoSource>()
-            .AddScoped<ISecurityContextSource, SecurityContextSource>()
-            .AddSingleton<ISecurityContextInfoSource, SecurityContextInfoSource>()
-            .AddSingleton<ISecurityRuleBasicOptimizer, SecurityRuleBasicOptimizer>()
-            .AddSingleton<ISecurityRuleDeepOptimizer, SecurityRuleDeepOptimizer>()
+			    .AddScoped<IRootPrincipalSourceService, RootPrincipalSourceService>()
+			    .AddScoped<IPrincipalManagementService, FakePrincipalManagementService>()
 
-            .AddScoped(typeof(IRoleBaseSecurityProviderFactory<>), typeof(RoleBaseSecurityProviderFactory<>))
-            .AddScoped(typeof(IDomainSecurityProviderFactory<>), typeof(DomainSecurityProviderFactory<>))
-            .AddSingleton<ISecurityPathRestrictionService, SecurityPathRestrictionService>()
-            .AddScoped(typeof(ISecurityFilterFactory<>), typeof(SecurityFilterBuilderFactory<>))
-            .AddScoped(typeof(IAccessorsFilterFactory<>), typeof(AccessorsFilterBuilderFactory<>))
-            .AddScoped<ICurrentUser, CurrentUser>()
-            .AddKeyedScoped(
-                typeof(ISecurityProvider<>),
-                nameof(DomainSecurityRule.CurrentUser),
-                typeof(CurrentUserSecurityProvider<>))
-            .AddKeyedSingleton(
-                typeof(ISecurityProvider<>),
-                nameof(DomainSecurityRule.AccessDenied),
-                typeof(AccessDeniedSecurityProvider<>))
-            .AddKeyedSingleton(typeof(ISecurityProvider<>), nameof(SecurityRule.Disabled), typeof(DisabledSecurityProvider<>))
-            .AddSingleton(typeof(ISecurityProvider<>), typeof(DisabledSecurityProvider<>))
-            .AddScoped(typeof(IDomainSecurityService<>), typeof(ContextDomainSecurityService<>))
+			    .AddSingleton<IClientSecurityRuleNameExtractor, ClientSecurityRuleNameExtractor>()
+			    .AddSingleton<IClientSecurityRuleInfoSource, RootClientSecurityRuleInfoSource>()
+			    .AddKeyedSingleton<IClientSecurityRuleInfoSource, DomainModeClientSecurityRuleInfoSource>(RootClientSecurityRuleInfoSource.ElementKey)
+			    .AddSingleton<IClientSecurityRuleResolver, ClientSecurityRuleResolver>()
+			    .AddSingleton<IDomainModeSecurityRuleResolver, DomainModeSecurityRuleResolver>()
+			    .AddSingleton<IDomainSecurityRoleExtractor, DomainSecurityRoleExtractor>()
 
-            .AddScoped<ISecuritySystemFactory, SecuritySystemFactory>()
-            .AddScoped(sp =>
-            {
-                var factory = sp.GetRequiredService<ISecuritySystemFactory>();
-                var securityRuleCredential = sp.GetRequiredService<SecurityRuleCredential>();
+			    .AddSingleton<ISecurityRuleHeaderExpander, SecurityRuleHeaderExpander>()
+			    .AddSingleton<IClientSecurityRuleExpander, ClientSecurityRuleExpander>()
+			    .AddSingleton<ISecurityModeExpander, SecurityModeExpander>()
+			    .AddSingleton<ISecurityOperationExpander, SecurityOperationExpander>()
+			    .AddSingleton<ISecurityRoleExpander, SecurityRoleExpander>()
+			    .AddSingleton<IRoleFactorySecurityRuleExpander, RoleFactorySecurityRuleExpander>()
+			    .AddSingleton<ISecurityRuleExpander, RootSecurityRuleExpander>()
+			    .AddSingleton<ISecurityRoleSource, SecurityRoleSource>()
+			    .AddSingleton<ISecurityOperationInfoSource, SecurityOperationInfoSource>()
+			    .AddScoped<ISecurityContextSource, SecurityContextSource>()
+			    .AddSingleton<ISecurityContextInfoSource, SecurityContextInfoSource>()
+			    .AddSingleton<ISecurityRuleBasicOptimizer, SecurityRuleBasicOptimizer>()
+			    .AddSingleton<ISecurityRuleDeepOptimizer, SecurityRuleDeepOptimizer>()
 
-                return factory.Create(securityRuleCredential);
-            })
+			    .AddScoped(typeof(IRoleBaseSecurityProviderFactory<>), typeof(RoleBaseSecurityProviderFactory<>))
+			    .AddScoped(typeof(IDomainSecurityProviderFactory<>), typeof(DomainSecurityProviderFactory<>))
+			    .AddSingleton<ISecurityPathRestrictionService, SecurityPathRestrictionService>()
+			    .AddScoped(typeof(ISecurityFilterFactory<>), typeof(SecurityFilterBuilderFactory<>))
+			    .AddScoped(typeof(IAccessorsFilterFactory<>), typeof(AccessorsFilterBuilderFactory<>))
+			    .AddScoped<ICurrentUser, CurrentUser>()
+			    .AddKeyedScoped(
+				    typeof(ISecurityProvider<>),
+				    nameof(DomainSecurityRule.CurrentUser),
+				    typeof(CurrentUserSecurityProvider<>))
+			    .AddKeyedSingleton(
+				    typeof(ISecurityProvider<>),
+				    nameof(DomainSecurityRule.AccessDenied),
+				    typeof(AccessDeniedSecurityProvider<>))
+			    .AddKeyedSingleton(typeof(ISecurityProvider<>), nameof(SecurityRule.Disabled), typeof(DisabledSecurityProvider<>))
+			    .AddSingleton(typeof(ISecurityProvider<>), typeof(DisabledSecurityProvider<>))
+			    .AddScoped(typeof(IDomainSecurityService<>), typeof(ContextDomainSecurityService<>))
 
-            .AddKeyedScoped(
-                nameof(SecurityRuleCredential.CurrentUserWithoutRunAsCredential),
-                (sp, _) => sp.GetRequiredService<ISecuritySystemFactory>()
-                    .Create(new SecurityRuleCredential.CurrentUserWithoutRunAsCredential()))
+			    .AddScoped<ISecuritySystemFactory, SecuritySystemFactory>()
+			    .AddScoped(sp =>
+			    {
+				    var factory = sp.GetRequiredService<ISecuritySystemFactory>();
+				    var securityRuleCredential = sp.GetRequiredService<SecurityRuleCredential>();
 
-            .AddScoped(sp =>
-            {
-                var factoryList = sp.GetRequiredService<IEnumerable<IPermissionSystemFactory>>();
-                var securityRuleCredential = sp.GetRequiredService<SecurityRuleCredential>();
+				    return factory.Create(securityRuleCredential);
+			    })
 
-                return factoryList.Select(factory => factory.Create(securityRuleCredential));
-            })
+			    .AddKeyedScoped(
+				    nameof(SecurityRuleCredential.CurrentUserWithoutRunAsCredential),
+				    (sp, _) => sp.GetRequiredService<ISecuritySystemFactory>()
+					    .Create(new SecurityRuleCredential.CurrentUserWithoutRunAsCredential()))
 
-            .AddSingleton<ISecurityRolesIdentsResolver, SecurityRolesIdentsResolver>()
+			    .AddScoped(sp =>
+			    {
+				    var factoryList = sp.GetRequiredService<IEnumerable<IPermissionSystemFactory>>();
+				    var securityRuleCredential = sp.GetRequiredService<SecurityRuleCredential>();
 
-            .AddSingleton<IRuntimePermissionOptimizationService, RuntimePermissionOptimizationService>()
+				    return factoryList.Select(factory => factory.Create(securityRuleCredential));
+			    })
 
-            .AddSingleton<ISecurityAccessorDataOptimizer, SecurityAccessorDataOptimizer>()
-            .AddKeyedScoped<ISecurityAccessorResolver, RawSecurityAccessorResolver>(RawSecurityAccessorResolver.Key)
-            .AddScoped<ISecurityAccessorResolver, RootSecurityAccessorResolver>()
+			    .AddSingleton<ISecurityRolesIdentsResolver, SecurityRolesIdentsResolver>()
 
-            .AddScoped<IAvailableSecurityRoleSource, AvailableSecurityRoleSource>()
-            .AddScoped<IAvailableSecurityOperationSource, AvailableSecurityOperationSource>()
-            .AddScoped<IAvailableClientSecurityRuleSource, AvailableClientSecurityRuleSource>()
-            .AddScoped<IUserNameResolver, UserNameResolver>();
+			    .AddSingleton<IRuntimePermissionOptimizationService, RuntimePermissionOptimizationService>()
+
+			    .AddSingleton<ISecurityAccessorDataOptimizer, SecurityAccessorDataOptimizer>()
+			    .AddKeyedScoped<ISecurityAccessorResolver, RawSecurityAccessorResolver>(RawSecurityAccessorResolver.Key)
+			    .AddScoped<ISecurityAccessorResolver, RootSecurityAccessorResolver>()
+
+			    .AddScoped<IAvailableSecurityRoleSource, AvailableSecurityRoleSource>()
+			    .AddScoped<IAvailableSecurityOperationSource, AvailableSecurityOperationSource>()
+			    .AddScoped<IAvailableClientSecurityRuleSource, AvailableClientSecurityRuleSource>()
+			    .AddScoped<IUserNameResolver, UserNameResolver>();
+	    }
     }
 }

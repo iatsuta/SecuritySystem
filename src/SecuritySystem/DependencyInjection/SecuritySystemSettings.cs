@@ -21,9 +21,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
     private readonly List<Action<IServiceCollection>> registerActions = [];
 
-    private Action<IServiceCollection> registerUserSourceAction = _ => { };
-
-    private Action<IServiceCollection> registerRunAsManagerAction= _ => { };
+    private Action<IServiceCollection> registerRunAsManagerAction = _ => { };
 
     private Action<IServiceCollection>? registerQueryableSourceAction;
 
@@ -121,39 +119,39 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetUserSource<TUser, TIdent>(
-        Expression<Func<TUser, TIdent>> idPath,
+    public ISecuritySystemSettings SetUserSource<TUser>(
         Expression<Func<TUser, string>> namePath,
         Expression<Func<TUser, bool>> filter,
         Expression<Func<TUser, TUser?>>? runAsPath = null)
         where TUser : class
     {
-        this.registerUserSourceAction = sc =>
-                                        {
-                                            var info = new UserPathInfo<TUser, TIdent>(idPath, namePath, filter);
-                                            sc.AddSingleton(info);
-                                            sc.AddSingleton<IUserPathInfo>(info);
+        this.registerActions.Add(sc =>
+        {
+	        var info = new UserSourceInfo<TUser>(namePath, filter);
 
-                                            sc.AddScoped<IUserSource<TUser>, UserSource<TUser>>();
+	        sc.AddSingleton<UserSourceInfo>(info);
+	        sc.AddSingleton(info);
 
-                                            sc.AddScoped<ICurrentUserSource<TUser>, CurrentUserSource<TUser>>();
+	        sc.AddScoped<IUserCredentialNameByIdentityResolver, UserCredentialNameByIdentityResolver<TUser>>();
+		});
 
-                                            sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
+        if (runAsPath != null)
+        {
+	        this.registerRunAsManagerAction = sc =>
+	        {
+		        if (this.registerGenericRepositoryAction == null)
+		        {
+			        throw new InvalidOperationException("GenericRepository must be initialized");
+		        }
 
-                                            sc.AddScoped<IUserCredentialNameByIdentityResolver, UserSourceCredentialNameByIdResolver<TUser>>();
 
-                                            if (runAsPath != null)
-                                            {
-                                                if (this.registerGenericRepositoryAction == null)
-                                                {
-                                                    throw new InvalidOperationException("GenericRepository must be initialized");
-                                                }
+		        sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
 
-                                                sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(runAsPath));
-                                                sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
-                                                sc.AddScoped<IRunAsManager, UserSourceRunAsManager<TUser>>();
-                                            }
-                                        };
+		        sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(runAsPath));
+		        sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
+		        sc.ReplaceScoped<IRunAsManager, RunAsManager<TUser>>();
+	        };
+        }
 
         return this;
     }
@@ -161,7 +159,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     public ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
         where TRunAsManager : class, IRunAsManager
     {
-        this.registerRunAsManagerAction = sc => sc.AddScoped<IRunAsManager, TRunAsManager>();
+        this.registerRunAsManagerAction = sc => sc.ReplaceScoped<IRunAsManager, TRunAsManager>();
 
         return this;
     }
@@ -263,7 +261,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
         this.registerActions.ForEach(v => v(services));
 
-        this.registerUserSourceAction(services);
         this.registerRunAsManagerAction(services);
 
         if (this.InitializeDefaultRoles)

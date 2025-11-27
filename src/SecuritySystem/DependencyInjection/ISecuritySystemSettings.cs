@@ -43,8 +43,7 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
         where TRunAsManager : class, IRunAsManager;
 
-    ISecuritySystemSettings SetUserSource<TUser, TIdent>(
-        Expression<Func<TUser, TIdent>> idPath,
+    ISecuritySystemSettings SetUserSource<TUser>(
         Expression<Func<TUser, string>> namePath,
         Expression<Func<TUser, bool>> filter,
         Expression<Func<TUser, TUser?>>? runAsPath = null)

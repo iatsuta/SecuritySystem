@@ -2,6 +2,8 @@
 
 public abstract record SecurityIdentity
 {
+	public abstract object GetId();
+
 	public static implicit operator SecurityIdentity(Guid id)
 	{
 		return new SecurityIdentity<Guid>(id);
@@ -13,7 +15,13 @@ public abstract record SecurityIdentity
 	}
 }
 
-public record SecurityIdentity<T>(T Id) : SecurityIdentity
+public record SecurityIdentity<TIdent>(TIdent Id) : SecurityIdentity
+	where TIdent : notnull
 {
+	public override object GetId()
+	{
+		return this.Id;
+	}
+
 	public override string? ToString() => this.Id?.ToString();
 }

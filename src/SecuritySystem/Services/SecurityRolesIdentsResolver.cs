@@ -1,10 +1,12 @@
-﻿using SecuritySystem.Expanders;
+﻿using CommonFramework;
+using SecuritySystem.Expanders;
 
 namespace SecuritySystem.Services;
 
 public class SecurityRolesIdentsResolver(
     ISecurityRuleExpander securityRuleExpander,
-    ISecurityRoleSource securityRoleSource)
+    ISecurityRoleSource securityRoleSource,
+    SecuritySystemGeneralInfo generalInfo)
     : ISecurityRolesIdentsResolver
 {
     public Array Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false)
@@ -13,6 +15,7 @@ public class SecurityRolesIdentsResolver(
                                    .SecurityRoles
                                    .Select(securityRoleSource.GetSecurityRole)
                                    .Where(sr => includeVirtual || !sr.Information.IsVirtual)
-                                   .Select(sr => sr.Id);
+                                   .Select(sr => sr.Identity.GetId())
+                                   .ToArray(generalInfo.RoleIdentType);
     }
 }
