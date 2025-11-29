@@ -104,7 +104,7 @@ public class AuthorizationPermissionSource<TPrincipal, TPermission, TPermissionR
     {
         var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
 
-        var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.IdPath);
+        var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path);
 
         if (baseSecurityContextIdents.Any())
         {

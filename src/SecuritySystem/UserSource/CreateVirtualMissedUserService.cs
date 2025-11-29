@@ -13,7 +13,7 @@ public class CreateVirtualMissedUserService<TUser>(UserSourceInfo<TUser> userSou
 		{
 			case UserCredential.NamedUserCredential namedUserCredential:
 			{
-				userSourceInfo.NameAccessors.Setter(user, namedUserCredential.Name);
+				userSourceInfo.Name.Setter(user, namedUserCredential.Name);
 				break;
 			}
 

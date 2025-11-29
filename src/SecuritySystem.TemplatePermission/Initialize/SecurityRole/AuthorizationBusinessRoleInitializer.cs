@@ -32,7 +32,7 @@ public class AuthorizationBusinessRoleInitializer<TBusinessRole, TBusinessRoleId
     {
         var dbRoles = await queryableSource.GetQueryable<TBusinessRole>().GenericToListAsync(cancellationToken);
 
-        var mergeResult = dbRoles.GetMergeResult(securityRoles, br => identityInfo.Getter(br), sr => securityIdentityConverter.Convert(sr.Identity).Id);
+        var mergeResult = dbRoles.GetMergeResult(securityRoles, br => identityInfo.Id.Getter(br), sr => securityIdentityConverter.Convert(sr.Identity).Id);
 
         if (mergeResult.RemovingItems.Any())
         {
@@ -46,7 +46,7 @@ public class AuthorizationBusinessRoleInitializer<TBusinessRole, TBusinessRoleId
                 {
                     foreach (var removingItem in mergeResult.RemovingItems)
                     {
-                        logger.LogDebug("Role removed: {Name} {Id}", businessRoleInfo.NameGetter(removingItem), identityInfo.Getter(removingItem));
+                        logger.LogDebug("Role removed: {Name} {Id}", businessRoleInfo.Name.Getter(removingItem), identityInfo.Id.Getter(removingItem));
 
                         await genericRepository.RemoveAsync(removingItem, cancellationToken);
                     }
@@ -60,8 +60,8 @@ public class AuthorizationBusinessRoleInitializer<TBusinessRole, TBusinessRoleId
         {
 	        var businessRole = new TBusinessRole();
 
-	        businessRoleInfo.NameSetter(businessRole, securityRole.Name);
-	        businessRoleInfo.DescriptionSetter(businessRole, securityRole.Information.Description ?? "");
+	        businessRoleInfo.Name.Setter(businessRole, securityRole.Name);
+	        businessRoleInfo.Description.Setter(businessRole, securityRole.Information.Description ?? "");
 	        identityInfo.Setter(businessRole, securityIdentityConverter.Convert(securityRole.Identity).Id);
 
             logger.LogDebug("Role created: {Name} {Id}", securityRole.Name, securityRole.Identity);

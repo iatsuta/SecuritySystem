@@ -3,12 +3,15 @@
 namespace SecuritySystem.HierarchicalExpand;
 
 public record AncestorLinkInfo<TDomainObject, TAncestorLink>(
-    Expression<Func<TAncestorLink, TDomainObject>> FromPath,
-    Expression<Func<TAncestorLink, TDomainObject>> ToPath)
+	PropertyAccessors<TAncestorLink, TDomainObject> From,
+	PropertyAccessors<TAncestorLink, TDomainObject> To)
 {
-    public AncestorLinkInfo<TDomainObject, TAncestorLink> Reverse() => new(this.ToPath, this.FromPath);
+	public AncestorLinkInfo(
+		Expression<Func<TAncestorLink, TDomainObject>> fromPath,
+		Expression<Func<TAncestorLink, TDomainObject>> toPath)
+		: this(new PropertyAccessors<TAncestorLink, TDomainObject>(fromPath), new PropertyAccessors<TAncestorLink, TDomainObject>(toPath))
+	{
+	}
 
-    public PropertyAccessors<TAncestorLink, TDomainObject> FromAccessors { get; } = new (FromPath);
-
-    public PropertyAccessors<TAncestorLink, TDomainObject> ToAccessors { get; } = new (ToPath);
+	public AncestorLinkInfo<TDomainObject, TAncestorLink> Reverse() => new(this.To.Path, this.From.Path);
 }

@@ -32,7 +32,7 @@ public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurit
         {
             var securityIdents = hierarchicalObjectExpanderFactory
                                  .Create<TIdent>(typeof(TSecurityContext))
-                                 .Expand(securityObjects.Select(identityInfo.Accessors.Getter), expandType.Reverse());
+                                 .Expand(securityObjects.Select(identityInfo.Id.Getter), expandType.Reverse());
 
             return grandAccessExpr.BuildOr(permissionSystem.GetContainsIdentsExpr(securityIdents, securityContextRestriction?.Filter));
         }

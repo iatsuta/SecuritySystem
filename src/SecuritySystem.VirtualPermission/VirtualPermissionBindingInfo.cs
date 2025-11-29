@@ -100,13 +100,13 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
                     if (pureFilter == null)
                     {
                         return singlePath.Select(IEnumerable<TIdent> (securityContext) =>
-                            securityContext != null ? new[] { ee.Evaluate(identityInfo.IdPath, securityContext) } : Array.Empty<TIdent>());
+                            securityContext != null ? new[] { ee.Evaluate(identityInfo.Id.Path, securityContext) } : Array.Empty<TIdent>());
                     }
                     else
                     {
                         return singlePath.Select(IEnumerable<TIdent> (securityContext) =>
                             securityContext != null && ee.Evaluate(pureFilter, securityContext)
-                                ? new[] { ee.Evaluate(identityInfo.IdPath, securityContext) }
+                                ? new[] { ee.Evaluate(identityInfo.Id.Path, securityContext) }
                                 : Array.Empty<TIdent>());
                     }
                 });
@@ -117,13 +117,13 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
                 {
                     if (pureFilter == null)
                     {
-                        return manyPath.Select(securityContexts => securityContexts.Select(securityContext => ee.Evaluate(identityInfo.IdPath, securityContext)));
+                        return manyPath.Select(securityContexts => securityContexts.Select(securityContext => ee.Evaluate(identityInfo.Id.Path, securityContext)));
                     }
                     else
                     {
                         return manyPath.Select(securityContexts => securityContexts
                             .Where(securityContext => ee.Evaluate(pureFilter, securityContext))
-                            .Select(securityContext => ee.Evaluate(identityInfo.IdPath, securityContext)));
+                            .Select(securityContext => ee.Evaluate(identityInfo.Id.Path, securityContext)));
                     }
                 });
             }

@@ -40,7 +40,7 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
 
         var filterExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, bool>>(ee =>
 
-            domainObject => availableIdents.Contains(ee.Evaluate(domainIdentityInfo.IdPath, domainObject)));
+            domainObject => availableIdents.Contains(ee.Evaluate(domainIdentityInfo.Id.Path, domainObject)));
 
         return queryable.Where(filterExpr);
     }
@@ -52,7 +52,7 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
 
     public bool HasAccess(TDomainObject domainObject)
     {
-        return this.lazyAvailableIdents.Value.Contains(domainIdentityInfo.Accessors.Getter(domainObject));
+        return this.lazyAvailableIdents.Value.Contains(domainIdentityInfo.Id.Getter(domainObject));
     }
 
     public SecurityAccessorData GetAccessorData(TDomainObject domainObject)
@@ -62,13 +62,13 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
 
     private TBaseDomainObject GetBaseObject(TDomainObject domainObject)
     {
-        var id = domainIdentityInfo.Accessors.Getter(domainObject);
+        var id = domainIdentityInfo.Id.Getter(domainObject);
 
         var eqIdExp = ExpressionHelper.GetEquality<TIdent>();
 
         var filterExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TBaseDomainObject, bool>>(ee =>
 
-            baseDomainObject => ee.Evaluate(eqIdExp, ee.Evaluate(baseDomainIdentityInfo.IdPath, baseDomainObject), id));
+            baseDomainObject => ee.Evaluate(eqIdExp, ee.Evaluate(baseDomainIdentityInfo.Id.Path, baseDomainObject), id));
 
         return this.queryableSource
                    .GetQueryable<TBaseDomainObject>()
@@ -78,6 +78,6 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
 
     protected virtual IQueryable<TIdent> GetAvailableIdents()
     {
-        return this.queryableSource.GetQueryable<TBaseDomainObject>().Pipe(this.baseSecurityProvider.InjectFilter).Select(baseDomainIdentityInfo.IdPath);
+        return this.queryableSource.GetQueryable<TBaseDomainObject>().Pipe(this.baseSecurityProvider.InjectFilter).Select(baseDomainIdentityInfo.Id.Path);
     }
 }

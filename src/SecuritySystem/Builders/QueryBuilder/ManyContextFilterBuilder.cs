@@ -48,7 +48,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                     return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
                                                          || ee.Evaluate(securityPath.SecurityPathQ, domainObject)
-                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
                 else
                 {
@@ -57,7 +57,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                                                                   || !ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any()
 
                                                                   || ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any(item =>
-                                                                      ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                                      ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
             }
             else
@@ -67,7 +67,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                     return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
                                                          || ee.Evaluate(securityPath.Expression, domainObject)
-                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
                 else
                 {
@@ -76,7 +76,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                                                          || !ee.Evaluate(securityPath.Expression, domainObject).Any()
 
                                                          || ee.Evaluate(securityPath.Expression, domainObject).Any(item =>
-                                                             ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                             ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
             }
         });

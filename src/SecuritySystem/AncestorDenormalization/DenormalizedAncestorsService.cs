@@ -61,8 +61,8 @@ public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     {
         var link = new TDirectAncestorLink();
 
-        fullAncestorLinkInfo.Directed.FromAccessors.Setter(link, ancestor);
-		fullAncestorLinkInfo.Directed.ToAccessors.Setter(link, child);
+        fullAncestorLinkInfo.Directed.From.Setter(link, ancestor);
+		fullAncestorLinkInfo.Directed.To.Setter(link, child);
 
         return link;
     }

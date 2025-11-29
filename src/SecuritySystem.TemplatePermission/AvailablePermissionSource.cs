@@ -54,7 +54,7 @@ public class AvailablePermissionSource(
         var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
 
         var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo)
-                                                                    .Select(identityInfo.IdPath);
+                                                                    .Select(identityInfo.Id.Path);
 
         return securityContextId => filteredSecurityContextQueryable.Contains(securityContextId);
     }

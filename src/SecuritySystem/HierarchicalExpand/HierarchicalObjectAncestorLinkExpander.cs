@@ -57,9 +57,9 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var fromPathIdExpr = ancestorLinkInfo.From.Path.Select(identityInfo.Id.Path);
 
-        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.To.Path.Select(identityInfo.Id.Path);
 
         var containsExpr = ExpressionEvaluateHelper.InlineEvaluate(ee =>
             ExpressionHelper.Create((TAncestorLink ancestorLink) => idents.Contains(ee.Evaluate(fromPathIdExpr, ancestorLink))));
@@ -90,9 +90,9 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var fromPathIdExpr = ancestorLinkInfo.From.Path.Select(identityInfo.Id.Path);
 
-        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.To.Path.Select(identityInfo.Id.Path);
 
         var containsExpr = ExpressionEvaluateHelper.InlineEvaluate(ee =>
             ExpressionHelper.Create((TAncestorLink ancestorLink) =>
@@ -125,9 +125,9 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var fromPathIdExpr = ancestorLinkInfo.From.Path.Select(identityInfo.Id.Path);
 
-        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.To.Path.Select(identityInfo.Id.Path);
 
         return ExpressionEvaluateHelper.InlineEvaluate(ee =>
 
@@ -162,9 +162,9 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
     {
         var ancestorLinkQueryable = queryableSource.GetQueryable<TAncestorLink>();
 
-        var fromPathIdExpr = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var fromPathIdExpr = ancestorLinkInfo.From.Path.Select(identityInfo.Id.Path);
 
-        var toPathIdExpr = ancestorLinkInfo.ToPath.Select(identityInfo.IdPath);
+        var toPathIdExpr = ancestorLinkInfo.To.Path.Select(identityInfo.Id.Path);
 
         var eqIdentsExpr = ExpressionHelper.GetEquality<TIdent>();
 
@@ -195,10 +195,10 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
 
                 ExpressionHelper.Create((TDomainObject domainObject) => new
                 {
-                    Id = ee.Evaluate(identityInfo.IdPath, domainObject),
+                    Id = ee.Evaluate(identityInfo.Id.Path, domainObject),
                     ParentId = ee.Evaluate(hierarchicalInfo.ParentPath, domainObject) == null
                         ? default
-                        : ee.Evaluate(identityInfo.IdPath!, ee.Evaluate(hierarchicalInfo.ParentPath, domainObject))
+                        : ee.Evaluate(identityInfo.Id.Path!, ee.Evaluate(hierarchicalInfo.ParentPath, domainObject))
                 })))
             .Distinct()
             .ToDictionary(pair => pair.Id, pair => pair.ParentId!);
@@ -210,7 +210,7 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         {
             case HierarchicalExpandType.None:
             {
-                var filter = identityInfo.IdPath.Select(domainObjectId => idents.Contains(domainObjectId));
+                var filter = identityInfo.Id.Path.Select(domainObjectId => idents.Contains(domainObjectId));
 
                 return queryableSource.GetQueryable<TDomainObject>().Where(filter);
             }
@@ -234,11 +234,11 @@ public class HierarchicalObjectAncestorLinkExpander<TDomainObject, TDirectedAnce
         AncestorLinkInfo<TDomainObject, TAncestorLink> ancestorLinkInfo)
         where TAncestorLink : class
     {
-        var idPath = ancestorLinkInfo.FromPath.Select(identityInfo.IdPath);
+        var idPath = ancestorLinkInfo.From.Path.Select(identityInfo.Id.Path);
 
         var filter = idPath.Select(domainObjectId => idents.Contains(domainObjectId));
 
-        return queryableSource.GetQueryable<TAncestorLink>().Where(filter).Select(ancestorLinkInfo.ToPath);
+        return queryableSource.GetQueryable<TAncestorLink>().Where(filter).Select(ancestorLinkInfo.To.Path);
     }
 
     public IEnumerable Expand(IEnumerable idents, HierarchicalExpandType expandType)

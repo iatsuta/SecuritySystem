@@ -77,12 +77,12 @@ public class CurrentUserSecurityProvider<TDomainObject, TUser, TIdent>(
 	public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
 
 		relativeDomainPathInfo.CreateCondition(
-			identityInfo.IdPath.Select(ExpressionHelper.GetEqualityWithExpr(((SecurityIdentity<TIdent>)currentUserSource.ToSimple().CurrentUser.Identity).Id)));
+			identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(((SecurityIdentity<TIdent>)currentUserSource.ToSimple().CurrentUser.Identity).Id)));
 
 	public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
 	{
 		var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
 
-		return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(userSourceInfo.NamePath, user)));
+		return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(userSourceInfo.Name.Path, user)));
 	}
 }

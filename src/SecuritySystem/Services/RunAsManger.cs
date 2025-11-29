@@ -20,7 +20,7 @@ public class RunAsManager<TUser>(
 
 	private TUser NativeCurrentUser => this.lazyNativeCurrentUser.Value;
 
-	private TUser? NativeRunAsUser => userSourceRunAsInfo.Accessors.Getter(this.NativeCurrentUser);
+	private TUser? NativeRunAsUser => userSourceRunAsInfo.RunAs.Getter(this.NativeCurrentUser);
 
 	private UserCredential PureCredential { get; } = rawUserAuthenticationService.GetUserName();
 
@@ -61,7 +61,7 @@ public class RunAsManager<TUser>(
 
 		if (this.NativeRunAsUser != newRunAsUser)
 		{
-			userSourceRunAsInfo.Accessors.Setter(this.NativeCurrentUser, newRunAsUser);
+			userSourceRunAsInfo.RunAs.Setter(this.NativeCurrentUser, newRunAsUser);
 
 			await genericRepository.SaveAsync(this.NativeCurrentUser, cancellationToken);
 		}

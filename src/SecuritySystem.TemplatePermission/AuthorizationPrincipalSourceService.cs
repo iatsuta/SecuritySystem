@@ -1,20 +1,21 @@
 ﻿using System.Linq.Expressions;
+
 using CommonFramework;
+
 using GenericQueryable;
+
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 namespace SecuritySystem.TemplatePermission;
 
-public 
-
 public class AuthorizationPrincipalSourceService<TPrincipal, TPermission>(
     IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
-    UserSourceInfo<TPrincipal> userSourceInfo,
+    UserSourceInfo<TPrincipal> userSourceInfo
     ) : IPrincipalSourceService
 	where TPrincipal : class
 {

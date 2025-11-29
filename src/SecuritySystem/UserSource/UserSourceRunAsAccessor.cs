@@ -2,7 +2,10 @@
 
 namespace SecuritySystem.UserSource;
 
-public record UserSourceRunAsInfo<TUser>(Expression<Func<TUser, TUser?>> Path)
+public record UserSourceRunAsInfo<TUser>(PropertyAccessors<TUser, TUser?> RunAs)
 {
-	public PropertyAccessors<TUser, TUser?> Accessors { get; } = new (Path);
+	public UserSourceRunAsInfo(Expression<Func<TUser, TUser?>> runAsPath)
+		: this(new PropertyAccessors<TUser, TUser?>(runAsPath))
+	{
+	}
 }

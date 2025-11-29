@@ -51,7 +51,7 @@ public class AuthorizationPermissionSystem(
 
             var securityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo)
                                                                 .Where(restrictionFilterInfo.GetPureFilter(serviceProvider))
-                                                                .Select(identityInfo.IdPath);
+                                                                .Select(identityInfo.Id.Path);
 
             return permission => permission.Restrictions
                                            .Where(restriction => restriction.SecurityContextType.Id == securityContextTypeId)

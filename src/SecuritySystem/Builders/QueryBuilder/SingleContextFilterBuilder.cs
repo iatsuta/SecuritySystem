@@ -32,7 +32,7 @@ public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityCon
 
         var expandExpression = expander.GetExpandExpression(expandType);
 
-        var fullIdPath = securityPath.Expression!.Select(identityInfo.IdPath);
+        var fullIdPath = securityPath.Expression!.Select(identityInfo.Id.Path);
 
         return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
         {

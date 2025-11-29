@@ -4,6 +4,7 @@ using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.UserSource;
@@ -50,10 +51,10 @@ public class UserQueryableSource<TUser, TIdent>(
 	{
 		return userCredential switch
 		{
-			UserCredential.NamedUserCredential { Name: var name } => userSourceInfo.NamePath.Select(objName => objName == name),
+			UserCredential.NamedUserCredential { Name: var name } => userSourceInfo.Name.Path.Select(objName => objName == name),
 
 			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TIdent> { Id: var id } } =>
-				identityInfo.IdPath.Select(ExpressionHelper.GetEqualityWithExpr(id)),
+				identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id)),
 
 			_ => throw new ArgumentOutOfRangeException(nameof(userCredential))
 		};

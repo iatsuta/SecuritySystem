@@ -36,7 +36,7 @@ public class UserCredentialNameByIdentityResolver<TUser, TIdent>(
 	{
 		var typedSecurityIdentity = securityIdentity as SecurityIdentity<TIdent> ?? throw new ArgumentOutOfRangeException(nameof(securityIdentity));
 
-		return this.GetQueryable(typedSecurityIdentity).Select(userSourceInfo.NamePath).Select(v => (string?)v).SingleOrDefault();
+		return this.GetQueryable(typedSecurityIdentity).Select(userSourceInfo.Name.Path).Select(v => (string?)v).SingleOrDefault();
 	}
 
 	private IQueryable<TUser> GetQueryable(SecurityIdentity<TIdent> securityIdentity)
@@ -44,6 +44,6 @@ public class UserCredentialNameByIdentityResolver<TUser, TIdent>(
 		return queryableSource
 			.GetQueryable<TUser>()
 			.Where(userSourceInfo.Filter)
-			.Where(identityInfo.IdPath.Select(ExpressionHelper.GetEqualityWithExpr(securityIdentity.Id)));
+			.Where(identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(securityIdentity.Id)));
 	}
 }

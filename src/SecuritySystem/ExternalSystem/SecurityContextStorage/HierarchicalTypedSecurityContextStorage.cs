@@ -17,8 +17,8 @@ public class HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>(
 {
 	protected override SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext) =>
 
-		new(this.IdentityInfo.Accessors.Getter(securityContext), displayService.ToString(securityContext),
-			hierarchicalInfo.ParentFunc(securityContext).Maybe(IdentityInfo.Accessors.Getter));
+		new(this.IdentityInfo.Id.Getter(securityContext), displayService.ToString(securityContext),
+			hierarchicalInfo.ParentFunc(securityContext).Maybe(IdentityInfo.Id.Getter));
 
 	protected override IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject)
 	{

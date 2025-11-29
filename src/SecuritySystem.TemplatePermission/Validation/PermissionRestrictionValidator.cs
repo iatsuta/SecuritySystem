@@ -88,6 +88,6 @@ public class PermissionRestrictionValidator : AbstractValidator<PermissionRestri
     {
         var identityInfo = this.identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
 
-        return this.securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.IdPath).Contains(securityContextId);
+        return this.securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path).Contains(securityContextId);
     }
 }

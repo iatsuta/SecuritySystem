@@ -74,7 +74,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		var toPrincipalAnonHeaderExpr =
 			ExpressionEvaluateHelper.InlineEvaluate(ee =>
 				ExpressionHelper.Create((TPrincipal principal) =>
-					new { Id = ee.Evaluate(principalIdentityInfo.IdPath, principal), Name = ee.Evaluate(principalNamePath, principal) }));
+					new { Id = ee.Evaluate(principalIdentityInfo.Id.Path, principal), Name = ee.Evaluate(principalNamePath, principal) }));
 
 		var anonHeaders = await queryableSource
 			.GetQueryable<TPermission>()
@@ -102,7 +102,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		{
 			UserCredential.NamedUserCredential { Name: var principalName } => bindingInfo.PrincipalNamePath.Select(name => principalName == name),
 
-			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TPrincipalIdent> { Id: var id } } => principalIdentityInfo.IdPath.Select(
+			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TPrincipalIdent> { Id: var id } } => principalIdentityInfo.Id.Path.Select(
 				ExpressionHelper.GetEqualityWithExpr(id)),
 
 			_ => throw new ArgumentOutOfRangeException(nameof(userCredential))
@@ -123,7 +123,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		}
 		else
 		{
-			var header = new TypedPrincipalHeader(new SecurityIdentity<TPrincipalIdent>(principalIdentityInfo.Accessors.Getter(principal)),
+			var header = new TypedPrincipalHeader(new SecurityIdentity<TPrincipalIdent>(principalIdentityInfo.Id.Getter(principal)),
 				this.expressionEvaluator.Evaluate(bindingInfo.PrincipalNamePath, principal),
 				true);
 
@@ -150,7 +150,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 			.ToDictionary();
 
 		return new TypedPermission(
-			new SecurityIdentity<TPermissionIdent>(permissionIdentityInfo.Accessors.Getter(permission)),
+			new SecurityIdentity<TPermissionIdent>(permissionIdentityInfo.Id.Getter(permission)),
 			true,
 			bindingInfo.SecurityRole,
 			bindingInfo.StartDateFilter == null ? DateTime.MinValue : this.expressionEvaluator.Evaluate(bindingInfo.StartDateFilter, permission),
@@ -196,14 +196,14 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 
 				if (securityContext != null)
 				{
-					yield return identityInfo.Accessors.Getter(securityContext);
+					yield return identityInfo.Id.Getter(securityContext);
 				}
 			}
 			else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
 			{
 				foreach (var securityContext in this.expressionEvaluator.Evaluate(manyPath, permission))
 				{
-					yield return identityInfo.Accessors.Getter(securityContext);
+					yield return identityInfo.Id.Getter(securityContext);
 				}
 			}
 		}

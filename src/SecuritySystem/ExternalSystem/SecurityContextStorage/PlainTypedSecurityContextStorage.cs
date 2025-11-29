@@ -13,7 +13,7 @@ public class PlainTypedSecurityContextStorage<TSecurityContext, TIdent>(
 {
     protected override SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext) =>
 
-        new(this.IdentityInfo.Accessors.Getter(securityContext), displayService.ToString(securityContext), default);
+        new(this.IdentityInfo.Id.Getter(securityContext), displayService.ToString(securityContext), default);
 
     protected override IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject)
     {

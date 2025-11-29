@@ -4,21 +4,24 @@ using CommonFramework;
 
 namespace SecuritySystem;
 
-public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject, TIdent>> IdPath) : IdentityInfo<TDomainObject>
+public record IdentityInfo<TDomainObject, TIdent>(PropertyAccessors<TDomainObject, TIdent> Id) : IdentityInfo<TDomainObject>
     where TIdent : notnull
 {
-	public PropertyAccessors<TDomainObject, TIdent> Accessors { get; } = new(IdPath);
+	public IdentityInfo(Expression<Func<TDomainObject, TIdent>> idPath) :
+		this(new PropertyAccessors<TDomainObject, TIdent>(idPath))
+	{
+	}
 
 	public override Type IdentityType { get; } = typeof(TIdent);
 
     public Expression<Func<TDomainObject, bool>> CreateContainsFilter(IEnumerable<TIdent> idents)
     {
-        return this.IdPath.Select(ident => idents.Contains(ident));
+        return this.Id.Path.Select(ident => idents.Contains(ident));
     }
 
     public override object GetId(TDomainObject domainObject)
     {
-	    return this.Accessors.Getter(domainObject);
+	    return this.Id.Getter(domainObject);
     }
 }
 

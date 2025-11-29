@@ -97,7 +97,7 @@ public class AccessDeniedExceptionService(IIdentityInfoSource identityInfoSource
     {
         var comparer = EqualityComparer<TIdent>.Default;
 
-        var id = identityInfo.Accessors.Getter(domainObject);
+        var id = identityInfo.Id.Getter(domainObject);
 
         if (comparer.Equals(id, default))
         {
