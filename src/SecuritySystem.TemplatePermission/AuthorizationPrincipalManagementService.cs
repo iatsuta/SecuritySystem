@@ -19,6 +19,7 @@ public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TB
       securityContextInfoSource,
       availablePermissionSource),
       IPrincipalManagementService
+
 {
     public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default)
     {

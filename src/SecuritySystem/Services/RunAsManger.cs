@@ -10,7 +10,7 @@ public class RunAsManager<TUser>(
 	ISecuritySystemFactory securitySystemFactory,
 	IEnumerable<IRunAsValidator> validators,
 	IUserSource<TUser> userSource,
-	IUserSourceRunAsAccessor<TUser> accessor,
+	UserSourceRunAsInfo<TUser> userSourceRunAsInfo,
 	IGenericRepository genericRepository,
 	IDefaultUserConverter<TUser> toDefaultUserConverter)
 	: IRunAsManager
@@ -20,7 +20,7 @@ public class RunAsManager<TUser>(
 
 	private TUser NativeCurrentUser => this.lazyNativeCurrentUser.Value;
 
-	private TUser? NativeRunAsUser => accessor.GetRunAs(this.NativeCurrentUser);
+	private TUser? NativeRunAsUser => userSourceRunAsInfo.Accessors.Getter(this.NativeCurrentUser);
 
 	private UserCredential PureCredential { get; } = rawUserAuthenticationService.GetUserName();
 
@@ -61,7 +61,7 @@ public class RunAsManager<TUser>(
 
 		if (this.NativeRunAsUser != newRunAsUser)
 		{
-			accessor.SetRunAs(this.NativeCurrentUser, newRunAsUser);
+			userSourceRunAsInfo.Accessors.Setter(this.NativeCurrentUser, newRunAsUser);
 
 			await genericRepository.SaveAsync(this.NativeCurrentUser, cancellationToken);
 		}

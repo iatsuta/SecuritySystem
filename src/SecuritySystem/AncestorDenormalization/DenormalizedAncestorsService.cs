@@ -1,6 +1,4 @@
-﻿using CommonFramework;
-
-using SecuritySystem.HierarchicalExpand;
+﻿using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.AncestorDenormalization;
@@ -12,12 +10,6 @@ public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     where TDirectAncestorLink : class, new()
     where TDomainObject : class
 {
-    private readonly Action<TDirectAncestorLink, TDomainObject> setFromAction =
-        fullAncestorLinkInfo.Directed.FromPath.ToSetLambdaExpression().Compile();
-
-    private readonly Action<TDirectAncestorLink, TDomainObject> setToAction =
-        fullAncestorLinkInfo.Directed.ToPath.ToSetLambdaExpression().Compile();
-
     public async Task SyncUpAsync(TDomainObject domainObject, CancellationToken cancellationToken)
     {
         var syncResult = await ancestorLinkExtractor.GetSyncResult(domainObject, cancellationToken);
@@ -69,8 +61,8 @@ public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     {
         var link = new TDirectAncestorLink();
 
-        setFromAction(link, ancestor);
-        setToAction(link, child);
+        fullAncestorLinkInfo.Directed.FromAccessors.Setter(link, ancestor);
+		fullAncestorLinkInfo.Directed.ToAccessors.Setter(link, child);
 
         return link;
     }

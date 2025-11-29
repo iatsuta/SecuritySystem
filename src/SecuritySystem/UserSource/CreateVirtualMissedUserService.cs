@@ -3,7 +3,7 @@
 namespace SecuritySystem.UserSource;
 
 public class CreateVirtualMissedUserService<TUser>(UserSourceInfo<TUser> userSourceInfo) : IMissedUserService<TUser>
-	where TUser: class, new()
+	where TUser : class, new()
 {
 	public TUser GetUser(UserCredential userCredential)
 	{
@@ -13,7 +13,7 @@ public class CreateVirtualMissedUserService<TUser>(UserSourceInfo<TUser> userSou
 		{
 			case UserCredential.NamedUserCredential namedUserCredential:
 			{
-				userSourceInfo.NameSetter(user, namedUserCredential.Name);
+				userSourceInfo.NameAccessors.Setter(user, namedUserCredential.Name);
 				break;
 			}
 

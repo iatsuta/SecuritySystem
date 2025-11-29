@@ -7,9 +7,9 @@ namespace SecuritySystem;
 public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject, TIdent>> IdPath) : IdentityInfo<TDomainObject>
     where TIdent : notnull
 {
-    public Func<TDomainObject, TIdent> IdFunc { get; } = IdPath.Compile();
+	public PropertyAccessors<TDomainObject, TIdent> Accessors { get; } = new(IdPath);
 
-    public override Type IdentityType { get; } = typeof(TIdent);
+	public override Type IdentityType { get; } = typeof(TIdent);
 
     public Expression<Func<TDomainObject, bool>> CreateContainsFilter(IEnumerable<TIdent> idents)
     {
@@ -18,7 +18,7 @@ public record IdentityInfo<TDomainObject, TIdent>(Expression<Func<TDomainObject,
 
     public override object GetId(TDomainObject domainObject)
     {
-	    return this.IdFunc(domainObject);
+	    return this.Accessors.Getter(domainObject);
     }
 }
 

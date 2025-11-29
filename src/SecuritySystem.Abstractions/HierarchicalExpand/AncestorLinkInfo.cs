@@ -8,7 +8,7 @@ public record AncestorLinkInfo<TDomainObject, TAncestorLink>(
 {
     public AncestorLinkInfo<TDomainObject, TAncestorLink> Reverse() => new(this.ToPath, this.FromPath);
 
-    public Func<TAncestorLink, TDomainObject> FromFunc { get; } = FromPath.Compile();
+    public PropertyAccessors<TAncestorLink, TDomainObject> FromAccessors { get; } = new (FromPath);
 
-    public Func<TAncestorLink, TDomainObject> ToFunc { get; } = ToPath.Compile();
+    public PropertyAccessors<TAncestorLink, TDomainObject> ToAccessors { get; } = new (ToPath);
 }

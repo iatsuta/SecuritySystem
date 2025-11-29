@@ -12,7 +12,7 @@ public class LocalStorage<TSecurityContext, TIdent>(IIdentityInfoSource identity
 
     public bool IsExists(TIdent securityEntityId)
     {
-        return this.items.Select(identityInfo.IdFunc).Contains(securityEntityId);
+        return this.items.Select(identityInfo.Accessors.Getter).Contains(securityEntityId);
     }
 
     public bool Register(TSecurityContext securityContext)

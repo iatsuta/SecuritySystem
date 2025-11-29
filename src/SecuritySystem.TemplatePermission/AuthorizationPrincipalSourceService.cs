@@ -1,46 +1,43 @@
 ﻿using System.Linq.Expressions;
+using CommonFramework;
 using GenericQueryable;
-using SecuritySystem.Attributes;
-using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.Services;
+using SecuritySystem.UserSource;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationPrincipalSourceService(
-    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
+public 
+
+public class AuthorizationPrincipalSourceService<TPrincipal, TPermission>(
+    IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    IAvailablePermissionSource availablePermissionSource) : IPrincipalSourceService
+    IAvailablePermissionSource<TPermission> availablePermissionSource,
+    UserSourceInfo<TPrincipal> userSourceInfo,
+    ) : IPrincipalSourceService
+	where TPrincipal : class
 {
-    public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
+	private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
+
+	private readonly Expression<Func<TPermission, TypedPrincipalHeader>> toTypedPrincipalHeaderExpression; //principal => new TypedPrincipalHeader(principal.Id, principal.Name, false)
+
+	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,
         int limit,
         CancellationToken cancellationToken = default)
-    {
-        return await principalRepository.GetQueryable()
-                                        .Pipe(
-                                            !string.IsNullOrWhiteSpace(nameFilter),
-                                            q => q.Where(principal => principal.Name.Contains(nameFilter)))
-                                        .Select(principal => new TypedPrincipalHeader(principal.Id, principal.Name, false))
-                                        .GenericToListAsync(cancellationToken);
-    }
-
-
-    public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default) =>
-        userCredential switch
-        {
-            UserCredential.NamedUserCredential { Name: var principalName } =>
-                this.TryGetPrincipalAsync(principal => principal.Name == principalName, cancellationToken),
-
-            UserCredential.IdentUserCredential { Id: var principalId } =>
-                this.TryGetPrincipalAsync(principal => principal.Id == principalId, cancellationToken),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(userCredential))
-        };
+	{
+		return await principalQueryable
+			.Pipe(
+				!string.IsNullOrWhiteSpace(nameFilter),
+				q => q.Where(userSourceInfo.NamePath.Select(principalName => principalName.Contains(nameFilter))))
+					.Select(this.toTypedPrincipalHeaderExpression)
+					.GenericToListAsync(cancellationToken);
+	}
 
     private async Task<TypedPrincipal?> TryGetPrincipalAsync(Expression<Func<TPrincipal, bool>> filter, CancellationToken cancellationToken)
     {
-        var principal = await principalRepository.GetQueryable()
+        var principal = await principalQueryable
                                                  .Where(filter)
                                                  .WithFetch(r => r.Fetch(v => v.Permissions).ThenFetch(v => v.Restrictions))
                                                  .GenericSingleOrDefaultAsync(cancellationToken);

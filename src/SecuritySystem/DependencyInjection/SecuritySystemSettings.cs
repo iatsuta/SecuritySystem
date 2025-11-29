@@ -149,13 +149,10 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 					    throw new InvalidOperationException("GenericRepository must be initialized");
 				    }
 
-
+				    sc.AddSingleton(new UserSourceRunAsInfo<TUser>(userSourceBuilder.RunAsPath));
+				    sc.AddScoped<IRunAsManager, RunAsManager<TUser>>();
 				    sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
-
-				    sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(userSourceBuilder.RunAsPath));
-				    sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
-				    sc.ReplaceScoped<IRunAsManager, RunAsManager<TUser>>();
-			    };
+				};
 		    }
 		    else
 		    {

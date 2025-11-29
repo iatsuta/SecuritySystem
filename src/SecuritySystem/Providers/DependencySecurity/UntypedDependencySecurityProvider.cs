@@ -52,7 +52,7 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
 
     public bool HasAccess(TDomainObject domainObject)
     {
-        return this.lazyAvailableIdents.Value.Contains(domainIdentityInfo.IdFunc(domainObject));
+        return this.lazyAvailableIdents.Value.Contains(domainIdentityInfo.Accessors.Getter(domainObject));
     }
 
     public SecurityAccessorData GetAccessorData(TDomainObject domainObject)
@@ -62,7 +62,7 @@ public class UntypedDependencySecurityProvider<TDomainObject, TBaseDomainObject,
 
     private TBaseDomainObject GetBaseObject(TDomainObject domainObject)
     {
-        var id = domainIdentityInfo.IdFunc(domainObject);
+        var id = domainIdentityInfo.Accessors.Getter(domainObject);
 
         var eqIdExp = ExpressionHelper.GetEquality<TIdent>();
 

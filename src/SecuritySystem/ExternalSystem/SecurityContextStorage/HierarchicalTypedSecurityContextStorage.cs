@@ -6,21 +6,22 @@ using SecuritySystem.Services;
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 public class HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>(
-    IQueryableSource queryableSource,
-    IIdentityInfoSource identityInfoSource,
-    LocalStorage<TSecurityContext, TIdent> localStorage,
-    ISecurityContextDisplayService<TSecurityContext> displayService,
-    HierarchicalInfo<TSecurityContext> hierarchicalInfo)
-    : TypedSecurityContextStorageBase<TSecurityContext, TIdent>(queryableSource, identityInfoSource, localStorage)
-    where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+	IQueryableSource queryableSource,
+	IIdentityInfoSource identityInfoSource,
+	LocalStorage<TSecurityContext, TIdent> localStorage,
+	ISecurityContextDisplayService<TSecurityContext> displayService,
+	HierarchicalInfo<TSecurityContext> hierarchicalInfo)
+	: TypedSecurityContextStorageBase<TSecurityContext, TIdent>(queryableSource, identityInfoSource, localStorage)
+	where TSecurityContext : class, ISecurityContext
+	where TIdent : notnull
 {
-    protected override SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext) =>
+	protected override SecurityContextData<TIdent> CreateSecurityContextData(TSecurityContext securityContext) =>
 
-        new(this.IdentityInfo.IdFunc(securityContext), displayService.ToString(securityContext), hierarchicalInfo.ParentFunc(securityContext).Maybe(IdentityInfo.IdFunc));
+		new(this.IdentityInfo.Accessors.Getter(securityContext), displayService.ToString(securityContext),
+			hierarchicalInfo.ParentFunc(securityContext).Maybe(IdentityInfo.Accessors.Getter));
 
-    protected override IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject)
-    {
-        return startSecurityObject.GetAllElements(hierarchicalInfo.ParentFunc);
-    }
+	protected override IEnumerable<TSecurityContext> GetSecurityContextsWithMasterExpand(TSecurityContext startSecurityObject)
+	{
+		return startSecurityObject.GetAllElements(hierarchicalInfo.ParentFunc);
+	}
 }

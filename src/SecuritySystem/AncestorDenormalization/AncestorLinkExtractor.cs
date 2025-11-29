@@ -90,7 +90,7 @@ public class AncestorLinkExtractor<TDomainObject, TDirectAncestorLink>(
     private AncestorLinkInfo<TDomainObject> ToInfo(TDirectAncestorLink link)
     {
         return new AncestorLinkInfo<TDomainObject>(
-            ancestorLinkInfo.FromFunc(link),
-            ancestorLinkInfo.ToFunc(link));
+            ancestorLinkInfo.FromAccessors.Getter(link),
+            ancestorLinkInfo.ToAccessors.Getter(link));
     }
 }

@@ -123,7 +123,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		}
 		else
 		{
-			var header = new TypedPrincipalHeader(new SecurityIdentity<TPrincipalIdent>(principalIdentityInfo.IdFunc(principal)),
+			var header = new TypedPrincipalHeader(new SecurityIdentity<TPrincipalIdent>(principalIdentityInfo.Accessors.Getter(principal)),
 				this.expressionEvaluator.Evaluate(bindingInfo.PrincipalNamePath, principal),
 				true);
 
@@ -150,7 +150,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 			.ToDictionary();
 
 		return new TypedPermission(
-			new SecurityIdentity<TPermissionIdent>(permissionIdentityInfo.IdFunc(permission)),
+			new SecurityIdentity<TPermissionIdent>(permissionIdentityInfo.Accessors.Getter(permission)),
 			true,
 			bindingInfo.SecurityRole,
 			bindingInfo.StartDateFilter == null ? DateTime.MinValue : this.expressionEvaluator.Evaluate(bindingInfo.StartDateFilter, permission),
@@ -196,14 +196,14 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 
 				if (securityContext != null)
 				{
-					yield return identityInfo.IdFunc(securityContext);
+					yield return identityInfo.Accessors.Getter(securityContext);
 				}
 			}
 			else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
 			{
 				foreach (var securityContext in this.expressionEvaluator.Evaluate(manyPath, permission))
 				{
-					yield return identityInfo.IdFunc(securityContext);
+					yield return identityInfo.Accessors.Getter(securityContext);
 				}
 			}
 		}

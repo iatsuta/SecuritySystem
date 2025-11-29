@@ -1,6 +1,4 @@
-﻿using CommonFramework;
-
-using SecuritySystem.AncestorDenormalization;
+﻿using SecuritySystem.AncestorDenormalization;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
@@ -27,10 +25,21 @@ public class AncestorLinkExtractorTests
         {
             return $"{nameof(this.From)}:{this.From}|{nameof(this.To)}:{this.To}";
         }
+	}
+    public record UnDirectAncestorLink
+    {
+	    public required DomainObject From { get; init; }
+
+	    public required DomainObject To { get; init; }
+
+	    public override string ToString()
+	    {
+		    return $"{nameof(this.From)}:{this.From}|{nameof(this.To)}:{this.To}";
+	    }
     }
 
 
-    [Theory]
+	[Theory]
     [MemberData(nameof(GetMoveCases))]
     public async Task MoveNode_UpdatesLinksCorrectly(MoveTestCase testCase)
     {
@@ -44,9 +53,9 @@ public class AncestorLinkExtractorTests
         var extractor = new AncestorLinkExtractor<DomainObject, DirectAncestorLink>(
             queryableSource,
             new DomainObjectExpander<DomainObject>(new HierarchicalInfo<DomainObject>(v => v.Parent), queryableSource),
-            new FullAncestorLinkInfo<DomainObject, DirectAncestorLink, Ignore>(
+            new FullAncestorLinkInfo<DomainObject, DirectAncestorLink, UnDirectAncestorLink>(
                 new AncestorLinkInfo<DomainObject, DirectAncestorLink>(l => l.From, l => l.To),
-                new AncestorLinkInfo<DomainObject, Ignore>(_ => null!, _ => null!)));
+                new AncestorLinkInfo<DomainObject, UnDirectAncestorLink>(l => l.From, l => l.To)));
 
         // Act
         foreach (var pair in testCase.UpdateParents)
