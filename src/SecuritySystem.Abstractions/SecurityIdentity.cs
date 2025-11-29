@@ -2,6 +2,8 @@
 
 public abstract record SecurityIdentity
 {
+	public abstract Type IdentType { get; }
+
 	public abstract object GetId();
 
 	public static implicit operator SecurityIdentity(Guid id)
@@ -18,6 +20,8 @@ public abstract record SecurityIdentity
 public record SecurityIdentity<TIdent>(TIdent Id) : SecurityIdentity
 	where TIdent : notnull
 {
+	public override Type IdentType { get; } = typeof(TIdent);
+
 	public override object GetId()
 	{
 		return this.Id;

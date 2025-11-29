@@ -11,8 +11,6 @@ using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
-using System.Linq.Expressions;
-
 namespace SecuritySystem.DependencyInjection;
 
 public class SecuritySystemSettings : ISecuritySystemSettings

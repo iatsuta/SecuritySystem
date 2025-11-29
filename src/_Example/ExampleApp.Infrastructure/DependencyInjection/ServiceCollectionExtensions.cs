@@ -46,7 +46,7 @@ public static class ServiceCollectionExtensions
                     .SetRawUserAuthenticationService<RawUserAuthenticationService>()
                     .SetGenericRepository<EfGenericRepository>()
 
-                    .SetUserSource<Employee>(employee => employee.Id, employee => employee.Login, _ => true, employee => employee.RunAs)
+                    .AddUserSource<Employee>(usb => usb.SetName(employee => employee.Login).SetRunAs(employee => employee.RunAs))
 
                     .AddSecurityContext<BusinessUnit>(
                         new Guid("{E4AE968E-7B6B-4236-B381-9886C8E0FA34}"),

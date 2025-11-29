@@ -43,10 +43,10 @@ public class GetPrincipalHandler(
             .Select(typedPermission =>
                 new PermissionDto
                 {
-                    Id = typedPermission.Id,
+                    Id = typedPermission.Identity.ToString()!,
                     IsVirtual = typedPermission.IsVirtual,
                     Role = typedPermission.SecurityRole.Name,
-                    RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Id,
+                    RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.ToString()!,
                     Comment = typedPermission.Comment,
                     StartDate = typedPermission.StartDate,
                     EndDate = typedPermission.EndDate,
@@ -60,7 +60,7 @@ public class GetPrincipalHandler(
 
                             return new ContextDto
                             {
-                                Id = securityContextInfo.Id,
+                                Id = securityContextInfo.Identity.ToString()!,
                                 Name = securityContextInfo.Name,
                                 Entities = restriction.Value.Cast<object>().Select(securityContextId =>
                                         new RestrictionDto { Id = securityContextId.ToString()!, Name = typedCache[securityContextId] })

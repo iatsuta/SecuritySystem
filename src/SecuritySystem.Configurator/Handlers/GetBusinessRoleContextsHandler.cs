@@ -18,7 +18,7 @@ public class GetBusinessRoleContextsHandler(
 
         return securityContextInfoSource
                .SecurityContextInfoList
-               .Select(x => new EntityDto { Id = x.Id, Name = x.Name })
+               .Select(x => new EntityDto { Id = x.Identity.ToString()!, Name = x.Name })
                .OrderBy(x => x.Name)
                .ToList();
     }

@@ -72,7 +72,7 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
     private IEnumerable<Expression<Func<TPermission, bool>>> GetManyGrandAccessExpr<TSecurityContext>()
         where TSecurityContext : ISecurityContext
     {
-        foreach (var restrictionPath in bindingInfo.RestrictionPaths)
+        foreach (var restrictionPath in bindingInfo.Restrictions)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
             {
@@ -94,7 +94,7 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
 
         var filterExpr = identityInfo.CreateContainsFilter(idents.ToArray());
 
-        foreach (var restrictionPath in bindingInfo.RestrictionPaths)
+        foreach (var restrictionPath in bindingInfo.Restrictions)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext>> singlePath)
             {
