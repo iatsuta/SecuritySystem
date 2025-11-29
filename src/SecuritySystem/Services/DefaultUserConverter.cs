@@ -3,6 +3,8 @@
 using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
+
+using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 
 namespace SecuritySystem.Services;
@@ -18,18 +20,25 @@ public class DefaultUserConverter<TUser>(IServiceProvider serviceProvider, IIden
 		return (IDefaultUserConverter<TUser>)ActivatorUtilities.CreateInstance(serviceProvider, innerUserSourceType, identityInfo);
 	});
 
-	public Expression<Func<TUser, User>> GetConvertFunc()
-	{
-		return this.lazyInnerUserSource.Value.GetConvertFunc();
-	}
+	private IDefaultUserConverter<TUser> InnerUserSource => lazyInnerUserSource.Value;
+
+	public Expression<Func<TUser, User>> ConvertExpression => this.InnerUserSource.ConvertExpression;
+
+	public Func<TUser, User> ConvertFunc => this.InnerUserSource.ConvertFunc;
 }
 
 public class DefaultUserConverter<TUser, TIdent>(UserSourceInfo<TUser> userSourceInfo, IdentityInfo<TUser, TIdent> identityInfo) : IDefaultUserConverter<TUser>
 	where TIdent : notnull
 {
-	public Expression<Func<TUser, User>> GetConvertFunc()
+	private readonly Tuple<Expression<Func<TUser, User>>, Func<TUser, User>> convertData = FuncHelper.Create(() =>
 	{
-		return ExpressionEvaluateHelper.InlineEvaluate<Func<TUser, User>>(ee =>
+		var convertExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TUser, User>>(ee =>
 			user => new User(ee.Evaluate(userSourceInfo.NamePath, user), new SecurityIdentity<TIdent>(ee.Evaluate(identityInfo.IdPath, user))));
-	}
+
+		return new Tuple<Expression<Func<TUser, User>>, Func<TUser, User>>(convertExpr, convertExpr.Compile());
+	}).Invoke();
+
+	public Expression<Func<TUser, User>> ConvertExpression => convertData.Item1;
+
+	public Func<TUser, User> ConvertFunc => convertData.Item2;
 }

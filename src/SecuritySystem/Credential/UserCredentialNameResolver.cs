@@ -13,7 +13,9 @@ public class RootUserCredentialNameResolver(IEnumerable<IUserCredentialNameByIde
 
 			case UserCredential.IdentUserCredential { Identity: var identity }:
 			{
-				var request = from resolver in resolvers
+				var request =
+
+					from resolver in resolvers
 
 					let userName = resolver.TryGetUserName(identity)
 

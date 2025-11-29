@@ -1,4 +1,5 @@
-﻿using SecuritySystem.Credential;
+﻿using CommonFramework;
+using SecuritySystem.Credential;
 
 using SecuritySystem.UserSource;
 
@@ -9,68 +10,64 @@ public class RunAsManager<TUser>(
 	ISecuritySystemFactory securitySystemFactory,
 	IEnumerable<IRunAsValidator> validators,
 	IUserSource<TUser> userSource,
-	IUserSource<User> primitiveUserSource,
 	IUserSourceRunAsAccessor<TUser> accessor,
-	IGenericRepository genericRepository)
-    : IRunAsManager
+	IGenericRepository genericRepository,
+	IDefaultUserConverter<TUser> toDefaultUserConverter)
+	: IRunAsManager
 	where TUser : class
 {
-	private readonly Lazy<TUser> nativeCurrentUser = new(() =>
-	{
+	private readonly Lazy<TUser> lazyNativeCurrentUser = new(() => userSource.GetUser(rawUserAuthenticationService.GetUserName()));
 
-	});
+	private TUser NativeCurrentUser => this.lazyNativeCurrentUser.Value;
 
-	private TUser NativeUser => this.nativeCurrentUser.Value;
-
-	private TUser? NativeRunAsUser => accessor.GetRunAs(this.NativeUser);
+	private TUser? NativeRunAsUser => accessor.GetRunAs(this.NativeCurrentUser);
 
 	private UserCredential PureCredential { get; } = rawUserAuthenticationService.GetUserName();
 
-	public User? RunAsUser { get; } = primitiveUserSource.GetUser(rawUserAuthenticationService.GetUserName());
+	public User? RunAsUser => this.NativeRunAsUser?.Pipe(toDefaultUserConverter.ConvertFunc);
 
 	public async Task StartRunAsUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
-    {
-        this.CheckAccess();
+	{
+		this.CheckAccess();
 
-        if (this.RunAsUser != null && userCredential.IsMatch(this.RunAsUser))
-        {
-        }
-        else if (userCredential == this.PureCredential)
-        {
-            await this.FinishRunAsUserAsync(cancellationToken);
-        }
-        else
-        {
+		if (this.RunAsUser != null && userCredential.IsMatch(this.RunAsUser))
+		{
+		}
+		else if (userCredential == this.PureCredential)
+		{
+			await this.FinishRunAsUserAsync(cancellationToken);
+		}
+		else
+		{
 			foreach (var runAsValidator in validators)
 			{
 				runAsValidator.Validate(userCredential);
 			}
 
 			await this.PersistRunAs(userCredential, cancellationToken);
-        }
-    }
+		}
+	}
 
-    public async Task FinishRunAsUserAsync(CancellationToken cancellationToken)
-    {
-        this.CheckAccess();
+	public async Task FinishRunAsUserAsync(CancellationToken cancellationToken)
+	{
+		this.CheckAccess();
 
-        await this.PersistRunAs(null, cancellationToken);
-    }
+		await this.PersistRunAs(null, cancellationToken);
+	}
 
-    private async Task PersistRunAs(UserCredential? userCredential, CancellationToken cancellationToken)
+	private async Task PersistRunAs(UserCredential? userCredential, CancellationToken cancellationToken)
 	{
 		var newRunAsUser = userCredential is null ? null : userSource.GetUser(userCredential);
 
 		if (this.NativeRunAsUser != newRunAsUser)
 		{
-			accessor.SetRunAs(this.NativeUser, newRunAsUser);
+			accessor.SetRunAs(this.NativeCurrentUser, newRunAsUser);
 
-			await genericRepository.SaveAsync(this.NativeUser, cancellationToken);
+			await genericRepository.SaveAsync(this.NativeCurrentUser, cancellationToken);
 		}
 	}
 
-    private void CheckAccess() =>
-        securitySystemFactory.Create(new SecurityRuleCredential.CurrentUserWithoutRunAsCredential())
-                             .CheckAccess(SecurityRole.Administrator);
+	private void CheckAccess() =>
+		securitySystemFactory.Create(new SecurityRuleCredential.CurrentUserWithoutRunAsCredential())
+			.CheckAccess(SecurityRole.Administrator);
 }
-

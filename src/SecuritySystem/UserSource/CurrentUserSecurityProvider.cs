@@ -66,23 +66,23 @@ public class CurrentUserSecurityProvider<TDomainObject>(
 }
 
 public class CurrentUserSecurityProvider<TDomainObject, TUser, TIdent>(
-    IExpressionEvaluatorStorage expressionEvaluatorStorage,
-    IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
-    UserSourceInfo<TUser> userSourceInfo,
-    IdentityInfo<TUser, TIdent> identityInfo,
-    ICurrentUser currentUser) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
-    where TUser : class
-    where TIdent : notnull
+	IExpressionEvaluatorStorage expressionEvaluatorStorage,
+	IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
+	UserSourceInfo<TUser> userSourceInfo,
+	IdentityInfo<TUser, TIdent> identityInfo,
+	ICurrentUserSource<TUser> currentUserSource) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
+	where TUser : class
+	where TIdent : notnull
 {
 	public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
 
 		relativeDomainPathInfo.CreateCondition(
-			identityInfo.IdPath.Select(ExpressionHelper.GetEqualityWithExpr(((SecurityIdentity<TIdent>)currentUser.Identity).Id)));
+			identityInfo.IdPath.Select(ExpressionHelper.GetEqualityWithExpr(((SecurityIdentity<TIdent>)currentUserSource.ToSimple().CurrentUser.Identity).Id)));
 
-    public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
-    {
-        var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
+	public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
+	{
+		var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
 
-        return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(userSourceInfo.NamePath, user)));
-    }
+		return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(userSourceInfo.NamePath, user)));
+	}
 }

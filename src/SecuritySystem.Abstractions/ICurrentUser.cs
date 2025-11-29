@@ -3,6 +3,4 @@
 public interface ICurrentUser
 {
 	string Name { get; }
-
-	SecurityIdentity Identity { get; }
 }

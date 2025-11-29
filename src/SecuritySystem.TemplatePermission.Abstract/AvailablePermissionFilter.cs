@@ -1,8 +1,5 @@
 ﻿using System.Linq.Expressions;
 
-using CommonFramework;
-using CommonFramework.ExpressionEvaluate;
-
 namespace SecuritySystem.TemplatePermission;
 
 public class AvailablePermissionFilter(DateTime today)

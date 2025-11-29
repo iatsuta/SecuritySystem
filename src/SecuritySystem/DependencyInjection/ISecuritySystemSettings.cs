@@ -6,8 +6,6 @@ using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 
-using System.Linq.Expressions;
-
 namespace SecuritySystem.DependencyInjection;
 
 public interface ISecuritySystemSettings
@@ -40,14 +38,8 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetAccessDeniedExceptionService<TAccessDeniedExceptionService>()
         where TAccessDeniedExceptionService : class, IAccessDeniedExceptionService;
 
-    ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
-        where TRunAsManager : class, IRunAsManager;
-
-    ISecuritySystemSettings SetUserSource<TUser>(
-        Expression<Func<TUser, string>> namePath,
-        Expression<Func<TUser, bool>> filter,
-        Expression<Func<TUser, TUser?>>? runAsPath = null)
-        where TUser : class;
+    ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>> setupUserSource)
+	    where TUser : class;
 
     ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
         where TStorage : class, ISecurityAccessorInfinityStorage;

@@ -21,7 +21,6 @@ using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
-
 using CommonFramework.ExpressionEvaluate;
 
 using SecuritySystem.HierarchicalExpand;
@@ -95,6 +94,7 @@ public static class ServiceCollectionExtensions
 
 			    .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))
 			    .AddScoped(typeof(IUserSource<>), typeof(UserSource<>))
+			    .AddScoped(typeof(IUserQueryableSource<>), typeof(UserQueryableSource<>))
 
 			    .AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
 			    .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))

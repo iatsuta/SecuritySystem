@@ -21,7 +21,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
     private readonly List<Action<IServiceCollection>> registerActions = [];
 
-    private Action<IServiceCollection> registerRunAsManagerAction = _ => { };
+    private Action<IServiceCollection>? registerRunAsManagerAction;
 
     private Action<IServiceCollection>? registerQueryableSourceAction;
 
@@ -119,49 +119,53 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetUserSource<TUser>(
-        Expression<Func<TUser, string>> namePath,
-        Expression<Func<TUser, bool>> filter,
-        Expression<Func<TUser, TUser?>>? runAsPath = null)
-        where TUser : class
+    public ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>> setupUserSource)
+	    where TUser : class
     {
-        this.registerActions.Add(sc =>
-        {
-	        var info = new UserSourceInfo<TUser>(namePath, filter);
+	    var userSourceBuilder = new UserSourceBuilder<TUser>();
 
-	        sc.AddSingleton<UserSourceInfo>(info);
-	        sc.AddSingleton(info);
+	    setupUserSource(userSourceBuilder);
 
-	        sc.AddScoped<IUserCredentialNameByIdentityResolver, UserCredentialNameByIdentityResolver<TUser>>();
-		});
+	    var namePath = userSourceBuilder.NamePath ?? throw new InvalidOperationException("NamePath must be initialized");
 
-        if (runAsPath != null)
-        {
-	        this.registerRunAsManagerAction = sc =>
-	        {
-		        if (this.registerGenericRepositoryAction == null)
-		        {
-			        throw new InvalidOperationException("GenericRepository must be initialized");
-		        }
+	    this.registerActions.Add(sc =>
+	    {
+		    var info = new UserSourceInfo<TUser>(namePath, userSourceBuilder.FilterPath);
+
+		    sc.AddSingleton<UserSourceInfo>(info);
+		    sc.AddSingleton(info);
+
+		    sc.AddScoped(typeof(IMissedUserService<>), userSourceBuilder.MissedUserServiceType);
+
+		    sc.AddScoped<IUserCredentialNameByIdentityResolver, UserCredentialNameByIdentityResolver<TUser>>();
+	    });
+
+	    if (userSourceBuilder.RunAsPath != null)
+	    {
+		    if (this.registerRunAsManagerAction == null)
+		    {
+			    this.registerRunAsManagerAction = sc =>
+			    {
+				    if (this.registerGenericRepositoryAction == null)
+				    {
+					    throw new InvalidOperationException("GenericRepository must be initialized");
+				    }
 
 
-		        sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
+				    sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
 
-		        sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(runAsPath));
-		        sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
-		        sc.ReplaceScoped<IRunAsManager, RunAsManager<TUser>>();
-	        };
-        }
+				    sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(userSourceBuilder.RunAsPath));
+				    sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
+				    sc.ReplaceScoped<IRunAsManager, RunAsManager<TUser>>();
+			    };
+		    }
+		    else
+		    {
+			    throw new InvalidOperationException("RunAs already initialized");
+		    }
+	    }
 
-        return this;
-    }
-
-    public ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
-        where TRunAsManager : class, IRunAsManager
-    {
-        this.registerRunAsManagerAction = sc => sc.ReplaceScoped<IRunAsManager, TRunAsManager>();
-
-        return this;
+	    return this;
     }
 
     public ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
@@ -261,7 +265,10 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
         this.registerActions.ForEach(v => v(services));
 
-        this.registerRunAsManagerAction(services);
+        if (this.registerRunAsManagerAction != null)
+        {
+	        this.registerRunAsManagerAction(services);
+		}
 
         if (this.InitializeDefaultRoles)
         {
