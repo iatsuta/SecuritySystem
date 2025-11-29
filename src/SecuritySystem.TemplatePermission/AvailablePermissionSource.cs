@@ -40,18 +40,18 @@ public class AvailablePermissionSource(
                };
     }
 
-    private Expression<Func<Guid, bool>> GetRestrictionFilter(SecurityContextRestrictionFilterInfo restrictionFilterInfo)
+    private Expression<Func<TSecurityContextIdent, bool>> GetRestrictionFilter(SecurityContextRestrictionFilterInfo restrictionFilterInfo)
     {
-        return new Func<SecurityContextRestrictionFilterInfo<ISecurityContext>, Expression<Func<Guid, bool>>>(this.GetRestrictionFilterExpression)
+        return new Func<SecurityContextRestrictionFilterInfo<ISecurityContext>, Expression<Func<TSecurityContextIdent, bool>>>(this.GetRestrictionFilterExpression)
                .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
-               .Invoke<Expression<Func<Guid, bool>>>(this, restrictionFilterInfo);
+               .Invoke<Expression<Func<TSecurityContextIdent, bool>>>(this, restrictionFilterInfo);
     }
 
-    private Expression<Func<Guid, bool>> GetRestrictionFilterExpression<TSecurityContext>(
+    private Expression<Func<TSecurityContextIdent, bool>> GetRestrictionFilterExpression<TSecurityContext>(
         SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
+        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
         var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo)
                                                                     .Select(identityInfo.Id.Path);

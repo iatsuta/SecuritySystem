@@ -3,12 +3,13 @@ namespace SecuritySystem;
 
 public static class SecurityContextInfoSourceExtensions
 {
-    public static IEnumerable<Type> GetSecurityContextTypes(this ISecurityContextInfoSource securityContextInfoSource) =>
-        securityContextInfoSource.SecurityContextInfoList.Select(info => info.Type);
+	extension(ISecurityContextInfoSource securityContextInfoSource)
+	{
+		public IEnumerable<Type> GetSecurityContextTypes() =>
+			securityContextInfoSource.SecurityContextInfoList.Select(info => info.Type);
 
-    public static SecurityContextInfo GetSecurityContextInfo<TSecurityContext>(this ISecurityContextInfoSource securityContextInfoSource)
-        where TSecurityContext : ISecurityContext
-    {
-        return securityContextInfoSource.GetSecurityContextInfo(typeof(TSecurityContext));
-    }
+		public SecurityContextInfo GetSecurityContextInfo<TSecurityContext>()
+			where TSecurityContext : ISecurityContext =>
+			securityContextInfoSource.GetSecurityContextInfo(typeof(TSecurityContext));
+	}
 }

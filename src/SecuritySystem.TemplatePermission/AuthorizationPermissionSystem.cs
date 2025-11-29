@@ -9,19 +9,15 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.TemplatePermission;
 
-
-public class TemplatePermissionSystemInfo<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole>
-(
-    Expression<Func<TPrincipal, string>> PrincipalNamePath,
-
-    //Expression<Func<TPrincipal, IEnumerable<TPermission>>> PrincipalPermissionsPath,
-
-    Expression<Func<TPermission, TPrincipal>> PrincipalToPermissionPath,
-
-    Expression<Func<TPrincipal, IEnumerable<TPermission>>> PrincipalPermissionsPath,
+public class TemplatePermissionSystemInfo<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole, TSecurityContextIdent>(
+	PropertyAccessors<TPermission, TPrincipal> ToPrincipal,
+	PropertyAccessors<TPermission, TSecurityRole> ToSecurityRole,
+	PropertyAccessors<TPermissionRestriction, TPermission> ToPermission,
+	PropertyAccessors<TPermissionRestriction, TSecurityContextType> ToSecurityContextType,
+	PropertyAccessors<TPermissionRestriction, TSecurityContextIdent> ToSecurityContextIdent
 );
 
-public class AuthorizationPermissionSystem<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole>(
+public class TemplatePermissionSystem<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole, TSecurityContextIdent>(
     IServiceProvider serviceProvider,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextSource securityContextSource,
@@ -36,9 +32,9 @@ public class AuthorizationPermissionSystem<TPrincipal, TPermission, TPermissionR
         where TSecurityContext : class, ISecurityContext
         where TIdent : notnull
     {
-        if (typeof(TIdent) != typeof(Guid))
+        if (typeof(TIdent) != typeof(TSecurityContextIdent))
         {
-            throw new InvalidOperationException($"{nameof(TIdent)} must be {nameof(Guid)}");
+            throw new InvalidOperationException($"{nameof(TIdent)} must be {nameof(TSecurityContextIdent)}");
         }
         else
         {
@@ -46,11 +42,11 @@ public class AuthorizationPermissionSystem<TPrincipal, TPermission, TPermissionR
         }
     }
 
-    private Expression<Func<TPermission, IEnumerable<Guid>>> GetPermissionRestrictionsExpr<TSecurityContext>(
+    private Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetPermissionRestrictionsExpr<TSecurityContext>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        var securityContextTypeId = securityContextInfoSource.GetSecurityContextInfo<TSecurityContext>().Id;
+        var securityContextTypeId = securityContextInfoSource.GetSecurityContextInfo<TSecurityContext>().Identity;
 
         if (restrictionFilterInfo == null)
         {
@@ -60,7 +56,7 @@ public class AuthorizationPermissionSystem<TPrincipal, TPermission, TPermissionR
         }
         else
         {
-            var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
+            var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
             var securityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo)
                                                                 .Where(restrictionFilterInfo.GetPureFilter(serviceProvider))
@@ -80,14 +76,14 @@ public class AuthorizationPermissionSystem<TPrincipal, TPermission, TPermissionR
 
     public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        return ActivatorUtilities.CreateInstance<AuthorizationPermissionSource>(
+        return ActivatorUtilities.CreateInstance<TemplatePermissionSource>(
             serviceProvider,
             securityRule.TryApplyCredential(securityRuleCredential));
     }
 
     public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default)
     {
-        return ActivatorUtilities.CreateInstance<AuthorizationAvailableSecurityRoleSource>(serviceProvider, securityRuleCredential)
+        return ActivatorUtilities.CreateInstance<TemplateAvailableSecurityRoleSource>(serviceProvider, securityRuleCredential)
                                  .GetAvailableSecurityRoles(cancellationToken);
     }
 

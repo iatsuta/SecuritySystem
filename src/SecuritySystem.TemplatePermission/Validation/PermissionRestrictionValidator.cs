@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
 using SecuritySystem.Services;
 
@@ -42,10 +43,10 @@ public class PermissionRestrictionValidator : AbstractValidator<PermissionRestri
                       var securityContextTypeInfo =
                           securityContextInfoSource.GetSecurityContextInfo(permissionRestriction.SecurityContextType.Id);
 
-                      var authorizationTypedExternalSource =
-                          (ITypedSecurityContextStorage<Guid>)securityEntitySource.GetTyped(securityContextTypeInfo.Type);
+                      var typedSecurityContextStorage =
+                          (ITypedSecurityContextStorage<TSecurityContextIdent>)securityEntitySource.GetTyped(securityContextTypeInfo.Type);
 
-                      return authorizationTypedExternalSource.IsExists(securityContextId);
+                      return typedSecurityContextStorage.IsExists(securityContextId);
                   })
             .WithMessage(permissionRestriction =>
                              $"{permissionRestriction.SecurityContextType.Name} with id '{permissionRestriction.SecurityContextId}' not exists.");
@@ -74,19 +75,19 @@ public class PermissionRestrictionValidator : AbstractValidator<PermissionRestri
         return this.securityContextInfoSource.GetSecurityContextInfo(securityContextType.Id);
     }
 
-    private bool IsAllowed(Guid securityContextId, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
+    private bool IsAllowed(TSecurityContextIdent securityContextId, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
     {
-        return new Func<Guid, SecurityContextRestrictionFilterInfo<ISecurityContext>, bool>(this.IsAllowed)
+        return new Func<TSecurityContextIdent, SecurityContextRestrictionFilterInfo<ISecurityContext>, bool>(this.IsAllowed)
                .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
                .Invoke<bool>(this, securityContextId, restrictionFilterInfo);
     }
 
     private bool IsAllowed<TSecurityContext>(
-        Guid securityContextId,
+        TSecurityContextIdent securityContextId,
         SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        var identityInfo = this.identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
+        var identityInfo = this.identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
         return this.securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path).Contains(securityContextId);
     }

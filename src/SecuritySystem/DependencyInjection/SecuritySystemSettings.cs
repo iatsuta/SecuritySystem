@@ -1,8 +1,6 @@
 ﻿using CommonFramework.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.Credential;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;

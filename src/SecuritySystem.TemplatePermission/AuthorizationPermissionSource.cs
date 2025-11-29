@@ -15,7 +15,7 @@ public record PermissionSourceInfo<TPrincipal, TPermission, TPermissionRestricti
     Expression<Func<TPermissionRestriction, TSecurityContextType>> SecurityContextTypePath,
     Expression<Func<TPermission, TSecurityRole>> SecurityRolePath);
 
-public class AuthorizationPermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType>(
+public class TemplatePermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType>(
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IRealTypeResolver realTypeResolver,
     IQueryableSource queryableSource,
@@ -93,17 +93,17 @@ public class AuthorizationPermissionSource<TPrincipal, TPermission, TPermissionR
             });
     }
 
-    private Guid[] ApplySecurityContextFilter(List<Guid> securityContextIdents, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
+    private TSecurityContextIdent[] ApplySecurityContextFilter(List<TSecurityContextIdent> securityContextIdents, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
     {
-        return new Func<List<Guid>, SecurityContextRestrictionFilterInfo<ISecurityContext>, Guid[]>(this.ApplySecurityContextFilter)
+        return new Func<List<TSecurityContextIdent>, SecurityContextRestrictionFilterInfo<ISecurityContext>, TSecurityContextIdent[]>(this.ApplySecurityContextFilter)
                .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
-               .Invoke<Guid[]>(this, securityContextIdents, restrictionFilterInfo);
+               .Invoke<TSecurityContextIdent[]>(this, securityContextIdents, restrictionFilterInfo);
     }
 
-    private Guid[] ApplySecurityContextFilter<TSecurityContext>(List<Guid> baseSecurityContextIdents, SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
+    private TSecurityContextIdent[] ApplySecurityContextFilter<TSecurityContext>(List<TSecurityContextIdent> baseSecurityContextIdents, SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, Guid>();
+        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
         var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path);
 

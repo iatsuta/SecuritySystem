@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationAvailableSecurityRoleSource(
+public class TemplateAvailableSecurityRoleSource(
     IAvailablePermissionSource availablePermissionSource,
     ISecurityRoleSource securityRoleSource,
     SecurityRuleCredential securityRuleCredential)

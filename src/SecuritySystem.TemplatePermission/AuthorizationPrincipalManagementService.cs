@@ -6,14 +6,14 @@ using SecuritySystem.UserSource;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TBusinessRole, TSecurityContextType>(
+public class TemplatePrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType>(
     IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource)
-    : AuthorizationPrincipalSourceService(
+    : TemplatePrincipalSourceService(
       principalRepository,
       securityRoleSource,
       securityContextInfoSource,
@@ -50,13 +50,13 @@ public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TB
     }
 
     public async Task<MergeResult<object, object>> UpdatePermissionsAsync(
-        Guid principalId,
+        TSecurityContextIdent principalId,
         IEnumerable<TypedPermission> typedPermissions,
         CancellationToken cancellationToken = default)
     {
         var dbPrincipal = await principalRepository.LoadAsync(principalId, cancellationToken);
 
-        var permissionMergeResult = dbPrincipal.Permissions.GetMergeResult(typedPermissions, p => p.Id, p => p.Id == Guid.Empty ? Guid.NewGuid() : p.Id);
+        var permissionMergeResult = dbPrincipal.Permissions.GetMergeResult(typedPermissions, p => p.Id, p => p.Id == TSecurityContextIdent.Empty ? TSecurityContextIdent.NewTSecurityContextIdent() : p.Id);
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
@@ -91,14 +91,14 @@ public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TB
         TypedPermission typedPermission,
         CancellationToken cancellationToken = default)
     {
-        if (typedPermission.Id != Guid.Empty || typedPermission.IsVirtual)
+        if (typedPermission.Id != TSecurityContextIdent.Empty || typedPermission.IsVirtual)
         {
             throw new Exception("wrong typed permission");
         }
 
         var securityRole = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole);
 
-        var dbRole = await businessRoleRepository.LoadAsync(securityRole.Id, cancellationToken);
+        var dbRole = await securityRoleRepository.LoadAsync(securityRole.Id, cancellationToken);
 
         var newDbPermission = new TPermission(dbPrincipal)
                               {
@@ -109,7 +109,7 @@ public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TB
         {
             var securityContextTypeId = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Id;
 
-            foreach (Guid securityContextId in restrictionGroup.Value)
+            foreach (TSecurityContextIdent securityContextId in restrictionGroup.Value)
             {
                 _ = new PermissionRestriction(newDbPermission)
                     {
@@ -155,7 +155,7 @@ public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TB
 
         var restrictionMergeResult = dbPermission.Restrictions.GetMergeResult(
             typedPermission.Restrictions.ChangeKey(t => securityContextInfoSource.GetSecurityContextInfo(t).Id)
-                           .SelectMany(pair => pair.Value.Cast<Guid>().Select(securityContextId => (pair.Key, securityContextId))),
+                           .SelectMany(pair => pair.Value.Cast<TSecurityContextIdent>().Select(securityContextId => (pair.Key, securityContextId))),
             r => (r.SecurityContextType.Id, r.SecurityContextId),
             pair => pair);
 

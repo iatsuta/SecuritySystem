@@ -1,6 +1,5 @@
 ﻿using CommonFramework;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
-using System.Security.Principal;
 
 namespace SecuritySystem.TemplatePermission.Validation;
 
@@ -71,7 +70,7 @@ public class PrincipalUniquePermissionValidator<TPrincipal> : IPrincipalUniquePe
 
             var securityEntities = this.securityEntitySource
                                        .GetTyped(securityContextInfo.Type)
-                                       .Pipe(v => (ITypedSecurityContextStorage<Guid>)v)
+                                       .Pipe(v => (ITypedSecurityContextStorage<TSecurityContextIdent>)v)
                                        .GetSecurityContextsByIdents(securityContextTypeGroup);
 
             yield return $"{securityContextTypeGroup.Key.Name.ToPluralize()}: {securityEntities.Select(v => v.Name).Join(", ")}";

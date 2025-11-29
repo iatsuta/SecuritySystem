@@ -135,7 +135,7 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
         return subPermission.Period.IsEmpty || delegatedFrom.Period.Contains(subPermission.Period);
     }
 
-    private Dictionary<TSecurityContextType, IEnumerable<SecurityContextData<Guid>>> GetInvalidDelegatedPermissionSecurities(
+    private Dictionary<TSecurityContextType, IEnumerable<SecurityContextData<TSecurityContextIdent>>> GetInvalidDelegatedPermissionSecurities(
         TPermission subPermission,
         TPermission delegatedFrom)
     {
@@ -158,7 +158,7 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
 
                               let allSecurityContexts = this.securityEntitySource
                                                             .GetTyped(securityContextTypeInfo.Type)
-                                                            .Pipe(v => (ITypedSecurityContextStorage<Guid>)v)
+                                                            .Pipe(v => (ITypedSecurityContextStorage<TSecurityContextIdent>)v)
                                                             .GetSecurityContexts()
 
                               let securityContextType = requiredGroup.Key
@@ -195,7 +195,7 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
 
                               let key = g.Key
 
-                              let value = (IEnumerable<SecurityContextData<Guid>>)g
+                              let value = (IEnumerable<SecurityContextData<TSecurityContextIdent>>)g
 
                               select (key, value);
 
@@ -207,8 +207,8 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
 
                               let key = securityContextType
 
-                              let value = (IEnumerable<SecurityContextData<Guid>>)
-                                  [new SecurityContextData<Guid>(Guid.Empty, "[Not Selected Element]", Guid.Empty)]
+                              let value = (IEnumerable<SecurityContextData<TSecurityContextIdent>>)
+                                  [new SecurityContextData<TSecurityContextIdent>(TSecurityContextIdent.Empty, "[Not Selected Element]", TSecurityContextIdent.Empty)]
 
                               select (key, value);
 

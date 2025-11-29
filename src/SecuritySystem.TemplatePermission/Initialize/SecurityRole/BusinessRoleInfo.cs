@@ -2,14 +2,14 @@
 
 namespace SecuritySystem.TemplatePermission.Initialize;
 
-public record BusinessRoleInfo<TBusinessRole>(
-	PropertyAccessors<TBusinessRole, string> Name,
-	PropertyAccessors<TBusinessRole, string> Description)
+public record SecurityRoleInfo<TSecurityRole>(
+	PropertyAccessors<TSecurityRole, string> Name,
+	PropertyAccessors<TSecurityRole, string> Description)
 {
 
-	public BusinessRoleInfo(Expression<Func<TBusinessRole, string>> namePath,
-		Expression<Func<TBusinessRole, string>> descriptionPath)
-		: this(new PropertyAccessors<TBusinessRole, string>(namePath), new PropertyAccessors<TBusinessRole, string>(descriptionPath))
+	public SecurityRoleInfo(Expression<Func<TSecurityRole, string>> namePath,
+		Expression<Func<TSecurityRole, string>> descriptionPath)
+		: this(new PropertyAccessors<TSecurityRole, string>(namePath), new PropertyAccessors<TSecurityRole, string>(descriptionPath))
 	{
 	}
 }

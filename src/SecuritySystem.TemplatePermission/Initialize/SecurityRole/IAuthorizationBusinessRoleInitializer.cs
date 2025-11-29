@@ -3,9 +3,9 @@
 
 namespace SecuritySystem.TemplatePermission.Initialize;
 
-public interface IAuthorizationBusinessRoleInitializer<TBusinessRole> : ISecurityInitializer
+public interface ITemplateSecurityRoleInitializer<TSecurityRole> : ISecurityInitializer
 {
-    Task<MergeResult<TBusinessRole, FullSecurityRole>> Init(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken = default);
+    Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken = default);
 
-    new Task<MergeResult<TBusinessRole, FullSecurityRole>> Init(CancellationToken cancellationToken = default);
+    new Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(CancellationToken cancellationToken = default);
 }

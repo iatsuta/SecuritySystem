@@ -10,7 +10,7 @@ using SecuritySystem.UserSource;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationPrincipalSourceService<TPrincipal, TPermission>(
+public class TemplatePrincipalSourceService<TPrincipal, TPermission>(
     IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
