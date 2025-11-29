@@ -34,7 +34,7 @@ public class PermissionRestrictionValidator : AbstractValidator<PermissionRestri
 
                       return allowedSecurityContexts == null || allowedSecurityContexts.Contains(securityContextInfo.Type);
                   })
-            .WithMessage(permissionRestriction => $"Invalid SecurityContextType: {permissionRestriction.SecurityContextType.Name}.");
+            .WithMessage(permissionRestriction => $"Invalid TSecurityContextType: {permissionRestriction.SecurityContextType.Name}.");
 
         this.RuleFor(permissionRestriction => permissionRestriction.SecurityContextId)
             .Must((permissionRestriction, securityContextId) =>

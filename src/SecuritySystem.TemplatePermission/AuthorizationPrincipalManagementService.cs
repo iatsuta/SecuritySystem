@@ -1,20 +1,18 @@
 ﻿using CommonFramework;
-using SecuritySystem.Attributes;
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.Services;
+using SecuritySystem.UserSource;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationPrincipalManagementService(
-    [DisabledSecurity] IRepository<TPrincipal> principalRepository,
+public class AuthorizationPrincipalManagementService<TPrincipal, TPermission, TBusinessRole, TSecurityContextType>(
+    IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    IAvailablePermissionSource availablePermissionSource,
-    [DisabledSecurity] IRepository<TPermission> permissionRepository,
-    [DisabledSecurity] IRepository<BusinessRole> businessRoleRepository,
-    [DisabledSecurity] IRepository<SecurityContextType> securityContextTypeRepository,
-    IPrincipalDomainService principalDomainService,
-    IPrincipalResolver principalResolver)
+    IAvailablePermissionSource<TPermission> availablePermissionSource,
+    IPrincipalDomainService<TPrincipal> principalDomainService,
+    IUserSource<TPrincipal> principalUserSource)
     : AuthorizationPrincipalSourceService(
       principalRepository,
       securityRoleSource,
@@ -115,7 +113,7 @@ public class AuthorizationPrincipalManagementService(
                 _ = new PermissionRestriction(newDbPermission)
                     {
                         SecurityContextId = securityContextId,
-                        SecurityContextType = await securityContextTypeRepository.LoadAsync(
+                        TSecurityContextType = await securityContextTypeRepository.LoadAsync(
                                                   securityContextTypeId,
                                                   cancellationToken)
                     };
@@ -175,7 +173,7 @@ public class AuthorizationPrincipalManagementService(
             _ = new PermissionRestriction(dbPermission)
                 {
                     SecurityContextId = restriction.securityContextId,
-                    SecurityContextType = await securityContextTypeRepository.LoadAsync(restriction.Key, cancellationToken)
+                    TSecurityContextType = await securityContextTypeRepository.LoadAsync(restriction.Key, cancellationToken)
                 };
         }
 

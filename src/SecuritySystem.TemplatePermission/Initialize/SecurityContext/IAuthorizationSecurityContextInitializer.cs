@@ -5,5 +5,5 @@ namespace SecuritySystem.TemplatePermission.Initialize;
 
 public interface IAuthorizationSecurityContextInitializer : ISecurityInitializer
 {
-    new Task<MergeResult<SecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken = default);
+    new Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken = default);
 }

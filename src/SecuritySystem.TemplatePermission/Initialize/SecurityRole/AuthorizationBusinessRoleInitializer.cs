@@ -4,18 +4,18 @@ using SecuritySystem.Attributes;
 namespace SecuritySystem.TemplatePermission.Initialize;
 
 public class AuthorizationBusinessRoleInitializer(
-    [DisabledSecurity] IRepository<BusinessRole> businessRoleRepository,
+    [DisabledSecurity] IRepository<TBusinessRole> businessRoleRepository,
     ISecurityRoleSource securityRoleSource,
     ILogger<AuthorizationBusinessRoleInitializer> logger,
     InitializerSettings settings)
     : IAuthorizationBusinessRoleInitializer
 {
-    public async Task<MergeResult<BusinessRole, FullSecurityRole>> Init(CancellationToken cancellationToken)
+    public async Task<MergeResult<TBusinessRole, FullSecurityRole>> Init(CancellationToken cancellationToken)
     {
         return await this.Init(securityRoleSource.GetRealRoles(), cancellationToken);
     }
 
-    public async Task<MergeResult<BusinessRole, FullSecurityRole>> Init(
+    public async Task<MergeResult<TBusinessRole, FullSecurityRole>> Init(
         IEnumerable<FullSecurityRole> securityRoles,
         CancellationToken cancellationToken)
     {
@@ -47,7 +47,7 @@ public class AuthorizationBusinessRoleInitializer(
 
         foreach (var securityRole in mergeResult.AddingItems)
         {
-            var businessRole = new BusinessRole { Name = securityRole.Name, Description = securityRole.Information.Description ?? "" };
+            var businessRole = new TBusinessRole { Name = securityRole.Name, Description = securityRole.Information.Description ?? "" };
 
             logger.LogDebug("Role created: {Name} {Id}", businessRole.Name, securityRole.Id);
 

@@ -135,7 +135,7 @@ public class PermissionDelegateValidator : AbstractValidator<TPermission>
         return subPermission.Period.IsEmpty || delegatedFrom.Period.Contains(subPermission.Period);
     }
 
-    private Dictionary<SecurityContextType, IEnumerable<SecurityContextData<Guid>>> GetInvalidDelegatedPermissionSecurities(
+    private Dictionary<TSecurityContextType, IEnumerable<SecurityContextData<Guid>>> GetInvalidDelegatedPermissionSecurities(
         TPermission subPermission,
         TPermission delegatedFrom)
     {

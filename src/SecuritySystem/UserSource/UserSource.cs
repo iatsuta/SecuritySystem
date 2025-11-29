@@ -1,13 +1,16 @@
-﻿using SecuritySystem.Credential;
+﻿using GenericQueryable;
+using SecuritySystem.Credential;
 
 namespace SecuritySystem.UserSource;
 
 public class UserSource<TUser>(IUserQueryableSource<TUser> userQueryableSource, IMissedUserService<TUser> missedUserService) : IUserSource<TUser>
 	where TUser : class
 {
-	public TUser? TryGetUser(UserCredential userCredential) => userQueryableSource.GetQueryable(userCredential).SingleOrDefault();
+	public Task<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken) =>
+		userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
 
-	public TUser GetUser(UserCredential userCredential) => this.TryGetUser(userCredential) ?? missedUserService.GetUser(userCredential);
+	public async Task<TUser> GetUserAsync(UserCredential userCredential, CancellationToken cancellationToken) =>
+		await this.TryGetUserAsync(userCredential, cancellationToken) ?? missedUserService.GetUser(userCredential);
 
 	public IUserSource<User> ToSimple()
 	{

@@ -1,3 +1,3 @@
 ﻿namespace SecuritySystem.TemplatePermission.Validation;
 
-public interface IPermissionGeneralValidator : IValidator<TPermission>;
+public interface IPermissionGeneralValidator<in TPermission> : IValidator<TPermission>;

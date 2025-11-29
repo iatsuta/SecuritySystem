@@ -4,13 +4,13 @@ using SecuritySystem.Attributes;
 namespace SecuritySystem.TemplatePermission.Initialize;
 
 public class AuthorizationSecurityContextInitializer(
-    [DisabledSecurity] IRepository<SecurityContextType> securityContextTypeRepository,
+    [DisabledSecurity] IRepository<TSecurityContextType> securityContextTypeRepository,
     ISecurityContextInfoSource securityContextInfoSource,
     ILogger<AuthorizationSecurityContextInitializer> logger,
     InitializerSettings settings)
     : IAuthorizationSecurityContextInitializer
 {
-    public async Task<MergeResult<SecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken)
+    public async Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken)
     {
         var dbSecurityContextTypes = await securityContextTypeRepository.GetQueryable().GenericToListAsync(cancellationToken);
 
@@ -40,7 +40,7 @@ public class AuthorizationSecurityContextInitializer(
 
         foreach (var securityContextInfo in mergeResult.AddingItems)
         {
-            var securityContextType = new SecurityContextType { Name = securityContextInfo.Name };
+            var securityContextType = new TSecurityContextType { Name = securityContextInfo.Name };
 
             logger.LogDebug("SecurityContextType created: {Name} {Id}", securityContextType.Name, securityContextType.Id);
 

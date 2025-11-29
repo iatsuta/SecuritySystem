@@ -1,3 +1,3 @@
 ﻿namespace SecuritySystem.TemplatePermission.Validation;
 
-public interface IPrincipalUniquePermissionValidator : IValidator<TPrincipal>;
+public interface IPrincipalUniquePermissionValidator<in TPrincipal> : IValidator<TPrincipal>;

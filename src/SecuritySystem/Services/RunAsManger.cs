@@ -41,7 +41,7 @@ public class RunAsManager<TUser>(
 		{
 			foreach (var runAsValidator in validators)
 			{
-				runAsValidator.Validate(userCredential);
+				await runAsValidator.ValidateAsync(userCredential, cancellationToken);
 			}
 
 			await this.PersistRunAs(userCredential, cancellationToken);
@@ -57,7 +57,7 @@ public class RunAsManager<TUser>(
 
 	private async Task PersistRunAs(UserCredential? userCredential, CancellationToken cancellationToken)
 	{
-		var newRunAsUser = userCredential is null ? null : userSource.GetUser(userCredential);
+		var newRunAsUser = userCredential is null ? null : await userSource.GetUserAsync(userCredential, cancellationToken);
 
 		if (this.NativeRunAsUser != newRunAsUser)
 		{
