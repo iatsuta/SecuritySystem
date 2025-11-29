@@ -1,9 +1,10 @@
 ﻿using CommonFramework;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
+using System.Security.Principal;
 
 namespace SecuritySystem.TemplatePermission.Validation;
 
-public class PrincipalUniquePermissionValidator : AbstractValidator<TPrincipal>, IPrincipalUniquePermissionValidator
+public class PrincipalUniquePermissionValidator<TPrincipal> : IPrincipalUniquePermissionValidator<TPrincipal>
 {
     private readonly ISecurityContextStorage securityEntitySource;
 
@@ -28,9 +29,14 @@ public class PrincipalUniquePermissionValidator : AbstractValidator<TPrincipal>,
                       return !duplicates.Any();
                   })
             .WithMessage(principal => $"TPrincipal \"{principal.Name}\" has duplicate permissions: {{{duplicatesVar}}}");
+	}
+
+    public Task ValidateAsync(TPrincipal value, CancellationToken cancellationToken)
+    {
+	    throw new NotImplementedException();
     }
 
-    protected virtual IEnumerable<IGrouping<TPermission, TPermission>> GetDuplicates(IEnumerable<TPermission> permissions)
+	protected virtual IEnumerable<IGrouping<TPermission, TPermission>> GetDuplicates(IEnumerable<TPermission> permissions)
     {
         var comparer = new EqualityComparerImpl<TPermission>(this.IsDuplicate);
 

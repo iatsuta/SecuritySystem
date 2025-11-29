@@ -3,8 +3,10 @@
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 
+using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
+using SecuritySystem.UserSource;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -12,17 +14,18 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IIdentityInfoSource identityInfoSource,
-    IUserNameResolver userNameResolver,
+    IUserNameResolver<TPrincipal> userNameResolver,
     IQueryableSource queryableSource,
     TimeProvider timeProvider,
-    VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
-    DomainSecurityRule.RoleBaseSecurityRule securityRule,
-    SecurityRuleCredential defaultSecurityRuleCredential) : IPermissionSource<TPermission>
+    UserSourceInfo<TPrincipal> userSourceInfo,
+    SecurityRuleCredential defaultSecurityRuleCredential,
+	VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+	DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
     where TPermission : class
 {
     private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(VirtualPermissionSource<TPrincipal, TPermission>));
 
-    private readonly Expression<Func<TPermission, string>> fullNamePath = bindingInfo.PrincipalPath.Select(bindingInfo.PrincipalNamePath);
+    private readonly Expression<Func<TPermission, string>> fullNamePath = bindingInfo.PrincipalPath.Select(userSourceInfo.Name.Path);
 
     public bool HasAccess() => this.GetPermissionQuery().Any();
 

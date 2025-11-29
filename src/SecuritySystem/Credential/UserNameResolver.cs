@@ -1,20 +1,22 @@
-﻿using SecuritySystem.Credential;
-using SecuritySystem.Services;
+﻿using SecuritySystem.Services;
+using SecuritySystem.UserSource;
 
 // ReSharper disable once CheckNamespace
-namespace SecuritySystem;
+namespace SecuritySystem.Credential;
 
-public class UserNameResolver(
+public class UserNameResolver<TUser>(
     ICurrentUser currentUser,
     IRawUserAuthenticationService rawUserAuthenticationService,
-    IUserCredentialNameResolver userCredentialNameResolver) : IUserNameResolver
+    IUserSource<TUser> userSource) : IUserNameResolver<TUser>
 {
-    public string? Resolve(SecurityRuleCredential credential)
+	private readonly IUserSource<User> simpleUserSource = userSource.ToSimple();
+
+	public string? Resolve(SecurityRuleCredential credential)
     {
         switch (credential)
         {
             case SecurityRuleCredential.CustomUserSecurityRuleCredential customUserSecurityRuleCredential:
-                return userCredentialNameResolver.GetUserName(customUserSecurityRuleCredential.UserCredential);
+	            return simpleUserSource.TryGetUserAsync(customUserSecurityRuleCredential.UserCredential).GetAwaiter().GetResult()?.Name;
 
             case SecurityRuleCredential.CurrentUserWithRunAsCredential:
                 return currentUser.Name;

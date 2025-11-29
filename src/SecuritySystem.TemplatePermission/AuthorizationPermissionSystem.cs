@@ -1,14 +1,27 @@
 ﻿using System.Linq.Expressions;
+
 using CommonFramework;
 
-
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.TemplatePermission;
 
-public class AuthorizationPermissionSystem(
+
+public class TemplatePermissionSystemInfo<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole>
+(
+    Expression<Func<TPrincipal, string>> PrincipalNamePath,
+
+    //Expression<Func<TPrincipal, IEnumerable<TPermission>>> PrincipalPermissionsPath,
+
+    Expression<Func<TPermission, TPrincipal>> PrincipalToPermissionPath,
+
+    Expression<Func<TPrincipal, IEnumerable<TPermission>>> PrincipalPermissionsPath,
+);
+
+public class AuthorizationPermissionSystem<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole>(
     IServiceProvider serviceProvider,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextSource securityContextSource,

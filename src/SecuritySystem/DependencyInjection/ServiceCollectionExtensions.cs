@@ -95,8 +95,9 @@ public static class ServiceCollectionExtensions
 			    .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))
 			    .AddScoped(typeof(IUserSource<>), typeof(UserSource<>))
 			    .AddScoped(typeof(IUserQueryableSource<>), typeof(UserQueryableSource<>))
+			    .AddScoped(typeof(IUserNameResolver<>), typeof(UserNameResolver<>))
 
-			    .AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
+				.AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
 			    .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
 			    .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
 
@@ -116,8 +117,6 @@ public static class ServiceCollectionExtensions
 
 			    .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
 			    .AddScoped(typeof(LocalStorage<,>))
-
-			    .AddScoped<IUserCredentialNameResolver, RootUserCredentialNameResolver>()
 
 			    .AddScoped<IRootPrincipalSourceService, RootPrincipalSourceService>()
 			    .AddScoped<IPrincipalManagementService, FakePrincipalManagementService>()
@@ -193,8 +192,7 @@ public static class ServiceCollectionExtensions
 
 			    .AddScoped<IAvailableSecurityRoleSource, AvailableSecurityRoleSource>()
 			    .AddScoped<IAvailableSecurityOperationSource, AvailableSecurityOperationSource>()
-			    .AddScoped<IAvailableClientSecurityRuleSource, AvailableClientSecurityRuleSource>()
-			    .AddScoped<IUserNameResolver, UserNameResolver>();
+			    .AddScoped<IAvailableClientSecurityRuleSource, AvailableClientSecurityRuleSource>();
 	    }
     }
 }

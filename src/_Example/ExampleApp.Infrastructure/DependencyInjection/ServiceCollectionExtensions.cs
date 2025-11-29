@@ -76,12 +76,12 @@ public static class ServiceCollectionExtensions
                     .AddSecurityRole(SecurityRole.Administrator, new SecurityRoleInfo(new Guid("{2573CFDC-91CD-4729-AE97-82AB2F235E23}")))
 
                     .AddVirtualPermission<Employee, TestManager>(
-                        ExampleRoles.TestManager, domainObject => domainObject.Employee, employee => employee.Login,
+                        ExampleRoles.TestManager, domainObject => domainObject.Employee,
                         bi => bi
                             .AddRestriction(domainObject => domainObject.BusinessUnit)
                             .AddRestriction(domainObject => domainObject.Location))
 
                     .AddVirtualPermission<Employee, Administrator>(
-                        SecurityRole.Administrator, domainObject => domainObject.Employee, employee => employee.Login));
+                        SecurityRole.Administrator, domainObject => domainObject.Employee));
     }
 }

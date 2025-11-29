@@ -6,10 +6,7 @@ using CommonFramework.ExpressionEvaluate;
 
 namespace SecuritySystem.VirtualPermission;
 
-public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(
-    SecurityRole SecurityRole,
-    Expression<Func<TPermission, TPrincipal>> PrincipalPath,
-    Expression<Func<TPrincipal, string>> PrincipalNamePath)
+public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole SecurityRole, Expression<Func<TPermission, TPrincipal>> PrincipalPath)
 {
     public IReadOnlyList<LambdaExpression> Restrictions { get; init; } = [];
 

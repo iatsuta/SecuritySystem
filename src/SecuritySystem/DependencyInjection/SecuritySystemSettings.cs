@@ -134,8 +134,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 		    sc.AddSingleton(info);
 
 		    sc.AddScoped(typeof(IMissedUserService<>), userSourceBuilder.MissedUserServiceType);
-
-		    sc.AddScoped<IUserCredentialNameByIdentityResolver, UserCredentialNameByIdentityResolver<TUser>>();
 	    });
 
 	    if (userSourceBuilder.RunAsPath != null)

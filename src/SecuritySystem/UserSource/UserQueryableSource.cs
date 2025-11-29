@@ -56,6 +56,8 @@ public class UserQueryableSource<TUser, TIdent>(
 			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TIdent> { Id: var id } } =>
 				identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id)),
 
+			UserCredential.IdentUserCredential => _ => false,
+
 			_ => throw new ArgumentOutOfRangeException(nameof(userCredential))
 		};
 	}

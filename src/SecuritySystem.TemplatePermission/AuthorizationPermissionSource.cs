@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using GenericQueryable;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;

@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 
 using GenericQueryable;
@@ -9,15 +7,15 @@ using SecuritySystem.Expanders;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
+using System.Linq.Expressions;
+
+using Microsoft.Extensions.DependencyInjection;
+
 namespace SecuritySystem.VirtualPermission;
 
 public class VirtualPermissionSystem<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
-    IExpressionEvaluatorStorage expressionEvaluatorStorage,
     ISecurityRuleExpander securityRuleExpander,
-    IUserNameResolver userNameResolver,
-    IQueryableSource queryableSource,
-    TimeProvider timeProvider,
     IIdentityInfoSource identityInfoSource,
     SecurityRuleCredential securityRuleCredential,
     VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
@@ -47,16 +45,11 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
     {
         if (securityRuleExpander.FullRoleExpand(securityRule).SecurityRoles.Contains(bindingInfo.SecurityRole))
         {
-            return new VirtualPermissionSource<TPrincipal, TPermission>(
+            return ActivatorUtilities.CreateInstance<VirtualPermissionSource<TPrincipal, TPermission>>(
                 serviceProvider,
-                expressionEvaluatorStorage,
-                identityInfoSource,
-                userNameResolver,
-                queryableSource,
-                timeProvider,
-                bindingInfo,
-                securityRule,
-                securityRuleCredential);
+                securityRuleCredential,
+				bindingInfo,
+				securityRule);
         }
         else
         {
