@@ -1,20 +1,20 @@
 ﻿namespace SecuritySystem.GeneralPermission;
 
-public class TemplateAvailableSecurityRoleSource(
-    IAvailablePermissionSource availablePermissionSource,
-    ISecurityRoleSource securityRoleSource,
-    SecurityRuleCredential securityRuleCredential)
+public class GeneralAvailableSecurityRoleSource<TPermission>(
+	IAvailablePermissionSource<TPermission> availablePermissionSource,
+	ISecurityRoleSource securityRoleSource,
+	SecurityRuleCredential securityRuleCredential)
 {
-    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
-    {
-        var dbRequest =
-            from permission in availablePermissionSource.GetAvailablePermissionsQueryable(
-                DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
+	public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
+	{
+		var dbRequest =
 
-            select permission.Role.Id;
+			from permission in availablePermissionSource.GetAvailablePermissionsQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
 
-        var dbRolesIdents = await dbRequest.Distinct().GenericToListAsync(cancellationToken);
+			select permission.Role.Id;
 
-        return dbRolesIdents.Select(securityRoleSource.GetSecurityRole);
-    }
+		var dbRolesIdents = await dbRequest.Distinct().GenericToListAsync(cancellationToken);
+
+		return dbRolesIdents.Select(securityRoleSource.GetSecurityRole);
+	}
 }

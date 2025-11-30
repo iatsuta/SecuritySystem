@@ -6,15 +6,15 @@ using SecuritySystem.UserSource;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class TemplatePrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType>(
+public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType>(
     IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource)
-    : TemplatePrincipalSourceService(
-      principalRepository,
+    : GeneralPrincipalSourceService(
+		    queryableSource,
       securityRoleSource,
       securityContextInfoSource,
       availablePermissionSource),

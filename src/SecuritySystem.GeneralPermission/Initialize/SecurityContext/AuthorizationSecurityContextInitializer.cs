@@ -3,12 +3,12 @@ using SecuritySystem.Attributes;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public class TemplateSecurityContextInitializer(
+public class GeneralSecurityContextInitializer(
     [DisabledSecurity] IRepository<TSecurityContextType> securityContextTypeRepository,
     ISecurityContextInfoSource securityContextInfoSource,
-    ILogger<TemplateSecurityContextInitializer> logger,
+    ILogger<GeneralSecurityContextInitializer> logger,
     InitializerSettings settings)
-    : ITemplateSecurityContextInitializer
+    : IGeneralSecurityContextInitializer
 {
     public async Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken)
     {

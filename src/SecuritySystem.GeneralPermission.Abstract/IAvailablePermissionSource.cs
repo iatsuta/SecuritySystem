@@ -1,10 +1,17 @@
-﻿namespace SecuritySystem.GeneralPermission;
+﻿using System.Linq.Expressions;
 
-public interface IAvailablePermissionSource<out TPermission, TSecurityContextObjectIdent>
+namespace SecuritySystem.GeneralPermission;
+
+public interface IAvailablePermissionSource<out TPermission>
 {
-    AvailablePermissionFilter<TSecurityContextObjectIdent> CreateFilter(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+	IQueryable<TPermission> GetAvailablePermissionsQueryable(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+}
 
-    IQueryable<TPermission> GetAvailablePermissionsQueryable(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+public interface IAvailablePermissionSource<TPermission, TSecurityContextObjectIdent> : IAvailablePermissionSource<TPermission>
+{
+	Expression<Func<TPermission, bool>> ToFilterExpression(AvailablePermissionFilter<TSecurityContextObjectIdent> filter);
 
-    IQueryable<TPermission> GetAvailablePermissionsQueryable(AvailablePermissionFilter<TSecurityContextObjectIdent> filter);
+	AvailablePermissionFilter<TSecurityContextObjectIdent> CreateFilter(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+
+	IQueryable<TPermission> GetAvailablePermissionsQueryable(AvailablePermissionFilter<TSecurityContextObjectIdent> filter);
 }

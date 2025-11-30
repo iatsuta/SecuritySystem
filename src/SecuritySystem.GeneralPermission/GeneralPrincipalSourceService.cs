@@ -10,7 +10,7 @@ using SecuritySystem.UserSource;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class TemplatePrincipalSourceService<TPrincipal, TPermission>(
+public class GeneralPrincipalSourceService<TPrincipal, TPermission>(
     IQueryableSource queryableSource,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
@@ -21,7 +21,7 @@ public class TemplatePrincipalSourceService<TPrincipal, TPermission>(
 {
 	private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
 
-	private readonly Expression<Func<TPermission, TypedPrincipalHeader>> toTypedPrincipalHeaderExpression; //principal => new TypedPrincipalHeader(principal.Id, principal.Name, false)
+	private readonly Expression<Func<TPrincipal, TypedPrincipalHeader>> toTypedPrincipalHeaderExpression; //principal => new TypedPrincipalHeader(principal.Id, principal.Name, false)
 
 	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,

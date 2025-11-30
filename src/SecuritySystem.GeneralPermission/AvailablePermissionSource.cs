@@ -74,7 +74,7 @@ public class AvailablePermissionSource<TPrincipal, TPermission, TSecurityContext
     }
 
 
-    private Expression<Func<TPermission, bool>> ToFilterExpression(AvailablePermissionFilter filter)
+    public Expression<Func<TPermission, bool>> ToFilterExpression(AvailablePermissionFilter filter)
     {
         return this.GetFilterExpressionElements(filter).BuildAnd();
     }

@@ -7,16 +7,16 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public class TemplateSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>(
+public class GeneralSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>(
     IQueryableSource queryableSource,
     IGenericRepository genericRepository,
     ISecurityRoleSource securityRoleSource,
-    ILogger<TemplateSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>> logger,
+    ILogger<GeneralSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>> logger,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo,
     SecurityRoleInfo<TSecurityRole> securityRoleInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
 	InitializerSettings settings)
-    : ITemplateSecurityRoleInitializer<TSecurityRole>
+    : IGeneralSecurityRoleInitializer<TSecurityRole>
 	where TSecurityRole: class, new()
 	where TSecurityRoleIdent : notnull
 {

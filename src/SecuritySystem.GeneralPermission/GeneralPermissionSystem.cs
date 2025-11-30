@@ -73,10 +73,10 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 		});
 	}
 
-	public Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext>()
-		where TSecurityContext : class, ISecurityContext =>
-
-		this.GetPermissionRestrictionsExpr<TSecurityContext>(null).Select(v => !v.Any());
+	public Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext, TSecurityContextIdent>()
+		where TSecurityContext : class, ISecurityContext
+		where TSecurityContextIdent : notnull =>
+		this.GetPermissionRestrictionsExpr<TSecurityContext, TSecurityContextIdent>(null).Select(v => !v.Any());
 
 	public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
 	{
@@ -87,7 +87,7 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 
 	public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default)
 	{
-		return ActivatorUtilities.CreateInstance<TemplateAvailableSecurityRoleSource>(serviceProvider, securityRuleCredential)
+		return ActivatorUtilities.CreateInstance<GeneralAvailableSecurityRoleSource>(serviceProvider, securityRuleCredential)
 								 .GetAvailableSecurityRoles(cancellationToken);
 	}
 

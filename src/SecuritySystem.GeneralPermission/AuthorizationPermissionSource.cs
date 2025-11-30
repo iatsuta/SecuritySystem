@@ -1,43 +1,52 @@
-﻿using System.Linq.Expressions;
+﻿using CommonFramework;
 
-using CommonFramework;
-using GenericQueryable;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
+using System.Linq.Expressions;
+
+using SecuritySystem.UserSource;
+
 namespace SecuritySystem.GeneralPermission;
 
-public record PermissionSourceInfo<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityRole>(
-    Expression<Func<TPrincipal, string>> PrincipalNamePath,
-    Expression<Func<TPermission, TPrincipal>> PrincipalPath,
-    Expression<Func<TPermission, IEnumerable<TPermissionRestriction>>> RestrictionPath,
-    Expression<Func<TPermissionRestriction, TSecurityContextType>> SecurityContextTypePath,
-    Expression<Func<TPermission, TSecurityRole>> SecurityRolePath);
-
-public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType>(
-    IAvailablePermissionSource<TPermission> availablePermissionSource,
+public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>(
+    GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> info,
+    IAvailablePermissionSource<TPermission, TSecurityContextObjectIdent> availablePermissionSource,
     IRealTypeResolver realTypeResolver,
     IQueryableSource queryableSource,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextSource securityContextSource,
     IIdentityInfoSource identityInfoSource,
+    IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo,
+    ISecurityIdentityConverter<TSecurityContextTypeIdent> securityIdentityConverter,
+	UserSourceInfo<TPrincipal> userSourceInfo,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
+
+	where TPrincipal : class
+	where TPermission : class
+	where TSecurityRole : class
+	where TPermissionRestriction : class
+	where TSecurityContextType : class
+	where TSecurityContextObjectIdent : notnull
+
+	where TSecurityContextTypeIdent : notnull
 {
     public bool HasAccess()
     {
         return this.GetPermissionQuery().Any();
     }
 
+
     public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
     {
-        var permissions = availablePermissionSource.GetAvailablePermissionsQueryable(securityRule)
-                                                   .WithFetch(r => r.Fetch(v => v.Restrictions).ThenFetch(v => v.SecurityContextType))
-                                                   .ToList();
-
-        return permissions
-               .Select(permission => this.ConvertPermission(permission, securityContextTypes))
-               .ToList();
+	    return availablePermissionSource
+		    .GetAvailablePermissionsQueryable(securityRule)
+		    .GroupJoin(queryableSource.GetQueryable<TPermissionRestriction>(), v => v, info.ToPermission.Path,
+			    (_, restrictions) => new { restrictions })
+		    .ToList()
+		    .Select(pair => this.ConvertPermission(pair.restrictions.ToList(), securityContextTypes))
+		    .ToList();
     }
 
     public IQueryable<TPermission> GetPermissionQuery()
@@ -47,26 +56,25 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
 
     public IEnumerable<string> GetAccessors(Expression<Func<TPermission, bool>> permissionFilter)
     {
-        return this.GetSecurityPermissions(
-                       availablePermissionSource.CreateFilter(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() }))
-                   .Where(permissionFilter)
-                   .Select(permission => permission.TPrincipal.Name);
+	    var availableFilter = availablePermissionSource.CreateFilter(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() });
+
+	    return this.GetSecurityPermissions(availableFilter).Where(permissionFilter).Select(info.ToPrincipal.Path.Select(userSourceInfo.Name.Path));
     }
 
-    private IQueryable<TPermission> GetSecurityPermissions(AvailablePermissionFilter availablePermissionFilter)
+    private IQueryable<TPermission> GetSecurityPermissions(AvailablePermissionFilter<TSecurityContextObjectIdent> availablePermissionFilter)
     {
-        return permissionRepository.GetQueryable()
-                                   .Where(availablePermissionFilter.ToFilterExpression());
+	    return queryableSource.GetQueryable<TPermission>().Where(availablePermissionSource.ToFilterExpression(availablePermissionFilter));
     }
 
     private Dictionary<Type, Array> ConvertPermission(
-        TPermission permission,
-        IEnumerable<Type> securityContextTypes)
+	    IReadOnlyList<TPermissionRestriction> restrictions,
+	    IEnumerable<Type> securityContextTypes)
     {
-        var purePermission = permission.Restrictions.GroupBy(
-                                           permissionRestriction => permissionRestriction.SecurityContextType.Id,
-                                           permissionRestriction => permissionRestriction.SecurityContextId)
-                                       .ToDictionary(g => g.Key, g => g.ToList());
+	    var purePermission = restrictions.GroupBy(
+			    info.ToSecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter),
+			    info.ToSecurityContextObjectId.Getter)
+
+		    .ToDictionary(g => g.Key, g => g.ToList());
 
         var filterInfoDict = securityRule.GetSafeSecurityContextRestrictionFilters().ToDictionary(filterInfo => filterInfo.SecurityContextType);
 
@@ -76,10 +84,12 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
             {
                 var securityContextRestrictionFilterInfo = filterInfoDict.GetValueOrDefault(securityContextType);
 
-                var securityContextTypeId =
-                    securityContextInfoSource.GetSecurityContextInfo(realTypeResolver.Resolve(securityContextType)).Id;
+                var securityContextTypeIdentity =
+                    securityContextInfoSource.GetSecurityContextInfo(realTypeResolver.Resolve(securityContextType)).Identity;
 
-                var baseIdents = purePermission.GetValueOrDefault(securityContextTypeId, []);
+                var securityContextTypeId = securityIdentityConverter.Convert(securityContextTypeIdentity).Id;
+
+				var baseIdents = purePermission.GetValueOrDefault(securityContextTypeId, []);
 
                 if (securityContextRestrictionFilterInfo == null)
                 {
