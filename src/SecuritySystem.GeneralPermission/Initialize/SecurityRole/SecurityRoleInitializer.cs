@@ -7,16 +7,16 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public class GeneralSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>(
+public class SecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>(
     IQueryableSource queryableSource,
     IGenericRepository genericRepository,
     ISecurityRoleSource securityRoleSource,
-    ILogger<GeneralSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>> logger,
+    ILogger<SecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>> logger,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo,
     SecurityRoleInfo<TSecurityRole> securityRoleInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
 	InitializerSettings settings)
-    : IGeneralSecurityRoleInitializer<TSecurityRole>
+    : ISecurityRoleInitializer<TSecurityRole>
 	where TSecurityRole: class, new()
 	where TSecurityRoleIdent : notnull
 {
@@ -35,13 +35,13 @@ public class GeneralSecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>(
 
         if (mergeResult.RemovingItems.Any())
         {
-            switch (settings.UnexpectedAuthElementMode)
+            switch (settings.UnexpectedSecurityElementMode)
             {
-                case UnexpectedAuthElementMode.RaiseError:
+                case UnexpectedSecurityElementMode.RaiseError:
                     throw new InvalidOperationException(
                         $"Unexpected roles in database: {mergeResult.RemovingItems.Join(", ")}");
 
-                case UnexpectedAuthElementMode.Remove:
+                case UnexpectedSecurityElementMode.Remove:
                 {
                     foreach (var removingItem in mergeResult.RemovingItems)
                     {

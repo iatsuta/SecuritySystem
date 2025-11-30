@@ -8,10 +8,12 @@ namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType>(
     IQueryableSource queryableSource,
+    IGenericRepository genericRepository,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
+    UserSourceInfo<TPrincipal> userSourceInfo,
     IUserSource<TPrincipal> principalUserSource)
     : GeneralPrincipalSourceService(
 		    queryableSource,
@@ -20,6 +22,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
       availablePermissionSource),
       IPrincipalManagementService
 
+	where TPrincipal: class
 {
     public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default)
     {
@@ -31,18 +34,18 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         string principalName,
         CancellationToken cancellationToken)
     {
-        var principal = await principalResolver.Resolve(userCredential, cancellationToken);
+        var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        principal.Name = principalName;
+        userSourceInfo.Name.Setter(principal, principalName);
 
-        await principalRepository.SaveAsync(principal, cancellationToken);
+        await genericRepository.SaveAsync(principal, cancellationToken);
 
         return principal;
     }
 
     public async Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken = default)
     {
-        var principal = await principalResolver.Resolve(userCredential, cancellationToken);
+        var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
         await principalDomainService.RemoveAsync(principal, force, cancellationToken);
 
@@ -50,11 +53,11 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     }
 
     public async Task<MergeResult<object, object>> UpdatePermissionsAsync(
-        TSecurityContextObjectIdent principalId,
+	    SecurityIdentity principalId,
         IEnumerable<TypedPermission> typedPermissions,
         CancellationToken cancellationToken = default)
     {
-        var dbPrincipal = await principalRepository.LoadAsync(principalId, cancellationToken);
+        var dbPrincipal = await principalUserSource.GetUserAsync(principalId, cancellationToken);
 
         var permissionMergeResult = dbPrincipal.Permissions.GetMergeResult(typedPermissions, p => p.Id, p => p.Id == TSecurityContextObjectIdent.Empty ? TSecurityContextObjectIdent.NewTSecurityContextIdent() : p.Id);
 

@@ -22,7 +22,7 @@ public class UpdatePermissionsHandler(
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = new Guid((string)context.Request.RouteValues["id"]!);
+        var principalId = (string)context.Request.RouteValues["id"]!;
         var permissions = await this.ParseRequestBodyAsync<List<RequestBodyDto>>(context);
 
         var typedPermissions = permissions.Select(this.ToTypedPermission).ToList();
@@ -54,7 +54,7 @@ public class UpdatePermissionsHandler(
 
             from restriction in permission.Contexts
 
-            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(new Guid(restriction.Id)).Type
+            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(restriction.Name).Type
 
             let identityType = identityInfoSource.GetIdentityInfo(securityContextType).IdentityType
 
@@ -64,9 +64,9 @@ public class UpdatePermissionsHandler(
 
 
         return new TypedPermission(
-            string.IsNullOrWhiteSpace(permission.PermissionId) ? Guid.Empty : new Guid(permission.PermissionId),
+            permission.PermissionId,
             permission.IsVirtual,
-            securityRoleSource.GetSecurityRole(new Guid(permission.RoleId)),
+            securityRoleSource.GetSecurityRole(permission.RoleName),
             permission.StartDate,
             permission.EndDate,
             permission.Comment,
@@ -85,7 +85,7 @@ public class UpdatePermissionsHandler(
 
         public bool IsVirtual { get; set; }
 
-        public string RoleId { get; set; } = default!;
+        public string RoleName { get; set; } = default!;
 
         public DateTime StartDate { get; set; }
 
@@ -97,7 +97,7 @@ public class UpdatePermissionsHandler(
 
         public class ContextDto
         {
-            public string Id { get; set; } = default!;
+            public string Name { get; set; } = default!;
 
             public List<string> Entities { get; set; } = default!;
         }

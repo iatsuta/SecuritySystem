@@ -17,7 +17,7 @@ public class DeletePrincipalHandler(
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = new Guid((string?)context.Request.RouteValues["id"]!);
+        var principalId = (string)context.Request.RouteValues["id"]!;
 
         var principal = await principalManagementService.RemovePrincipalAsync(principalId, false, cancellationToken);
 

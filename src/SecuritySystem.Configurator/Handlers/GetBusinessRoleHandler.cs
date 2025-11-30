@@ -19,9 +19,9 @@ public class GetBusinessRoleHandler(
     {
         if (!securitySystem.IsSecurityAdministrator()) return new BusinessRoleDetailsDto { Operations = [], Principals = [] };
 
-        var securityRoleId = new Guid((string)context.Request.RouteValues["id"]!);
+        var securityRoleName = (string)context.Request.RouteValues["name"]!;
 
-        var securityRole = securityRoleSource.GetSecurityRole(securityRoleId);
+        var securityRole = securityRoleSource.GetSecurityRole(securityRoleName);
 
         var operations =
             securityRole

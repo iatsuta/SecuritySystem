@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.GeneralPermission.Initialize;
 
-public enum UnexpectedAuthElementMode
+public enum UnexpectedSecurityElementMode
 {
     RaiseError,
 

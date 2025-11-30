@@ -1,9 +1,12 @@
 ﻿using CommonFramework;
+
+using Microsoft.Extensions.Logging;
+
 using SecuritySystem.Attributes;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public class GeneralSecurityContextInitializer(
+public class SecurityContextInitializer(
     [DisabledSecurity] IRepository<TSecurityContextType> securityContextTypeRepository,
     ISecurityContextInfoSource securityContextInfoSource,
     ILogger<GeneralSecurityContextInitializer> logger,
@@ -18,13 +21,13 @@ public class GeneralSecurityContextInitializer(
 
         if (mergeResult.RemovingItems.Any())
         {
-            switch (settings.UnexpectedAuthElementMode)
+            switch (settings.UnexpectedSecurityElementMode)
             {
-                case UnexpectedAuthElementMode.RaiseError:
+                case UnexpectedSecurityElementMode.RaiseError:
                     throw new InvalidOperationException(
                         $"Unexpected entity type in database: {mergeResult.RemovingItems.Join(", ")}");
 
-                case UnexpectedAuthElementMode.Remove:
+                case UnexpectedSecurityElementMode.Remove:
                 {
                     foreach (var removingItem in mergeResult.RemovingItems)
                     {

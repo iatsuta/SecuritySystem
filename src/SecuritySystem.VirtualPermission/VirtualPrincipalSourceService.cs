@@ -1,16 +1,16 @@
 ﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
+using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
 using System.Reflection;
-using SecuritySystem.UserSource;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -33,17 +33,17 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(IServiceProv
 
 	private IPrincipalSourceService PrincipalSourceService => this.lazyPrincipalSourceService.Value;
 
-	public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken = default)
+	public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
 	{
 		return this.PrincipalSourceService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
 	}
 
-	public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default)
+	public Task<TypedPrincipal?> TryGetPrincipalAsync(string principalId, CancellationToken cancellationToken)
 	{
-		return this.PrincipalSourceService.TryGetPrincipalAsync(userCredential, cancellationToken);
+		return this.PrincipalSourceService.TryGetPrincipalAsync(principalId, cancellationToken);
 	}
 
-	public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken = default)
+	public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
 	{
 		return this.PrincipalSourceService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
 	}
@@ -61,7 +61,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 
 	where TPrincipal : class
 	where TPermission : class
-	where TPrincipalIdent : notnull
+	where TPrincipalIdent : IParsable<TPrincipalIdent>
 	where TPermissionIdent : notnull
 {
 	private readonly Expression<Func<TPrincipal, string>> principalNamePath = userSourceInfo.Name.Path;
@@ -72,7 +72,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
 		string nameFilter,
 		int limit,
-		CancellationToken cancellationToken = default)
+		CancellationToken cancellationToken)
 	{
 		var toPrincipalAnonHeaderExpr =
 			ExpressionEvaluateHelper.InlineEvaluate(ee =>
@@ -93,23 +93,21 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 			.Distinct()
 			.GenericToListAsync(cancellationToken);
 
-		return anonHeaders.Select(anonHeader => new TypedPrincipalHeader(new SecurityIdentity<TPrincipalIdent>(anonHeader.Id), anonHeader.Name, true));
+		return anonHeaders.Select(anonHeader => new TypedPrincipalHeader(anonHeader.Id.ToString()!, anonHeader.Name, true));
 	}
 
-	public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default) =>
-		TryGetPrincipalAsync(this.CreatePrincipalFilter(userCredential), cancellationToken);
-
-	private Expression<Func<TPrincipal, bool>> CreatePrincipalFilter(UserCredential userCredential)
+	public async Task<TypedPrincipal?> TryGetPrincipalAsync(string principalId, CancellationToken cancellationToken)
 	{
-		return userCredential switch
+		if (TPrincipalIdent.TryParse(principalId, null, out var id))
 		{
-			UserCredential.NamedUserCredential { Name: var principalName } => principalNamePath.Select(name => principalName == name),
+			var filter = principalIdentityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id));
 
-			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TPrincipalIdent> { Id: var id } } => principalIdentityInfo.Id.Path.Select(
-				ExpressionHelper.GetEqualityWithExpr(id)),
-
-			_ => throw new ArgumentOutOfRangeException(nameof(userCredential))
-		};
+			return await this.TryGetPrincipalAsync(filter, cancellationToken);
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	public async Task<TypedPrincipal?> TryGetPrincipalAsync(Expression<Func<TPrincipal, bool>> filter, CancellationToken cancellationToken)
@@ -124,7 +122,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		}
 		else
 		{
-			var header = new TypedPrincipalHeader(new SecurityIdentity<TPrincipalIdent>(principalIdentityInfo.Id.Getter(principal)),
+			var header = new TypedPrincipalHeader(principalIdentityInfo.Id.Getter(principal).ToString()!,
 				this.expressionEvaluator.Evaluate(principalNamePath, principal),
 				true);
 
@@ -151,7 +149,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 			.ToDictionary();
 
 		return new TypedPermission(
-			new SecurityIdentity<TPermissionIdent>(permissionIdentityInfo.Id.Getter(permission)),
+			permissionIdentityInfo.Id.Getter(permission).ToString()!,
 			true,
 			bindingInfo.SecurityRole,
 			bindingInfo.StartDateFilter == null ? DateTime.MinValue : this.expressionEvaluator.Evaluate(bindingInfo.StartDateFilter, permission),
@@ -162,7 +160,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 
 	public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(
 		IEnumerable<SecurityRole> securityRoles,
-		CancellationToken cancellationToken = default)
+		CancellationToken cancellationToken)
 	{
 		if (securityRoles.Contains(bindingInfo.SecurityRole))
 		{

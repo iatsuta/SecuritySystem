@@ -1,7 +1,7 @@
 ﻿namespace SecuritySystem.ExternalSystem.Management;
 
 public record TypedPermission(
-    SecurityIdentity Identity,
+    string Id,
     bool IsVirtual,
     SecurityRole SecurityRole,
     DateTime StartDate,

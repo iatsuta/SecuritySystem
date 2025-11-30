@@ -1,3 +1,3 @@
 ﻿namespace SecuritySystem.ExternalSystem.Management;
 
-public record TypedPrincipalHeader(SecurityIdentity Identity, string Name, bool IsVirtual);
+public record TypedPrincipalHeader(string Id, string Name, bool IsVirtual);

@@ -7,18 +7,25 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
 
     private readonly IReadOnlyDictionary<SecurityIdentity, SecurityContextInfo> identityDict;
 
-    public SecurityContextInfoSource(IEnumerable<SecurityContextInfo> securityContextInfoList)
+
+    private readonly IReadOnlyDictionary<string, SecurityContextInfo> nameDict;
+
+	public SecurityContextInfoSource(IEnumerable<SecurityContextInfo> securityContextInfoList)
     {
         this.SecurityContextInfoList = securityContextInfoList.ToList();
         this.typeDict = this.SecurityContextInfoList.ToDictionary(v => v.Type);
         this.identityDict = this.typeDict.Values.ToDictionary(v => v.Identity);
-    }
+        this.nameDict = this.typeDict.Values.ToDictionary(v => v.Name);
+	}
 
     public IReadOnlyList<SecurityContextInfo> SecurityContextInfoList { get; }
 
     public virtual SecurityContextInfo GetSecurityContextInfo(Type securityContextType) =>
         this.typeDict[securityContextType];
 
-    public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity securityContextIdentity) =>
+    public SecurityContextInfo GetSecurityContextInfo(string securityContextTypeName) =>
+	    this.nameDict[securityContextTypeName];
+
+	public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity securityContextIdentity) =>
         this.identityDict[securityContextIdentity];
 }

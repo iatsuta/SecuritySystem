@@ -24,14 +24,14 @@ public class GetPrincipalHandler(
     {
         if (!securitySystem.IsSecurityAdministrator()) return new PrincipalDetailsDto();
 
-        var principalId = new Guid((string)httpContext.Request.RouteValues["id"]!);
+        var principalId = (string)httpContext.Request.RouteValues["id"]!;
 
         var permissions = await this.GetPermissionsAsync(principalId, cancellationToken);
 
         return new PrincipalDetailsDto { Permissions = permissions };
     }
 
-    private async Task<List<PermissionDto>> GetPermissionsAsync(Guid principalId, CancellationToken cancellationToken)
+    private async Task<List<PermissionDto>> GetPermissionsAsync(string principalId, CancellationToken cancellationToken)
     {
         var principal = await principalSourceService.TryGetPrincipalAsync(principalId, cancellationToken)
                         ?? throw new SecuritySystemException($"Principal with id {principalId} not found");
@@ -43,7 +43,7 @@ public class GetPrincipalHandler(
             .Select(typedPermission =>
                 new PermissionDto
                 {
-                    Id = typedPermission.Identity.ToString()!,
+                    Id = typedPermission.Id,
                     IsVirtual = typedPermission.IsVirtual,
                     Role = typedPermission.SecurityRole.Name,
                     RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.ToString()!,

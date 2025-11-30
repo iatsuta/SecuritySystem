@@ -3,7 +3,7 @@
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public interface IGeneralSecurityContextInitializer : ISecurityInitializer
+public interface ISecurityContextInitializer<TSecurityContextType> : ISecurityInitializer
 {
     new Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken = default);
 }

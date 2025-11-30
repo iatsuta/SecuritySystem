@@ -17,7 +17,7 @@ public class UpdatePrincipalHandler(
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = new Guid((string?)context.Request.RouteValues["id"]!);
+        var principalId = (string?)context.Request.RouteValues["id"]!;
 
         var principalName = await this.ParseRequestBodyAsync<string>(context);
 

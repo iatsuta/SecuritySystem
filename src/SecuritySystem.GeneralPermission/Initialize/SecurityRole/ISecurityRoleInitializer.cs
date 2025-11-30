@@ -3,7 +3,7 @@
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public interface IGeneralSecurityRoleInitializer<TSecurityRole> : ISecurityInitializer
+public interface ISecurityRoleInitializer<TSecurityRole> : ISecurityInitializer
 {
     Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken = default);
 

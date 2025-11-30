@@ -1,3 +1,3 @@
 ﻿namespace SecuritySystem.GeneralPermission.Initialize;
 
-public record InitializerSettings(UnexpectedAuthElementMode UnexpectedAuthElementMode = UnexpectedAuthElementMode.Remove);
+public record InitializerSettings(UnexpectedSecurityElementMode UnexpectedSecurityElementMode = UnexpectedSecurityElementMode.Remove);
