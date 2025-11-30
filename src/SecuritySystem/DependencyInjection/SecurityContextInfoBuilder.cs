@@ -35,10 +35,10 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 		return this;
 	}
 
-	public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
-		where TIdent : struct
+	public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TSecurityContextIdent>(Expression<Func<TSecurityContext, TSecurityContextIdent>> identityPath)
+		where TSecurityContextIdent : struct
 	{
-		this.customIdentityInfo = new IdentityInfo<TSecurityContext, TIdent>(identityPath);
+		this.customIdentityInfo = new IdentityInfo<TSecurityContext, TSecurityContextIdent>(identityPath);
 
 		return this;
 	}

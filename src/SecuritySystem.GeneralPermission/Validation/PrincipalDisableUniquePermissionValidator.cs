@@ -1,0 +1,3 @@
+﻿namespace SecuritySystem.GeneralPermission.Validation;
+
+public class PrincipalDisableUniquePermissionValidator : AbstractValidator<TPrincipal>, IPrincipalUniquePermissionValidator;

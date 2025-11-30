@@ -4,47 +4,47 @@ using CommonFramework;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
-public class ManyContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>(
-    SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
-    SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo)
-    : ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TIdent>(securityContextRestriction)
-    where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+public class ManyContextFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(
+	SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
+	SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
+	IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+	: ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(securityContextRestriction)
+	where TSecurityContext : class, ISecurityContext
+	where TSecurityContextIdent : notnull
 {
-    protected override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TIdent> permissionIdents)
-    {
-        var singleFilter = identityInfo.CreateContainsFilter(permissionIdents);
+	protected override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TSecurityContextIdent> permissionIdents)
+	{
+		var singleFilter = identityInfo.CreateContainsFilter(permissionIdents);
 
-        var containsFilterExpr = securityPath.Expression.Select(singleFilter.ToCollectionFilter()).Select(securityContext => securityContext.Any());
+		var containsFilterExpr = securityPath.Expression.Select(singleFilter.ToCollectionFilter()).Select(securityContext => securityContext.Any());
 
-        if (securityPath.Required)
-        {
-            if (securityPath.SecurityPathQ != null)
-            {
-                return from securityObjects in securityPath.SecurityPathQ
+		if (securityPath.Required)
+		{
+			if (securityPath.SecurityPathQ != null)
+			{
+				return from securityObjects in securityPath.SecurityPathQ
 
-                    select securityObjects.Any(singleFilter);
-            }
-            else
-            {
-                return containsFilterExpr;
-            }
-        }
-        else
-        {
-            if (securityPath.SecurityPathQ != null)
-            {
-                return from securityObjects in securityPath.SecurityPathQ
+					select securityObjects.Any(singleFilter);
+			}
+			else
+			{
+				return containsFilterExpr;
+			}
+		}
+		else
+		{
+			if (securityPath.SecurityPathQ != null)
+			{
+				return from securityObjects in securityPath.SecurityPathQ
 
-                    select !securityObjects.Any() || securityObjects.Any(singleFilter);
-            }
-            else
-            {
-                var grandAccessFilter = securityPath.Expression.Select(securityObjects => !securityObjects.Any());
+					select !securityObjects.Any() || securityObjects.Any(singleFilter);
+			}
+			else
+			{
+				var grandAccessFilter = securityPath.Expression.Select(securityObjects => !securityObjects.Any());
 
-                return grandAccessFilter.BuildOr(containsFilterExpr);
-            }
-        }
-    }
+				return grandAccessFilter.BuildOr(containsFilterExpr);
+			}
+		}
+	}
 }

@@ -2,21 +2,22 @@
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
-public class LocalStorage<TSecurityContext, TIdent>(IIdentityInfoSource identityInfoSource)
-    where TSecurityContext : ISecurityContext
-    where TIdent : notnull
+public class LocalStorage<TSecurityContext, TSecurityContextIdent>(IIdentityInfoSource identityInfoSource)
+	where TSecurityContext : ISecurityContext
+	where TSecurityContextIdent : notnull
 {
-    private readonly IdentityInfo<TSecurityContext, TIdent> identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TIdent>();
+	private readonly IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo =
+		identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
-    private readonly HashSet<TSecurityContext> items = [];
+	private readonly HashSet<TSecurityContext> items = [];
 
-    public bool IsExists(TIdent securityEntityId)
-    {
-        return this.items.Select(identityInfo.Id.Getter).Contains(securityEntityId);
-    }
+	public bool IsExists(TSecurityContextIdent securityEntityId)
+	{
+		return this.items.Select(identityInfo.Id.Getter).Contains(securityEntityId);
+	}
 
-    public bool Register(TSecurityContext securityContext)
-    {
-        return this.items.Add(securityContext);
-    }
+	public bool Register(TSecurityContext securityContext)
+	{
+		return this.items.Add(securityContext);
+	}
 }

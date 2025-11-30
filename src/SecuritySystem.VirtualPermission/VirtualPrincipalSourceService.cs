@@ -178,16 +178,16 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		}
 	}
 
-	private Array GetRestrictionArray<TSecurityContext, TIdent>(TPermission permission, IdentityInfo<TSecurityContext, TIdent> identityInfo)
+	private Array GetRestrictionArray<TSecurityContext, TSecurityContextIdent>(TPermission permission, IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
 		where TSecurityContext : ISecurityContext
-		where TIdent : notnull
+		where TSecurityContextIdent : notnull
 	{
 		return this.GetRestrictionIdents(permission, identityInfo).ToArray();
 	}
 
-	private IEnumerable<TIdent> GetRestrictionIdents<TSecurityContext, TIdent>(TPermission permission, IdentityInfo<TSecurityContext, TIdent> identityInfo)
+	private IEnumerable<TSecurityContextIdent> GetRestrictionIdents<TSecurityContext, TSecurityContextIdent>(TPermission permission, IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
 		where TSecurityContext : ISecurityContext
-		where TIdent : notnull
+		where TSecurityContextIdent : notnull
 	{
 		foreach (var restrictionPath in bindingInfo.Restrictions)
 		{

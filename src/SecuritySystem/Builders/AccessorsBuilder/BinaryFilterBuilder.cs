@@ -1,7 +1,6 @@
 ﻿using SecuritySystem.HierarchicalExpand;
 using System.Linq.Expressions;
 
-
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
 public abstract class BinaryFilterBuilder<TPermission, TDomainObject, TSecurityPath>(

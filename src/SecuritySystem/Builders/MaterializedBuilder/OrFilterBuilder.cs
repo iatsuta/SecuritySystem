@@ -1,7 +1,6 @@
 ﻿using System.Linq.Expressions;
 using CommonFramework;
 
-
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
 public class OrFilterBuilder<TDomainObject>(

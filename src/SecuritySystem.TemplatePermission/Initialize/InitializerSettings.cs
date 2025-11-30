@@ -1,3 +1,0 @@
-﻿namespace SecuritySystem.TemplatePermission.Initialize;
-
-public record InitializerSettings(UnexpectedAuthElementMode UnexpectedAuthElementMode = UnexpectedAuthElementMode.Remove);

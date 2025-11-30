@@ -2,33 +2,33 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo)
+    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     : SecurityFilterBuilder<TPermission, TDomainObject>
     where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+    where TSecurityContextIdent : notnull
 {
-    public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(
-        HierarchicalExpandType expandType)
+    public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(HierarchicalExpandType expandType)
     {
         var allowGrandAccess = securityContextRestriction?.Required != true;
 
         var grandAccessExpr = allowGrandAccess
-            ? permissionSystem.GetGrandAccessExpr<TSecurityContext>()
+            ? permissionSystem.GetGrandAccessExpr<TSecurityContext, TSecurityContextIdent>()
             : _ => false;
 
-        var getIdents = permissionSystem.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(securityContextRestriction?.Filter);
+        var getIdents = permissionSystem.GetPermissionRestrictionsExpr<TSecurityContext, TSecurityContextIdent>(securityContextRestriction?.Filter);
 
-        var expander = hierarchicalObjectExpanderFactory.Create<TIdent>(typeof(TSecurityContext));
+        var expander = hierarchicalObjectExpanderFactory.Create<TSecurityContextIdent>(typeof(TSecurityContext));
 
         var expandExpression = expander.GetExpandExpression(expandType);
 

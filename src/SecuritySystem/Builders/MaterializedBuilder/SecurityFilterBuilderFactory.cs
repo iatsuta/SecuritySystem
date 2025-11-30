@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 
@@ -57,20 +58,20 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
         return new ConditionFilterBuilder<TDomainObject>(securityPath);
     }
 
-    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
+    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext, TSecurityContextIdent>(
         SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
         SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-        IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     {
-        return new SingleContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>(securityPath, securityContextRestriction, identityInfo);
+        return new SingleContextFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(securityPath, securityContextRestriction, identityInfo);
     }
 
-    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
+    protected override SecurityFilterBuilder<TDomainObject> CreateBuilder<TSecurityContext, TSecurityContextIdent>(
         SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
         SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-        IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     {
-        return new ManyContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>(securityPath, securityContextRestriction, identityInfo);
+        return new ManyContextFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(securityPath, securityContextRestriction, identityInfo);
     }
 
     protected override SecurityFilterBuilder<TDomainObject> CreateBuilder(SecurityPath<TDomainObject>.OrSecurityPath securityPath, IReadOnlyList<SecurityContextRestriction> securityContextRestrictions)

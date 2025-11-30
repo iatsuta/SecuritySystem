@@ -1,6 +1,7 @@
 ﻿using CommonFramework.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
@@ -148,7 +149,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 				    sc.AddSingleton(new UserSourceRunAsInfo<TUser>(userSourceBuilder.RunAsPath));
 				    sc.AddScoped<IRunAsManager, RunAsManager<TUser>>();
 				    sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
-				};
+
+                    sc.AddScoped<IUserSource>(sp => sp.GetRequiredService<IUserSource<TUser>>());
+                };
 		    }
 		    else
 		    {

@@ -2,8 +2,6 @@
 
 using CommonFramework;
 
-
-
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
 public class AndFilterBuilder<TPermission, TDomainObject>(

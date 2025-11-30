@@ -90,7 +90,8 @@ public static class ServiceCollectionExtensions
 	    {
 		    return services
 
-			    .AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
+			    .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
+				.AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
 
 			    .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))
 			    .AddScoped(typeof(IUserSource<>), typeof(UserSource<>))

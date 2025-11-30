@@ -1,23 +1,24 @@
 ﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo)
-    : ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(permissionSystem, hierarchicalObjectExpanderFactory, securityPath, securityContextRestriction, identityInfo)
+    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+    : ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(permissionSystem, hierarchicalObjectExpanderFactory, securityPath, securityContextRestriction, identityInfo)
     where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+    where TSecurityContextIdent : notnull
 {
     private readonly IExpressionEvaluator expressionEvaluator =
-        expressionEvaluatorStorage.GetForType(typeof(ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>));
+        expressionEvaluatorStorage.GetForType(typeof(ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>));
 
     protected override IEnumerable<TSecurityContext> GetSecurityObjects(TDomainObject domainObject) =>
 

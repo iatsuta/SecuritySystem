@@ -12,8 +12,8 @@ public interface ISecurityContextInfoBuilder<TSecurityContext>
 
     ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> displayFunc);
 
-    ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
-        where TIdent : struct;
+    ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TSecurityContextIdent>(Expression<Func<TSecurityContext, TSecurityContextIdent>> identityPath)
+        where TSecurityContextIdent : struct;
 
     ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(
         HierarchicalInfo<TSecurityContext> hierarchicalInfo,

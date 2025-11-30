@@ -87,21 +87,21 @@ public class SecurityFilterBuilderFactory<TPermission, TDomainObject>(
         return new ConditionFilterBuilder<TPermission, TDomainObject>(securityPath);
     }
 
-    protected override SecurityFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
+    protected override SecurityFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TSecurityContextIdent>(
         SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
         SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-        IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     {
-        return new SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+        return new SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
             permissionSystem, hierarchicalObjectExpanderFactory, securityPath, securityContextRestriction, identityInfo);
     }
 
-    protected override SecurityFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
+    protected override SecurityFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TSecurityContextIdent>(
         SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
         SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-        IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     {
-        return new ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+        return new ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
             permissionSystem, hierarchicalObjectExpanderFactory, securityPath, securityContextRestriction, identityInfo);
     }
 

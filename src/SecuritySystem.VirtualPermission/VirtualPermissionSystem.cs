@@ -25,20 +25,21 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
 {
     public Type PermissionType { get; } = typeof(TPermission);
 
-    public Expression<Func<TPermission, IEnumerable<TIdent>>> GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(
+    public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetPermissionRestrictionsExpr<TSecurityContext, TSecurityContextIdent>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull =>
-        bindingInfo.GetRestrictionsExpr(identityInfoSource.GetIdentityInfo<TSecurityContext, TIdent>(), restrictionFilterInfo?.GetPureFilter(serviceProvider));
+        where TSecurityContextIdent : notnull =>
+        bindingInfo.GetRestrictionsExpr(identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>(), restrictionFilterInfo?.GetPureFilter(serviceProvider));
 
-    public Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext>()
-        where TSecurityContext : class, ISecurityContext =>
+    public Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext, TSecurityContextIdent>()
+        where TSecurityContext : class, ISecurityContext
+		where TSecurityContextIdent : notnull =>
         this.GetManyGrandAccessExpr<TSecurityContext>().BuildAnd();
 
-    public Expression<Func<TPermission, bool>> GetContainsIdentsExpr<TSecurityContext, TIdent>(IEnumerable<TIdent> idents,
+    public Expression<Func<TPermission, bool>> GetContainsIdentsExpr<TSecurityContext, TSecurityContextIdent>(IEnumerable<TSecurityContextIdent> idents,
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull =>
+        where TSecurityContextIdent : notnull =>
         this.GetManyContainsIdentsExpr(idents, restrictionFilterInfo).BuildOr();
 
     public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
@@ -78,12 +79,12 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
         }
     }
 
-    private IEnumerable<Expression<Func<TPermission, bool>>> GetManyContainsIdentsExpr<TSecurityContext, TIdent>(IEnumerable<TIdent> idents,
+    private IEnumerable<Expression<Func<TPermission, bool>>> GetManyContainsIdentsExpr<TSecurityContext, TSecurityContextIdent>(IEnumerable<TSecurityContextIdent> idents,
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : ISecurityContext
-        where TIdent : notnull
+        where TSecurityContextIdent : notnull
     {
-        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TIdent>();
+        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
         var filterExpr = identityInfo.CreateContainsFilter(idents.ToArray());
 

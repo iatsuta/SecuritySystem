@@ -15,19 +15,20 @@ public interface IPermissionSystem
 
 public interface IPermissionSystem<TPermission> : IPermissionSystem
 {
-    Expression<Func<TPermission, IEnumerable<TIdent>>> GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(
+    Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetPermissionRestrictionsExpr<TSecurityContext, TSecurityContextIdent>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull;
+        where TSecurityContextIdent : notnull;
 
-    Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext>()
-        where TSecurityContext : class, ISecurityContext;
+    Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext, TSecurityContextIdent>()
+        where TSecurityContext : class, ISecurityContext
+        where TSecurityContextIdent : notnull;
 
-    Expression<Func<TPermission, bool>> GetContainsIdentsExpr<TSecurityContext, TIdent>(IEnumerable<TIdent> idents,
+	Expression<Func<TPermission, bool>> GetContainsIdentsExpr<TSecurityContext, TSecurityContextIdent>(IEnumerable<TSecurityContextIdent> idents,
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull =>
-        this.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(restrictionFilterInfo)
+        where TSecurityContextIdent : notnull =>
+        this.GetPermissionRestrictionsExpr<TSecurityContext, TSecurityContextIdent>(restrictionFilterInfo)
             .Select(restrictionIdents => restrictionIdents.Any(restrictionIdent => idents.Contains(restrictionIdent)));
 
     new IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule);

@@ -11,7 +11,12 @@ public class UserSource<TUser>(IUserQueryableSource<TUser> userQueryableSource, 
 
 	private readonly Dictionary<UserCredential, TUser> getUserCache = new();
 
-	public async Task<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	private IUserSource<User>? simpleCache;
+
+
+	public Type UserType { get; } = typeof(TUser);
+
+    public async Task<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
 	{
 		if (!tryGetUserCache.TryGetValue(userCredential, out var result))
 		{
@@ -31,8 +36,8 @@ public class UserSource<TUser>(IUserQueryableSource<TUser> userQueryableSource, 
 		return result;
 	}
 
-	public IUserSource<User> ToSimple()
+    public IUserSource<User> ToSimple()
 	{
-		return new UserSource<User>(userQueryableSource.ToSimple(), missedUserService.ToSimple());
+		return this.simpleCache ??= new UserSource<User>(userQueryableSource.ToSimple(), missedUserService.ToSimple());
 	}
 }
