@@ -26,7 +26,7 @@ public class GeneralPrincipalSourceService<TPrincipal, TPermission>(
 	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,
         int limit,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
 	{
 		return await principalQueryable
 			.Pipe(
@@ -71,7 +71,7 @@ public class GeneralPrincipalSourceService<TPrincipal, TPermission>(
 
     public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(
         IEnumerable<SecurityRole> securityRoles,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         return await availablePermissionSource
                      .GetAvailablePermissionsQueryable(

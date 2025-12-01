@@ -17,3 +17,7 @@ public record GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole
 {
 	public override Type PermissionType { get; } = typeof(TPermission);
 }
+public abstract record GeneralPermissionSystemInfo<TPrincipal>
+{
+	public abstract Type PermissionType { get; }
+}

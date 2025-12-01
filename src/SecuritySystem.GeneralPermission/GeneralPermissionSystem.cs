@@ -23,6 +23,7 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 	IIdentityInfoSource identityInfoSource,
 	SecurityRuleCredential securityRuleCredential)
 	: IPermissionSystem<TPermission>
+
 	where TPrincipal : class
 	where TPermission : class
 	where TSecurityRole : class
@@ -85,7 +86,7 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 			securityRule.TryApplyCredential(securityRuleCredential));
 	}
 
-	public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default)
+	public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
 	{
 		return ActivatorUtilities.CreateInstance<GeneralAvailableSecurityRoleSource>(serviceProvider, securityRuleCredential)
 								 .GetAvailableSecurityRoles(cancellationToken);

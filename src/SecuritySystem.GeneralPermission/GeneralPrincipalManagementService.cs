@@ -24,7 +24,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
 	where TPrincipal: class
 {
-    public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default)
+    public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
     {
         return await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
     }
@@ -43,7 +43,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         return principal;
     }
 
-    public async Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken = default)
+    public async Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken)
     {
         var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
@@ -55,7 +55,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     public async Task<MergeResult<object, object>> UpdatePermissionsAsync(
 	    SecurityIdentity principalId,
         IEnumerable<TypedPermission> typedPermissions,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var dbPrincipal = await principalUserSource.GetUserAsync(principalId, cancellationToken);
 
@@ -83,7 +83,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     private async Task<IReadOnlyList<TPermission>> CreatePermissionsAsync(
         TPrincipal dbPrincipal,
         IEnumerable<TypedPermission> typedPermissions,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         return await typedPermissions.SyncWhenAll(
                    typedPermission => this.CreatePermissionAsync(dbPrincipal, typedPermission, cancellationToken));
@@ -92,7 +92,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     private async Task<TPermission> CreatePermissionAsync(
         TPrincipal dbPrincipal,
         TypedPermission typedPermission,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (typedPermission.Id != TSecurityContextObjectIdent.Empty || typedPermission.IsVirtual)
         {
@@ -131,7 +131,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
     private async Task<IReadOnlyList<(TPermission, TypedPermission)>> UpdatePermissionsAsync(
         IReadOnlyList<(TPermission, TypedPermission)> permissionPairs,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var preResult = await permissionPairs.SyncWhenAll(
                             async permissionPair => new

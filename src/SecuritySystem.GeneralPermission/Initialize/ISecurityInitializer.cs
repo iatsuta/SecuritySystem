@@ -2,5 +2,5 @@
 
 public interface ISecurityInitializer
 {
-    Task Init(CancellationToken cancellationToken = default);
+    Task Init(CancellationToken cancellationToken);
 }

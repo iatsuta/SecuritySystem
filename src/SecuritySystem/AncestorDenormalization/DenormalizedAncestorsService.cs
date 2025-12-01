@@ -1,12 +1,30 @@
-﻿using SecuritySystem.HierarchicalExpand;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.AncestorDenormalization;
 
+public class DenormalizedAncestorsService<TDomainObject>(IServiceProvider serviceProvider, FullAncestorLinkInfo<TDomainObject> fullAncestorLinkInfo) : IDenormalizedAncestorsService<TDomainObject>
+{
+	private readonly IDenormalizedAncestorsService<TDomainObject> innerService =
+		(IDenormalizedAncestorsService<TDomainObject>)ActivatorUtilities.CreateInstance(serviceProvider,
+			typeof(DenormalizedAncestorsService<,>).MakeGenericType(typeof(TDomainObject), fullAncestorLinkInfo.DirectedLinkType));
+
+	public Task SyncUpAsync(TDomainObject domainObject, CancellationToken cancellationToken) =>
+		this.innerService.SyncUpAsync(domainObject, cancellationToken);
+
+	public Task SyncAllAsync(CancellationToken cancellationToken) =>
+		this.innerService.SyncAllAsync(cancellationToken);
+
+	public Task SyncAsync(IEnumerable<TDomainObject> updatedDomainObjectsBase, IEnumerable<TDomainObject> removedDomainObjects, CancellationToken cancellationToken) =>
+		this.innerService.SyncAsync(updatedDomainObjectsBase, removedDomainObjects, cancellationToken);
+}
+
 public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     IGenericRepository genericRepository,
     FullAncestorLinkInfo<TDomainObject, TDirectAncestorLink> fullAncestorLinkInfo,
-    IAncestorLinkExtractor<TDomainObject, TDirectAncestorLink> ancestorLinkExtractor) : IDenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>
+    IAncestorLinkExtractor<TDomainObject, TDirectAncestorLink> ancestorLinkExtractor) : IDenormalizedAncestorsService<TDomainObject>
     where TDirectAncestorLink : class, new()
     where TDomainObject : class
 {
@@ -14,14 +32,14 @@ public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     {
         var syncResult = await ancestorLinkExtractor.GetSyncResult(domainObject, cancellationToken);
 
-        await ApplySync(syncResult, cancellationToken);
+        await this.ApplySync(syncResult, cancellationToken);
     }
 
     public async Task SyncAllAsync(CancellationToken cancellationToken)
     {
         var syncResult = await ancestorLinkExtractor.GetSyncAllResult(cancellationToken);
 
-        await ApplySync(syncResult, cancellationToken);
+        await this.ApplySync(syncResult, cancellationToken);
     }
 
     public async Task SyncAsync(
@@ -31,19 +49,19 @@ public class DenormalizedAncestorsService<TDomainObject, TDirectAncestorLink>(
     {
         var syncResult = await ancestorLinkExtractor.GetSyncResult(updatedDomainObjectsBase, removedDomainObjects, cancellationToken);
 
-        await ApplySync(syncResult, cancellationToken);
+        await this.ApplySync(syncResult, cancellationToken);
     }
 
     private async Task ApplySync(SyncResult<TDomainObject, TDirectAncestorLink> syncResult, CancellationToken cancellationToken)
     {
         foreach (var addLink in syncResult.Adding)
         {
-            await SaveAncestor(CreateLink(addLink.Ancestor, addLink.Child), cancellationToken);
+            await this.SaveAncestor(CreateLink(addLink.Ancestor, addLink.Child), cancellationToken);
         }
 
         foreach (var removeLink in syncResult.Removing)
         {
-            await RemoveAncestor(removeLink, cancellationToken);
+            await this.RemoveAncestor(removeLink, cancellationToken);
         }
     }
 

@@ -2,6 +2,7 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
@@ -34,10 +35,11 @@ public class AvailablePermissionSource<TPrincipal, TPermission, TSecurityContext
             select (securityContextType.Id, (!securityContextRestriction.Required, filter));
 
 
-        return new AvailablePermissionFilter(timeProvider.GetToday())
+        return new AvailablePermissionFilter()
                {
-                   PrincipalName = userNameResolver.Resolve(securityRule.CustomCredential ?? defaultSecurityRuleCredential),
-                   SecurityRoleIdents = securityRolesIdentsResolver.Resolve(securityRule).ToList(),
+	               Date = timeProvider.GetUtcNow().Date,
+				   PrincipalName = userNameResolver.Resolve(securityRule.CustomCredential ?? defaultSecurityRuleCredential),
+                   SecurityRoleIdents = securityRolesIdentsResolver.Resolve(securityRule),
                    RestrictionFilters = restrictionFiltersRequest.ToDictionary()
                };
     }

@@ -96,7 +96,7 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
         return identRequest.SingleOrDefault();
     }
 
-    public async Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken)
     {
         await this.ValidateAsync(principal, cancellationToken);
 

@@ -27,5 +27,5 @@ public record SecurityIdentity<TIdent>(TIdent Id) : SecurityIdentity
 		return this.Id;
 	}
 
-	public override string? ToString() => this.Id?.ToString();
+	public override string? ToString() => this.Id.ToString();
 }

@@ -98,9 +98,8 @@ public static class ServiceCollectionExtensions
 			    .AddScoped(typeof(IUserQueryableSource<>), typeof(UserQueryableSource<>))
 			    .AddScoped(typeof(IUserNameResolver<>), typeof(UserNameResolver<>))
 
-				.AddScoped(typeof(IDenormalizedAncestorsService<,>), typeof(DenormalizedAncestorsService<,>))
+				.AddScoped(typeof(IDenormalizedAncestorsService<>), typeof(DenormalizedAncestorsService<>))
 			    .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
-			    .AddScoped<IDenormalizedAncestorsServiceFactory, DenormalizedAncestorsServiceFactory>()
 
 			    .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
 			    .AddSingleton<IRealTypeResolver, IdentityRealTypeResolver>()

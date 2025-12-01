@@ -1,6 +1,8 @@
-﻿namespace SecuritySystem.GeneralPermission;
+﻿using System.Diagnostics.Contracts;
+
+namespace SecuritySystem.GeneralPermission;
 
 public interface ICurrentPrincipalSource<out TPrincipal>
 {
-    TPrincipal CurrentPrincipal { get; }
+	TPrincipal CurrentPrincipal { get; }
 }

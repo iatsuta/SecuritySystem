@@ -58,7 +58,7 @@ public class VirtualPermissionSystem<TPrincipal, TPermission>(
         }
     }
 
-    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default) =>
+    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken) =>
         await this.GetPermissionSource(bindingInfo.SecurityRole).GetPermissionQuery().GenericAnyAsync(cancellationToken)
             ? [bindingInfo.SecurityRole]
             : [];
