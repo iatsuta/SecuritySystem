@@ -14,13 +14,13 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     UserSourceInfo<TPrincipal> userSourceInfo,
-    IUserSource<TPrincipal> principalUserSource)
+	IUserSource<TPrincipal> principalUserSource)
     : GeneralPrincipalSourceService(
 		    queryableSource,
-      securityRoleSource,
-      securityContextInfoSource,
-      availablePermissionSource),
-      IPrincipalManagementService
+		    securityRoleSource,
+		    securityContextInfoSource,
+		    availablePermissionSource),
+	    IPrincipalManagementService
 
 	where TPrincipal: class
 {

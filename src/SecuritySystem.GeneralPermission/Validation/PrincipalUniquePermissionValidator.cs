@@ -1,9 +1,10 @@
 ﻿using CommonFramework;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class PrincipalUniquePermissionValidator<TPrincipal> : IPrincipalUniquePermissionValidator<TPrincipal>
+public class PrincipalUniquePermissionValidator<TPrincipal> : IValidator<TPrincipal>
 {
     private readonly ISecurityContextStorage securityEntitySource;
 
