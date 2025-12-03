@@ -14,6 +14,8 @@ namespace SecuritySystem.DependencyInjection;
 
 public class SecuritySystemSettings : ISecuritySystemSettings
 {
+	private readonly HashSet<Type> userSourceTypes = new();
+
     private DomainSecurityRule.RoleBaseSecurityRule securityAdministratorRule = SecurityRole.Administrator;
 
     private readonly List<Action<IServiceCollection>> registerActions = [];
@@ -119,6 +121,11 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     public ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>> setupUserSource)
 	    where TUser : class
     {
+	    if (!userSourceTypes.Add(typeof(TUser)))
+	    {
+		    throw new Exception($"{nameof(UserSource<>)} for {typeof(TUser).Name} already initialized");
+	    }
+
 	    var userSourceBuilder = new UserSourceBuilder<TUser>();
 
 	    setupUserSource(userSourceBuilder);

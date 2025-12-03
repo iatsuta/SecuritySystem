@@ -1,23 +1,31 @@
 ﻿using CommonFramework;
-
+using GenericQueryable;
 using Microsoft.Extensions.Logging;
 
-using SecuritySystem.Attributes;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
 
-public class SecurityContextInitializer(
-    [DisabledSecurity] IRepository<TSecurityContextType> securityContextTypeRepository,
+public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTypeIdent>(
+    IQueryableSource queryableSource,
+    IGenericRepository genericRepository,
     ISecurityContextInfoSource securityContextInfoSource,
-    ILogger<GeneralSecurityContextInitializer> logger,
+    ILogger<SecurityContextInitializer<TSecurityContextType, TSecurityContextTypeIdent>> logger,
+    IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> identityInfo,
+    ISecurityIdentityConverter<TSecurityContextTypeIdent> identityConverter,
     InitializerSettings settings)
-    : IGeneralSecurityContextInitializer
+    : ISecurityContextInitializer<TSecurityContextType>
+	where TSecurityContextType : class
+	where TSecurityContextTypeIdent : notnull
 {
     public async Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken)
     {
-        var dbSecurityContextTypes = await securityContextTypeRepository.GetQueryable().GenericToListAsync(cancellationToken);
+	    var dbSecurityContextTypes = await queryableSource.GetQueryable<TSecurityContextType>().GenericToListAsync(cancellationToken);
 
-        var mergeResult = dbSecurityContextTypes.GetMergeResult(securityContextInfoSource.SecurityContextInfoList, et => et.Id, sc => sc.Id);
+	    var mergeResult = dbSecurityContextTypes.GetMergeResult(
+		    securityContextInfoSource.SecurityContextInfoList,
+		    identityInfo.Id.Getter,
+		    sc => identityConverter.Convert(sc.Identity).Id);
 
         if (mergeResult.RemovingItems.Any())
         {
@@ -33,7 +41,7 @@ public class SecurityContextInitializer(
                     {
                         logger.LogDebug("SecurityContextType removed: {Name} {Id}", removingItem.Name, removingItem.Id);
 
-                        await securityContextTypeRepository.RemoveAsync(removingItem, cancellationToken);
+                        await genericRepository.RemoveAsync(removingItem, cancellationToken);
                     }
 
                     break;
