@@ -48,12 +48,11 @@ public static class ServiceCollectionExtensions
 						.SetRawUserAuthenticationService<RawUserAuthenticationService>()
 						.SetGenericRepository<EfGenericRepository>()
 
-						.AddUserSource<Employee>(usb => usb.SetName(employee => employee.Login).SetRunAs(employee => employee.RunAs))
+						.AddUserSource<Employee>(usb => usb.SetRunAs(employee => employee.RunAs))
 
 						.AddSecurityContext<BusinessUnit>(
 							new Guid("{E4AE968E-7B6B-4236-B381-9886C8E0FA34}"),
 							scb => scb
-								.SetDisplayFunc(bu => bu.Name)
 								.SetHierarchicalInfo(
 									v => v.Parent,
 									new AncestorLinkInfo<BusinessUnit, BusinessUnitDirectAncestorLink>(link => link.Ancestor, link => link.Child),
@@ -61,7 +60,6 @@ public static class ServiceCollectionExtensions
 						.AddSecurityContext<Location>(
 							new Guid("{9756440C-6643-4AAD-AB57-A901F3917BA4}"),
 							scb => scb
-								.SetDisplayFunc(loc => loc.Name)
 								.SetIdentityPath(loc => loc.MyId))
 
 						.AddDomainSecurityServices(rb =>

@@ -9,7 +9,7 @@ public class HierarchicalTypedSecurityContextStorage<TSecurityContext, TSecurity
 	IQueryableSource queryableSource,
 	IIdentityInfoSource identityInfoSource,
 	LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage,
-	ISecurityContextDisplayService<TSecurityContext> displayService,
+	IDomainObjectDisplayService displayService,
 	HierarchicalInfo<TSecurityContext> hierarchicalInfo)
 	: TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(queryableSource, identityInfoSource, localStorage)
 	where TSecurityContext : class, ISecurityContext

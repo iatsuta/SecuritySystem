@@ -46,7 +46,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     }
 
     public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(SecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
-        where TSecurityContext : ISecurityContext
+        where TSecurityContext : class, ISecurityContext
     {
         this.registerActions.Add(sc =>
         {
@@ -130,11 +130,14 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
 	    setupUserSource(userSourceBuilder);
 
-	    var namePath = userSourceBuilder.NamePath ?? throw new InvalidOperationException("NamePath must be initialized");
-
 	    this.registerActions.Add(sc =>
 	    {
-		    var info = new UserSourceInfo<TUser>(namePath, userSourceBuilder.FilterPath);
+		    if (userSourceBuilder.NamePath != null)
+		    {
+			    sc.AddSingleton(new VisualIdentityInfo<TUser>(userSourceBuilder.NamePath));
+		    }
+
+			var info = new UserSourceInfo<TUser>(userSourceBuilder.FilterPath);
 
 		    sc.AddSingleton<UserSourceInfo>(info);
 		    sc.AddSingleton(info);

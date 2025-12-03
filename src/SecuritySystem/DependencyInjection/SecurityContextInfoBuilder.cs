@@ -7,13 +7,13 @@ using SecuritySystem.HierarchicalExpand;
 namespace SecuritySystem.DependencyInjection;
 
 public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity identity) : ISecurityContextInfoBuilder<TSecurityContext>
-	where TSecurityContext : ISecurityContext
+	where TSecurityContext : class, ISecurityContext
 {
 	private readonly List<Action<IServiceCollection>> extensions = new();
 
 	private string name = typeof(TSecurityContext).Name;
 
-	private Func<TSecurityContext, string> displayFunc = securityContext => securityContext.ToString() ?? typeof(TSecurityContext).Name;
+	private Func<TSecurityContext, string>? customDisplayFunc;
 
 	private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
 
@@ -28,9 +28,9 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 		return this;
 	}
 
-	public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> newDisplayFunc)
+	public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> displayFunc)
 	{
-		this.displayFunc = newDisplayFunc;
+		this.customDisplayFunc = displayFunc;
 
 		return this;
 	}
@@ -66,7 +66,11 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 
 		services.AddSingleton(securityContextInfo);
 		services.AddSingleton<SecurityContextInfo>(securityContextInfo);
-		services.AddSingleton<ISecurityContextDisplayService<TSecurityContext>>(new SecurityContextDisplayService<TSecurityContext>(this.displayFunc));
+
+		if (this.customDisplayFunc != null)
+		{
+			services.AddSingleton(new DisplayObjectInfo<TSecurityContext>(this.customDisplayFunc));
+		}
 
 		if (this.customIdentityInfo != null)
 		{

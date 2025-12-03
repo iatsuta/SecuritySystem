@@ -2,9 +2,9 @@
 
 namespace SecuritySystem.Services;
 
-public class IdentityPropertySource(IdentityPropertySourceSettings settings) : IIdentityPropertySource
+public class IdentityPropertyExtractor(IdentityPropertySourceSettings settings) : IIdentityPropertyExtractor
 {
-    public PropertyInfo GetIdentityProperty(Type domainType)
+    public PropertyInfo Extract(Type domainType)
     {
         var propertyName = settings.DefaultPropertyName;
 

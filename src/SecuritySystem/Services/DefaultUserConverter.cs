@@ -9,15 +9,20 @@ using CommonFramework.ExpressionEvaluate;
 
 namespace SecuritySystem.Services;
 
-public class DefaultUserConverter<TUser>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IDefaultUserConverter<TUser>
+public class DefaultUserConverter<TUser>(
+	IServiceProvider serviceProvider,
+	IIdentityInfoSource identityInfoSource,
+	IVisualIdentityInfoSource visualIdentityInfoSource) : IDefaultUserConverter<TUser>
 {
 	private readonly Lazy<IDefaultUserConverter<TUser>> lazyInnerUserSource = new(() =>
 	{
 		var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TUser));
 
+		var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>();
+
 		var innerUserSourceType = typeof(DefaultUserConverter<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType);
 
-		return (IDefaultUserConverter<TUser>)ActivatorUtilities.CreateInstance(serviceProvider, innerUserSourceType, identityInfo);
+		return (IDefaultUserConverter<TUser>)ActivatorUtilities.CreateInstance(serviceProvider, innerUserSourceType, identityInfo, visualIdentityInfo);
 	});
 
 	private IDefaultUserConverter<TUser> InnerUserSource => lazyInnerUserSource.Value;
@@ -27,13 +32,15 @@ public class DefaultUserConverter<TUser>(IServiceProvider serviceProvider, IIden
 	public Func<TUser, User> ConvertFunc => this.InnerUserSource.ConvertFunc;
 }
 
-public class DefaultUserConverter<TUser, TIdent>(UserSourceInfo<TUser> userSourceInfo, IdentityInfo<TUser, TIdent> identityInfo) : IDefaultUserConverter<TUser>
+public class DefaultUserConverter<TUser, TIdent>(
+	IdentityInfo<TUser, TIdent> identityInfo,
+	VisualIdentityInfo<TUser> visualIdentityInfo) : IDefaultUserConverter<TUser>
 	where TIdent : notnull
 {
 	private readonly Tuple<Expression<Func<TUser, User>>, Func<TUser, User>> convertData = FuncHelper.Create(() =>
 	{
 		var convertExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TUser, User>>(ee =>
-			user => new User(ee.Evaluate(userSourceInfo.Name.Path, user), new SecurityIdentity<TIdent>(ee.Evaluate(identityInfo.Id.Path, user))));
+			user => new User(ee.Evaluate(visualIdentityInfo.Name.Path, user), new SecurityIdentity<TIdent>(ee.Evaluate(identityInfo.Id.Path, user))));
 
 		return new Tuple<Expression<Func<TUser, User>>, Func<TUser, User>>(convertExpr, convertExpr.Compile());
 	}).Invoke();

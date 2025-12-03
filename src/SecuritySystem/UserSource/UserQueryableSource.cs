@@ -9,16 +9,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.UserSource;
 
-public class UserQueryableSource<TUser>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IUserQueryableSource<TUser>
+public class UserQueryableSource<TUser>(
+	IServiceProvider serviceProvider,
+	IIdentityInfoSource identityInfoSource,
+	IVisualIdentityInfoSource visualIdentityInfoSource) : IUserQueryableSource<TUser>
 {
 	private readonly Lazy<IUserQueryableSource<TUser>> lazyInnerUserQueryableSource = new(() =>
 	{
 		var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TUser));
 
+		var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>();
+
 		return (IUserQueryableSource<TUser>)
 			ActivatorUtilities.CreateInstance(
 				serviceProvider,
-				typeof(UserQueryableSource<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType), identityInfo);
+				typeof(UserQueryableSource<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType), identityInfo, visualIdentityInfo);
 	});
 
 	public IQueryable<TUser> GetQueryable(UserCredential userCredential) => this.lazyInnerUserQueryableSource.Value.GetQueryable(userCredential);
@@ -30,6 +35,7 @@ public class UserQueryableSource<TUser, TIdent>(
 	IQueryableSource queryableSource,
 	UserSourceInfo<TUser> userSourceInfo,
 	IdentityInfo<TUser, TIdent> identityInfo,
+	VisualIdentityInfo<TUser> visualIdentityInfo,
 	IDefaultUserConverter<TUser> defaultUserConverter) : IUserQueryableSource<TUser>
 	where TUser : class
 	where TIdent : notnull
@@ -38,7 +44,7 @@ public class UserQueryableSource<TUser, TIdent>(
 	{
 		return queryableSource
 			.GetQueryable<TUser>()
-			.Where(userSourceInfo.Filter)
+			.Where(userSourceInfo.FilterPath)
 			.Where(this.GetCredentialFilter(userCredential));
 	}
 
@@ -51,7 +57,7 @@ public class UserQueryableSource<TUser, TIdent>(
 	{
 		return userCredential switch
 		{
-			UserCredential.NamedUserCredential { Name: var name } => userSourceInfo.Name.Path.Select(objName => objName == name),
+			UserCredential.NamedUserCredential { Name: var name } => visualIdentityInfo.Name.Path.Select(objName => objName == name),
 
 			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TIdent> { Id: var id } } =>
 				identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id)),

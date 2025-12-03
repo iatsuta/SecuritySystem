@@ -1,10 +1,14 @@
-﻿using SecuritySystem.Services;
-using SecuritySystem.UserSource;
+﻿using System.Linq.Expressions;
+
+using SecuritySystem.Services;
 
 namespace SecuritySystem.SecurityAccessor;
 
-public class SecurityAccessorInfinityStorage<TUser>(IQueryableSource queryableSource, UserSourceInfo<TUser> userSourceInfo) : ISecurityAccessorInfinityStorage
+public class SecurityAccessorInfinityStorage<TUser>(IQueryableSource queryableSource, IVisualIdentityInfoSource visualIdentityInfoSource)
+	: ISecurityAccessorInfinityStorage
 	where TUser : class
 {
-	public IEnumerable<string> GetInfinityData() => queryableSource.GetQueryable<TUser>().Select(userSourceInfo.Name.Path);
+	private readonly Expression<Func<TUser, string>> namePath = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Path;
+
+	public IEnumerable<string> GetInfinityData() => queryableSource.GetQueryable<TUser>().Select(namePath);
 }

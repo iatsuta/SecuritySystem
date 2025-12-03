@@ -1,10 +1,13 @@
 ﻿using SecuritySystem.Credential;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;
 
-public class CreateVirtualMissedUserService<TUser>(UserSourceInfo<TUser> userSourceInfo) : IMissedUserService<TUser>
+public class CreateVirtualMissedUserService<TUser>(IVisualIdentityInfoSource visualIdentityInfoSources) : IMissedUserService<TUser>
 	where TUser : class, new()
 {
+	private readonly Action<TUser, string> nameSetter = visualIdentityInfoSources.GetVisualIdentityInfo<TUser>().Name.Setter;
+
 	public TUser GetUser(UserCredential userCredential)
 	{
 		var user = new TUser();
@@ -13,7 +16,7 @@ public class CreateVirtualMissedUserService<TUser>(UserSourceInfo<TUser> userSou
 		{
 			case UserCredential.NamedUserCredential namedUserCredential:
 			{
-				userSourceInfo.Name.Setter(user, namedUserCredential.Name);
+				nameSetter(user, namedUserCredential.Name);
 				break;
 			}
 

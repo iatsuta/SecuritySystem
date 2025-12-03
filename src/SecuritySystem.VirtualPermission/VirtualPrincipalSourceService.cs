@@ -55,6 +55,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 	IQueryableSource queryableSource,
 	VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
 	IIdentityInfoSource identityInfoSource,
+	IVisualIdentityInfoSource visualIdentityInfoSource,
 	UserSourceInfo<TPrincipal> userSourceInfo,
 	IdentityInfo<TPrincipal, TPrincipalIdent> principalIdentityInfo,
 	IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo) : IPrincipalSourceService
@@ -64,7 +65,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 	where TPrincipalIdent : IParsable<TPrincipalIdent>
 	where TPermissionIdent : notnull
 {
-	private readonly Expression<Func<TPrincipal, string>> principalNamePath = userSourceInfo.Name.Path;
+	private readonly Expression<Func<TPrincipal, string>> principalNamePath = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path;
 
 	private readonly IExpressionEvaluator expressionEvaluator =
 		expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalIdent, TPermissionIdent>));
@@ -176,14 +177,16 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 		}
 	}
 
-	private Array GetRestrictionArray<TSecurityContext, TSecurityContextIdent>(TPermission permission, IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+	private Array GetRestrictionArray<TSecurityContext, TSecurityContextIdent>(TPermission permission,
+		IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
 		where TSecurityContext : ISecurityContext
 		where TSecurityContextIdent : notnull
 	{
 		return this.GetRestrictionIdents(permission, identityInfo).ToArray();
 	}
 
-	private IEnumerable<TSecurityContextIdent> GetRestrictionIdents<TSecurityContext, TSecurityContextIdent>(TPermission permission, IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+	private IEnumerable<TSecurityContextIdent> GetRestrictionIdents<TSecurityContext, TSecurityContextIdent>(TPermission permission,
+		IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
 		where TSecurityContext : ISecurityContext
 		where TSecurityContextIdent : notnull
 	{

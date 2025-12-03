@@ -7,6 +7,7 @@ using SecuritySystem.HierarchicalExpand;
 namespace SecuritySystem.DependencyInjection;
 
 public interface ISecurityContextInfoBuilder<TSecurityContext>
+	where TSecurityContext : class, ISecurityContext
 {
     ISecurityContextInfoBuilder<TSecurityContext> SetName(string name);
 

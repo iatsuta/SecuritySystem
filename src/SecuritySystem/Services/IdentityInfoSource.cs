@@ -5,19 +5,19 @@ using CommonFramework.DictionaryCache;
 
 namespace SecuritySystem.Services;
 
-public class IdentityInfoSource(IIdentityPropertySource identityPropertySource, IEnumerable<IdentityInfo> customIdentityInfoList) : IIdentityInfoSource
+public class IdentityInfoSource(IIdentityPropertyExtractor propertyExtractor, IEnumerable<IdentityInfo> customInfoList) : IIdentityInfoSource
 {
     private readonly IDictionaryCache<Type, IdentityInfo> identityInfoCache = new DictionaryCache<Type, IdentityInfo>(domainType =>
     {
-        var customIdentityInfo = customIdentityInfoList.SingleOrDefault(identityInfo => identityInfo.DomainObjectType == domainType);
+        var customInfo = customInfoList.SingleOrDefault(identityInfo => identityInfo.DomainObjectType == domainType);
 
-        if (customIdentityInfo != null)
+        if (customInfo != null)
         {
-            return customIdentityInfo;
+            return customInfo;
         }
         else
         {
-            var idProperty = identityPropertySource.GetIdentityProperty(domainType);
+            var idProperty = propertyExtractor.Extract(domainType);
 
             var idPath = idProperty.ToLambdaExpression();
 

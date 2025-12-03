@@ -15,7 +15,7 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule);
 
     ISecuritySystemSettings AddSecurityContext<TSecurityContext>(SecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
-        where TSecurityContext : ISecurityContext;
+        where TSecurityContext : class, ISecurityContext;
 
     ISecuritySystemSettings AddDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setup);
 

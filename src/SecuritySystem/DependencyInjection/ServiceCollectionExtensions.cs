@@ -110,10 +110,15 @@ public static class ServiceCollectionExtensions
 			    .AddSingleton<SecurityAdministratorRuleFactory>()
 
 			    .AddSingleton(new IdentityPropertySourceSettings("Id"))
-			    .AddSingleton<IIdentityPropertySource, IdentityPropertySource>()
+			    .AddSingleton<IIdentityPropertyExtractor, IdentityPropertyExtractor>()
 			    .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
 
-			    .AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
+			    .AddSingleton(new VisualIdentityPropertySourceSettings(["Login", "Name", "Code"]))
+			    .AddSingleton<IVisualIdentityPropertyExtractor, VisualIdentityPropertyExtractor>()
+			    .AddSingleton<IVisualIdentityInfoSource, VisualIdentityInfoSource>()
+			    .AddSingleton<IDomainObjectDisplayService, DomainObjectDisplayService>()
+
+				.AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
 
 			    .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
 			    .AddScoped(typeof(LocalStorage<,>))

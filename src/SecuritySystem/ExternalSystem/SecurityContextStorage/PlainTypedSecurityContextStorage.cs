@@ -6,7 +6,7 @@ public class PlainTypedSecurityContextStorage<TSecurityContext, TSecurityContext
     IQueryableSource queryableSource,
     LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage,
     IIdentityInfoSource identityInfoSource,
-    ISecurityContextDisplayService<TSecurityContext> displayService)
+    IDomainObjectDisplayService displayService)
     : TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(queryableSource, identityInfoSource, localStorage)
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
