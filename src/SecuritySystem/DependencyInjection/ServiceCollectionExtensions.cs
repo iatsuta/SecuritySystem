@@ -97,6 +97,7 @@ public static class ServiceCollectionExtensions
 			    .AddScoped(typeof(IUserSource<>), typeof(UserSource<>))
 			    .AddScoped(typeof(IUserQueryableSource<>), typeof(UserQueryableSource<>))
 			    .AddScoped(typeof(IUserNameResolver<>), typeof(UserNameResolver<>))
+			    .AddScoped(typeof(IUserFilterFactory<>), typeof(UserFilterFactory<>))
 
 				.AddScoped(typeof(IDenormalizedAncestorsService<>), typeof(DenormalizedAncestorsService<>))
 			    .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
