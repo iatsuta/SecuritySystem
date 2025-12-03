@@ -36,9 +36,10 @@ public class UserQueryableSource<TUser, TIdent>(
 	UserSourceInfo<TUser> userSourceInfo,
 	IdentityInfo<TUser, TIdent> identityInfo,
 	VisualIdentityInfo<TUser> visualIdentityInfo,
+	ISecurityIdentityConverter<TIdent> identityConverter,
 	IDefaultUserConverter<TUser> defaultUserConverter) : IUserQueryableSource<TUser>
 	where TUser : class
-	where TIdent : notnull
+	where TIdent : IParsable<TIdent>
 {
 	public IQueryable<TUser> GetQueryable(UserCredential userCredential)
 	{
@@ -55,17 +56,31 @@ public class UserQueryableSource<TUser, TIdent>(
 
 	private Expression<Func<TUser, bool>> GetCredentialFilter(UserCredential userCredential)
 	{
-		return userCredential switch
+		switch (userCredential)
 		{
-			UserCredential.NamedUserCredential { Name: var name } => visualIdentityInfo.Name.Path.Select(objName => objName == name),
+			case UserCredential.NamedUserCredential { Name: var name }:
+				return visualIdentityInfo.Name.Path.Select(objName => objName == name);
 
-			UserCredential.IdentUserCredential { Identity: SecurityIdentity<TIdent> { Id: var id } } =>
-				identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id)),
+			case UserCredential.IdentUserCredential { Identity: var identity }:
+			{
+				var convertedIdentity = identityConverter.TryConvert(identity);
 
-			UserCredential.IdentUserCredential => _ => false,
+				if (convertedIdentity == null)
+				{
+					return _ => false;
+				}
+				else
+				{
+					return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(convertedIdentity.Id));
+				}
+			}
 
-			_ => throw new ArgumentOutOfRangeException(nameof(userCredential))
-		};
+			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, null, out var id):
+				return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id));
+
+			default:
+				throw new ArgumentOutOfRangeException(nameof(userCredential));
+		}
 	}
 
 	public class SimpleUserQueryableSource(Func<UserCredential, IQueryable<TUser>> getFilteredQueryable, IDefaultUserConverter<TUser> defaultUserConverter)

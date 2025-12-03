@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+
 using SecuritySystem.Credential;
 
 using SecuritySystem.UserSource;
@@ -12,6 +13,7 @@ public class RunAsManager<TUser>(
 	IUserSource<TUser> userSource,
 	UserSourceRunAsInfo<TUser> userSourceRunAsInfo,
 	IGenericRepository genericRepository,
+	IUserCredentialMatcher<TUser> userCredentialMatcher,
 	IDefaultUserConverter<TUser> toDefaultUserConverter)
 	: IRunAsManager
 	where TUser : class
@@ -30,7 +32,7 @@ public class RunAsManager<TUser>(
 	{
 		this.CheckAccess();
 
-		if (this.RunAsUser != null && userCredential.IsMatch(this.RunAsUser))
+		if (this.NativeRunAsUser is not null && userCredentialMatcher.IsMatch(userCredential, this.NativeRunAsUser))
 		{
 		}
 		else if (userCredential == this.PureCredential)

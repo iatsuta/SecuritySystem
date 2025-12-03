@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+
 using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.GeneralPermission;

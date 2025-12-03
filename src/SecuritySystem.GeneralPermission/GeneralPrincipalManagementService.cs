@@ -8,19 +8,22 @@ using SecuritySystem.UserSource;
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType>(
-    IQueryableSource queryableSource,
-    IGenericRepository genericRepository,
-    ISecurityRoleSource securityRoleSource,
+	IQueryableSource queryableSource,
+	IVisualIdentityInfoSource visualIdentityInfoSource,
+	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
+	ITypedPrincipalConverter<TPrincipal> typedPrincipalConverter,
+	IPrincipalFilterFactory<TPrincipal> principalFilterFactory,
+	ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    IAvailablePermissionSource<TPermission> availablePermissionSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     UserSourceInfo<TPrincipal> userSourceInfo,
 	IUserSource<TPrincipal> principalUserSource)
-    : GeneralPrincipalSourceService(
+    : GeneralPrincipalSourceService<TPrincipal>(
 		    queryableSource,
-		    securityRoleSource,
-		    securityContextInfoSource,
-		    availablePermissionSource),
+		    visualIdentityInfoSource,
+		    availablePrincipalSource,
+            typedPrincipalConverter,
+		    principalFilterFactory),
 	    IPrincipalManagementService
 
 	where TPrincipal: class
@@ -31,8 +34,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     }
 
     public async Task<object> UpdatePrincipalNameAsync(
-        UserCredential userCredential,
-        string principalName,
+		UserCredential userCredential,
+		string principalName,
         CancellationToken cancellationToken)
     {
         var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
@@ -54,8 +57,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     }
 
     public async Task<MergeResult<object, object>> UpdatePermissionsAsync(
-	    SecurityIdentity principalId,
-        IEnumerable<TypedPermission> typedPermissions,
+		UserCredential userCredential,
+		IEnumerable<TypedPermission> typedPermissions,
         CancellationToken cancellationToken)
     {
         var dbPrincipal = await principalUserSource.GetUserAsync(principalId, cancellationToken);

@@ -4,6 +4,7 @@ using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 
 using SecuritySystem.Credential;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
@@ -13,29 +14,31 @@ public class AvailablePermissionSource<TPrincipal, TPermission, TSecurityContext
     TimeProvider timeProvider,
     IUserNameResolver<TPrincipal> userNameResolver,
     ISecurityRolesIdentsResolver securityRolesIdentsResolver,
+    ISecurityIdentityConverter<TSecurityContextObjectIdent> securityIdentityConverter,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextSource securityContextSource,
     IIdentityInfoSource identityInfoSource,
     SecurityRuleCredential defaultSecurityRuleCredential)
     : IAvailablePermissionSource<TPermission>
     where TPermission : class
+    where TSecurityContextObjectIdent : notnull
 {
     public AvailablePermissionFilter<TSecurityContextObjectIdent> CreateFilter(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        var restrictionFiltersRequest =
+	    var restrictionFiltersRequest =
 
-            from securityContextRestriction in securityRule.GetSafeSecurityContextRestrictions()
+		    from securityContextRestriction in securityRule.GetSafeSecurityContextRestrictions()
 
-            where securityContextRestriction.RawFilter != null
+		    where securityContextRestriction.RawFilter != null
 
-            let filter = this.GetRestrictionFilter(securityContextRestriction.RawFilter!)
+		    let filter = this.GetRestrictionFilter(securityContextRestriction.RawFilter!)
 
-            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(securityContextRestriction.SecurityContextType)
+		    let securityContextType = securityContextInfoSource.GetSecurityContextInfo(securityContextRestriction.SecurityContextType)
 
-            select (securityContextType.Id, (!securityContextRestriction.Required, filter));
+		    select (securityIdentityConverter.Convert(securityContextType.Identity).Id, (!securityContextRestriction.Required, filter));
 
 
-        return new AvailablePermissionFilter()
+        return new AvailablePermissionFilter<TSecurityContextObjectIdent>()
                {
 	               Date = timeProvider.GetUtcNow().Date,
 				   PrincipalName = userNameResolver.Resolve(securityRule.CustomCredential ?? defaultSecurityRuleCredential),
@@ -70,24 +73,24 @@ public class AvailablePermissionSource<TPrincipal, TPermission, TSecurityContext
         return this.GetAvailablePermissionsQueryable(filter);
     }
 
-    public IQueryable<TPermission> GetAvailablePermissionsQueryable(AvailablePermissionFilter filter)
+    public IQueryable<TPermission> GetAvailablePermissionsQueryable(AvailablePermissionFilter<TSecurityContextObjectIdent> filter)
     {
         return queryableSource.GetQueryable<TPermission>().Where(this.ToFilterExpression(filter));
     }
 
 
-    public Expression<Func<TPermission, bool>> ToFilterExpression(AvailablePermissionFilter filter)
+    public Expression<Func<TPermission, bool>> ToFilterExpression(AvailablePermissionFilter<TSecurityContextObjectIdent> filter)
     {
         return this.GetFilterExpressionElements(filter).BuildAnd();
     }
 
-    public IEnumerable<Expression<Func<TPermission, bool>>> GetFilterExpressionElements(AvailablePermissionFilter filter)
+    public IEnumerable<Expression<Func<TPermission, bool>>> GetFilterExpressionElements(AvailablePermissionFilter<TSecurityContextObjectIdent> filter)
     {
         yield return permission => permission.Period.Contains(today);
 
         if (filter.PrincipalName != null)
         {
-            yield return permission => this.PrincipalName == permission.TPrincipal.Name;
+            yield return permission => filter.PrincipalName == permission.TPrincipal.Name;
         }
 
         if (this.SecurityRoleIdents != null)

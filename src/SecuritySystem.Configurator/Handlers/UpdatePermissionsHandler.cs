@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
+using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
@@ -27,7 +28,7 @@ public class UpdatePermissionsHandler(
 
         var typedPermissions = permissions.Select(this.ToTypedPermission).ToList();
 
-        var mergeResult = await principalManagementService.UpdatePermissionsAsync(principalId, typedPermissions, cancellationToken);
+        var mergeResult = await principalManagementService.UpdatePermissionsAsync(new UserCredential.UntypedIdentUserCredential(principalId), typedPermissions, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
         {

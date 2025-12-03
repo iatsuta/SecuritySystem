@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CommonFramework;
 
-using CommonFramework;
+using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
 using SecuritySystem.Configurator.Models;
+using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
@@ -26,15 +27,15 @@ public class GetPrincipalHandler(
 
         var principalId = (string)httpContext.Request.RouteValues["id"]!;
 
-        var permissions = await this.GetPermissionsAsync(principalId, cancellationToken);
+        var permissions = await this.GetPermissionsAsync(new UserCredential.UntypedIdentUserCredential(principalId), cancellationToken);
 
         return new PrincipalDetailsDto { Permissions = permissions };
     }
 
-    private async Task<List<PermissionDto>> GetPermissionsAsync(string principalId, CancellationToken cancellationToken)
+    private async Task<List<PermissionDto>> GetPermissionsAsync(UserCredential userCredential, CancellationToken cancellationToken)
     {
-        var principal = await principalSourceService.TryGetPrincipalAsync(principalId, cancellationToken)
-                        ?? throw new SecuritySystemException($"Principal with id {principalId} not found");
+        var principal = await principalSourceService.TryGetPrincipalAsync(userCredential, cancellationToken)
+                        ?? throw new SecuritySystemException($"Principal with id {userCredential} not found");
 
         var allSecurityContextDict = this.GetSecurityContextDict(principal);
 

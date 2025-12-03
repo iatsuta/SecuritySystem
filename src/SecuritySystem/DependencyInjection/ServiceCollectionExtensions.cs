@@ -118,6 +118,8 @@ public static class ServiceCollectionExtensions
 			    .AddSingleton<IVisualIdentityInfoSource, VisualIdentityInfoSource>()
 			    .AddSingleton<IDomainObjectDisplayService, DomainObjectDisplayService>()
 
+			    .AddSingleton(typeof(IUserCredentialMatcher<>), typeof(UserCredentialMatcher<>))
+
 				.AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
 
 			    .AddScoped<ISecurityContextStorage, SecurityContextStorage>()

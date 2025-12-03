@@ -1,42 +1,41 @@
-﻿using CommonFramework;
+﻿using System.Linq.Expressions;
+
+using CommonFramework;
 
 using GenericQueryable;
 
+using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPrincipalSourceService<TPrincipal, TPermission>(
+public class GeneralPrincipalSourceService<TPrincipal>(
 	IQueryableSource queryableSource,
-	IAvailablePermissionSource<TPermission> availablePermissionSource,
-	UserSourceInfo<TPrincipal> userSourceInfo,
+	IVisualIdentityInfoSource visualIdentityInfoSource,
+	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
 	ITypedPrincipalConverter<TPrincipal> typedPrincipalConverter,
-	IPermissionToPrincipalInfo<TPrincipal, TPermission> permissionToPrincipalInfo,
-	IPrincipalFilterFactory<TPrincipal> principalFilterFactory) : IPrincipalSourceService
+	IUserQueryableSource<TPrincipal> userQueryableSource) : IPrincipalSourceService
 	where TPrincipal : class
 {
+	private readonly Expression<Func<TPrincipal, string>> namePath = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path;
+
 	private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
 
-	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
-		string nameFilter,
-		int limit,
-		CancellationToken cancellationToken)
+	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
 	{
 		return await principalQueryable
 			.Pipe(
 				!string.IsNullOrWhiteSpace(nameFilter),
-				q => q.Where(userSourceInfo.Name.Path.Select(principalName => principalName.Contains(nameFilter))))
+				q => q.Where(namePath.Select(principalName => principalName.Contains(nameFilter))))
 			.Select(typedPrincipalConverter.GetToHeaderExpression())
 			.GenericToListAsync(cancellationToken);
 	}
 
-	public async Task<TypedPrincipal?> TryGetPrincipalAsync(string principalId, CancellationToken cancellationToken)
+	public async Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
 	{
-		var filter = principalFilterFactory.CreateFilterById(principalId);
-
-		var principal = await principalQueryable.Where(filter).GenericSingleOrDefaultAsync(cancellationToken);
+		var principal = await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
 
 		if (principal is null)
 		{
@@ -48,18 +47,14 @@ public class GeneralPrincipalSourceService<TPrincipal, TPermission>(
 		}
 	}
 
-	public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(
-		IEnumerable<SecurityRole> securityRoles,
-		CancellationToken cancellationToken)
+	public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
 	{
-		return await availablePermissionSource
-			.GetAvailablePermissionsQueryable(
+		return await availablePrincipalSource.GetAvailablePrincipalsQueryable(
 				DomainSecurityRule.ExpandedRolesSecurityRule.Create(securityRoles) with
 				{
 					CustomCredential = new SecurityRuleCredential.AnyUserCredential()
 				})
-			.Select(permissionToPrincipalInfo.ToPrincipal.Path.Select(userSourceInfo.Name.Path))
-			.Distinct()
+			.Select(namePath)
 			.GenericToListAsync(cancellationToken);
 	}
 }

@@ -1,9 +1,16 @@
-﻿using SecuritySystem.ExternalSystem.Management;
+﻿using System.Linq.Expressions;
+
+using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class TypedPrincipalConverter<TPrincipal> : ITypedPrincipalConverter<TPrincipal>
 {
+	public Expression<Func<TPrincipal, TypedPrincipalHeader>> GetToHeaderExpression()
+	{
+		throw new NotImplementedException();
+	}
+
 	public async Task<TypedPrincipal> ToTypedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken)
 	{
 		return new TypedPrincipal(

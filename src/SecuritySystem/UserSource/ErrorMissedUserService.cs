@@ -4,18 +4,20 @@ namespace SecuritySystem.UserSource;
 
 public class ErrorMissedUserService<TUser> : IMissedUserService<TUser>
 {
-	public TUser GetUser(UserCredential userCredential)
+	public virtual TUser GetUser(UserCredential userCredential)
 	{
 		throw this.GetNotFoundException(userCredential);
 	}
 
-	public IMissedUserService<User> ToSimple()
+	public virtual IMissedUserService<User> ToSimple()
 	{
 		return new SimpleErrorMissedUserService(this.GetNotFoundException);
 	}
 
-	private Exception GetNotFoundException(UserCredential userCredential) =>
-		new UserSourceException($"{typeof(TUser).Name} \"{userCredential}\" not found");
+	private Exception GetNotFoundException(UserCredential userCredential)
+	{
+		return new UserSourceException($"{typeof(TUser).Name} \"{userCredential}\" not found");
+	}
 
 	private class SimpleErrorMissedUserService(Func<UserCredential, Exception> getError) : IMissedUserService<User>
 	{

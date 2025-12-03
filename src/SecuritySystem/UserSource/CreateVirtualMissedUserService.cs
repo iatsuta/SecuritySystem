@@ -3,32 +3,37 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;
 
-public class CreateVirtualMissedUserService<TUser>(IVisualIdentityInfoSource visualIdentityInfoSources) : IMissedUserService<TUser>
+public class CreateVirtualMissedUserService<TUser>(IVisualIdentityInfoSource visualIdentityInfoSource, IDefaultUserConverter<TUser> defaultUserConverter) : ErrorMissedUserService<TUser>
 	where TUser : class, new()
 {
-	private readonly Action<TUser, string> nameSetter = visualIdentityInfoSources.GetVisualIdentityInfo<TUser>().Name.Setter;
+	private readonly Action<TUser, string> nameSetter = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Setter;
 
-	public TUser GetUser(UserCredential userCredential)
+	public override TUser GetUser(UserCredential userCredential)
 	{
-		var user = new TUser();
-
-		switch (userCredential)
+		if (userCredential is UserCredential.NamedUserCredential namedUserCredential)
 		{
-			case UserCredential.NamedUserCredential namedUserCredential:
-			{
-				nameSetter(user, namedUserCredential.Name);
-				break;
-			}
-
-			default:
-				throw new ArgumentOutOfRangeException(nameof(userCredential));
+			var user = new TUser();
+			nameSetter(user, namedUserCredential.Name);
+			return user;
 		}
-
-		return user;
+		else
+		{
+			return base.GetUser(userCredential);
+		}
 	}
 
-	public IMissedUserService<User> ToSimple()
+	public override IMissedUserService<User> ToSimple()
 	{
-		return new SimpleCreateVirtualMissedUserService();
+		return new SimpleCreateVirtualMissedUserService(uc => defaultUserConverter.ConvertFunc(this.GetUser(uc)));
+	}
+
+	private class SimpleCreateVirtualMissedUserService(Func<UserCredential, User> getUser) : IMissedUserService<User>
+	{
+		public User GetUser(UserCredential userCredential) => getUser(userCredential);
+
+		public IMissedUserService<User> ToSimple()
+		{
+			return this;
+		}
 	}
 }
