@@ -118,7 +118,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>> setupUserSource)
+    public ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>>? setupUserSource)
 	    where TUser : class
     {
 	    if (!userSourceTypes.Add(typeof(TUser)))
@@ -128,7 +128,10 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
 	    var userSourceBuilder = new UserSourceBuilder<TUser>();
 
-	    setupUserSource(userSourceBuilder);
+	    if (setupUserSource != null)
+	    {
+		    setupUserSource(userSourceBuilder);
+		}
 
 	    this.registerActions.Add(sc =>
 	    {

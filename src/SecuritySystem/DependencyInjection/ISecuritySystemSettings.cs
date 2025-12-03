@@ -38,7 +38,7 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetAccessDeniedExceptionService<TAccessDeniedExceptionService>()
         where TAccessDeniedExceptionService : class, IAccessDeniedExceptionService;
 
-    ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>> setupUserSource)
+    ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>>? setupUserSource = null)
 	    where TUser : class;
 
     ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
