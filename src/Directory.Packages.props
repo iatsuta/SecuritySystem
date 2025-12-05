@@ -3,13 +3,12 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="IvAt.CommonFramework" Version="1.6.0" />
-    <PackageVersion Include="IvAt.CommonFramework.DependencyInjection" Version="1.6.0" />
-    <PackageVersion Include="IvAt.CommonFramework.VisualIdentitySource" Version="1.6.0" />
+    <PackageVersion Include="IvAt.CommonFramework.RelativePath" Version="1.6.1" />
+    <PackageVersion Include="IvAt.CommonFramework.VisualIdentitySource" Version="1.6.1" />
     <PackageVersion Include="IvAt.GenericQueryable" Version="1.5.6" />
     <PackageVersion Include="IvAt.GenericQueryable.EntityFramework" Version="1.5.6" />
-    <PackageVersion Include="IvAt.HierarchicalExpand" Version="1.6.0" />
-    <PackageVersion Include="IvAt.HierarchicalExpand.Abstractions" Version="1.6.0" />
+    <PackageVersion Include="IvAt.HierarchicalExpand" Version="1.6.1" />
+    <PackageVersion Include="IvAt.HierarchicalExpand.Abstractions" Version="1.6.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />

@@ -7,7 +7,6 @@ using SecuritySystem.Configurator.Interfaces;
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.Configurator.Handlers;
 

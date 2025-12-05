@@ -1,4 +1,4 @@
-﻿using SecuritySystem.Services;
+﻿using CommonFramework.GenericRepository;
 
 namespace SecuritySystem.DiTests.Services;
 

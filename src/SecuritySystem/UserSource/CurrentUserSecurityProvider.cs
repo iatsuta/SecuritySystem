@@ -3,13 +3,14 @@
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
+using CommonFramework.RelativePath;
 using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Providers;
-using SecuritySystem.RelativeDomainPathInfo;
 using SecuritySystem.SecurityAccessor;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;
 
@@ -22,7 +23,7 @@ public class CurrentUserSecurityProvider<TDomainObject>(
     private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerProvider = new(() =>
     {
 	    var (actualUserSourceInfo, actualRelativeDomainPathInfo) =
-		    TryGetActualUserSourceInfo() ?? throw new SecuritySystemException($"Can't found {nameof(RelativeDomainPathInfo)} for {typeof(TDomainObject)}");
+		    TryGetActualUserSourceInfo() ?? throw new SecuritySystemException($"Can't found RelativePath for {typeof(TDomainObject)}");
 
 	    var identityInfo = identityInfoSource.GetIdentityInfo(actualUserSourceInfo.UserType);
 
@@ -71,22 +72,23 @@ public class CurrentUserSecurityProvider<TDomainObject, TUser, TIdent>(
 	IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
 	IdentityInfo<TUser, TIdent> identityInfo,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
+	ISecurityIdentityConverter<TIdent> securityIdentityConverter,
 	ICurrentUserSource<TUser> currentUserSource) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
 	where TUser : class
 	where TIdent : notnull
 {
-	private readonly Expression<Func<TUser, string>> namePath = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Path;
+	private readonly Func<TUser, string> nameSelector = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Getter;
 
 	public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
 
 		relativeDomainPathInfo.CreateCondition(
 			identityInfo.Id.Path.Select(
-				ExpressionHelper.GetEqualityWithExpr(((SecurityIdentity<TIdent>)currentUserSource.ToSimple().CurrentUser.Identity).Id)));
+				ExpressionHelper.GetEqualityWithExpr(securityIdentityConverter.Convert(currentUserSource.ToSimple().CurrentUser.Identity).Id)));
 
 	public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
 	{
 		var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
 
-		return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(namePath, user)));
+		return SecurityAccessorData.Return(users.Select(nameSelector));
 	}
 }

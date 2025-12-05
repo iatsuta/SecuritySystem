@@ -1,7 +1,4 @@
 ﻿using CommonFramework;
-
-using GenericQueryable;
-
 using Microsoft.Extensions.Logging;
 using SecuritySystem.Services;
 

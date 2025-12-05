@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 using HierarchicalExpand;
 using Microsoft.Extensions.DependencyInjection;
 

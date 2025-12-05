@@ -1,5 +1,8 @@
 ﻿using CommonFramework;
 using CommonFramework.DependencyInjection;
+using CommonFramework.RelativePath.DependencyInjection;
+
+using HierarchicalExpand;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,7 +10,6 @@ using SecuritySystem.DependencyInjection;
 using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
 using SecuritySystem.DiTests.Services;
-using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.DiTests;
 

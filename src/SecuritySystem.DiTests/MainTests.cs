@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.GenericRepository;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.DiTests.DomainObjects;
@@ -6,7 +8,6 @@ using SecuritySystem.DiTests.Rules;
 using SecuritySystem.DiTests.Services;
 using SecuritySystem.DomainServices;
 using SecuritySystem.Providers;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.DiTests;
 

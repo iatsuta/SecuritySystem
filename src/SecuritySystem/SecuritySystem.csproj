@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="IvAt.CommonFramework.RelativePath" />
     <PackageReference Include="IvAt.CommonFramework.VisualIdentitySource" />
     <PackageReference Include="IvAt.HierarchicalExpand" />
   </ItemGroup>

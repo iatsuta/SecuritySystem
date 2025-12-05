@@ -3,8 +3,6 @@ using ExampleApp.Domain.Auth;
 using ExampleApp.Infrastructure;
 
 using Microsoft.AspNetCore.Mvc;
-
-using SecuritySystem.AncestorDenormalization;
 using SecuritySystem.Services;
 
 namespace ExampleApp.Api.Controllers;

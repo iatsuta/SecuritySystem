@@ -14,13 +14,10 @@ using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
 using SecuritySystem.PermissionOptimization;
 using SecuritySystem.Providers;
-using SecuritySystem.RelativeDomainPathInfo;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
-
-using System.Linq.Expressions;
 
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.VisualIdentitySource.DependencyInjection;
@@ -60,39 +57,12 @@ public static class ServiceCollectionExtensions
 		    return services;
 	    }
 
-	    public IServiceCollection AddRelativeDomainPath<TFrom, TTo>(Expression<Func<TFrom, TTo>> path,
-		    string? key = null)
-	    {
-		    var info = new SingleRelativeDomainPathInfo<TFrom, TTo>(path);
-
-		    if (key == null)
-		    {
-			    return services.AddSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(info);
-		    }
-		    else
-		    {
-			    return services.AddKeyedSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(key, info);
-		    }
-	    }
-
-	    public IServiceCollection AddRelativeDomainPath<TFrom, TTo>(Expression<Func<TFrom, IEnumerable<TTo>>> path,
-		    string? key = null)
-	    {
-		    var info = new ManyRelativeDomainPathInfo<TFrom, TTo>(path);
-
-		    if (key == null)
-		    {
-			    return services.AddSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(info);
-		    }
-		    else
-		    {
-			    return services.AddKeyedSingleton<IRelativeDomainPathInfo<TFrom, TTo>>(key, info);
-		    }
-	    }
-
 	    private IServiceCollection RegisterGeneralServices()
 	    {
 		    return services
+
+			    .AddSingleton(typeof(ISecurityRepository<>), typeof(SecurityRepository<>))
+				.AddSingleton(typeof(ISecurityIdentityFilterFactory<>), typeof(SecurityIdentityFilterFactory<>))
 
 			    .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
 
@@ -106,8 +76,6 @@ public static class ServiceCollectionExtensions
 			    .AddScoped(typeof(IUserFilterFactory<>), typeof(UserFilterFactory<>))
 
 				.AddSingleton<SecurityAdministratorRuleFactory>()
-
-			    .AddSingleton<IDomainObjectDisplayService, DomainObjectDisplayService>()
 
 			    .AddSingleton(typeof(IUserCredentialMatcher<>), typeof(UserCredentialMatcher<>))
 

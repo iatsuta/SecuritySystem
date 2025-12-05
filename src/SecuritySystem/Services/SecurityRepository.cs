@@ -1,10 +1,19 @@
-﻿namespace SecuritySystem.Services;
+﻿using CommonFramework.GenericRepository;
 
-public class SecurityRepository<TDomainObject> : ISecurityRepository<TDomainObject>
+using GenericQueryable;
+
+namespace SecuritySystem.Services;
+
+public class SecurityRepository<TDomainObject>(IQueryableSource queryableSource, ISecurityIdentityFilterFactory<TDomainObject> filterFactory)
+	: ISecurityRepository<TDomainObject>
 	where TDomainObject : class
 {
-	public Task<TDomainObject> GetObjectAsync(SecurityIdentity securityIdentity, CancellationToken cancellationToken)
+	public async Task<TDomainObject> GetObjectAsync(SecurityIdentity securityIdentity, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException();
+		var result = await queryableSource.GetQueryable<TDomainObject>().Where(filterFactory.CreateFilter(securityIdentity))
+			.GenericSingleOrDefaultAsync(cancellationToken);
+
+		return result ?? throw new ArgumentOutOfRangeException(nameof(securityIdentity),
+			$"{typeof(TDomainObject).Name} with {nameof(securityIdentity)} '{securityIdentity}' not found");
 	}
 }

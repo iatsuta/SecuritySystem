@@ -1,4 +1,6 @@
 ﻿using CommonFramework;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
 
 using GenericQueryable;
 

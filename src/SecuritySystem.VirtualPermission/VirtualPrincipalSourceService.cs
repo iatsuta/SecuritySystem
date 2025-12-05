@@ -1,5 +1,8 @@
 ﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
 
@@ -11,9 +14,6 @@ using SecuritySystem.Credential;
 
 using System.Linq.Expressions;
 using System.Reflection;
-using CommonFramework.GenericRepository;
-using CommonFramework.IdentitySource;
-using CommonFramework.VisualIdentitySource;
 
 namespace SecuritySystem.VirtualPermission;
 

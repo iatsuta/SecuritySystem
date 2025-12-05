@@ -1,6 +1,4 @@
-﻿using CommonFramework;
-
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
@@ -9,7 +7,6 @@ using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.Configurator.Handlers;
 
