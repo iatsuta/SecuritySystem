@@ -1,12 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using SecuritySystem.UserSource;
+using System.Linq.Expressions;
 
-using SecuritySystem.UserSource;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
 
 public class UserSourceBuilder<TUser> : IUserSourceBuilder<TUser>
 {
-	public Expression<Func<TUser, string>>? NamePath { get; private set; }
+	public Action<IVisualIdentitySourceSettings>? VisualIdentitySetupAction { get; private set; }
 
 	public Expression<Func<TUser, bool>> FilterPath { get; private set; } = _ => true;
 
@@ -16,7 +17,7 @@ public class UserSourceBuilder<TUser> : IUserSourceBuilder<TUser>
 
 	public IUserSourceBuilder<TUser> SetName(Expression<Func<TUser, string>> namePath)
 	{
-		this.NamePath = namePath;
+		this.VisualIdentitySetupAction = s => s.SetName(namePath);
 
 		return this;
 	}

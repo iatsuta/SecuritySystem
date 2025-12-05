@@ -40,7 +40,8 @@ public abstract class TestBase
 
                        settings
                            .SetQueryableSource<TestQueryableSource>()
-                           .SetRawUserAuthenticationService<FakeRawUserAuthenticationService>()
+                           .SetGenericRepository<TestGenericRepository>()
+						   .SetRawUserAuthenticationService<FakeRawUserAuthenticationService>()
 
                            .AddPermissionSystem<ExamplePermissionSystemFactory>()
 

@@ -34,7 +34,7 @@ public record SecurityContextRestrictionFilterInfo<TSecurityContext, TService>(
     public virtual bool Equals(SecurityContextRestrictionFilterInfo<TSecurityContext, TService>? other) =>
         ReferenceEquals(this, other)
         || (other is not null
-            && ExpressionComparer.Value.Equals(this.Expression, other.Expression));
+            && ExpressionComparer.Default.Equals(this.Expression, other.Expression));
 
     public override Expression<Func<TSecurityContext, bool>> GetPureFilter(IServiceProvider serviceProvider)
     {

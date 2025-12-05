@@ -9,6 +9,6 @@ public class TestQueryableSource : IQueryableSource
     public IQueryable<TDomainObject> GetQueryable<TDomainObject>()
         where TDomainObject : class
     {
-        return BaseQueryableSource.GetQueryable<TDomainObject>();
+        return this.BaseQueryableSource.GetQueryable<TDomainObject>();
     }
 }

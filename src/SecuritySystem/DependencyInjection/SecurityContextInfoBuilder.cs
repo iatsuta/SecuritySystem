@@ -1,7 +1,11 @@
 ﻿using System.Linq.Expressions;
-using CommonFramework.IdentitySource;
-using CommonFramework.VisualIdentitySource;
+
+using CommonFramework.IdentitySource.DependencyInjection;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
+
 using HierarchicalExpand;
+using HierarchicalExpand.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
@@ -13,13 +17,11 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 
 	private string name = typeof(TSecurityContext).Name;
 
-	private Func<TSecurityContext, string>? customDisplayFunc;
+	public Action<IHierarchicalExpandSettings>? HierarchicalSetupAction { get; private set; }
 
-	private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
+	public Action<IIdentitySourceSettings>? IdentitySetupAction { get; private set; }
 
-	private FullAncestorLinkInfo<TSecurityContext>? fullAncestorLinkInfo;
-
-	private IdentityInfo? customIdentityInfo;
+	public Action<IVisualIdentitySourceSettings>? VisualIdentitySetupAction { get; private set; }
 
 	public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
 	{
@@ -30,7 +32,7 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 
 	public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> displayFunc)
 	{
-		this.customDisplayFunc = displayFunc;
+		this.VisualIdentitySetupAction = s => s.SetDisplay(displayFunc);
 
 		return this;
 	}
@@ -38,7 +40,7 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 	public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TSecurityContextIdent>(Expression<Func<TSecurityContext, TSecurityContextIdent>> identityPath)
 		where TSecurityContextIdent : struct
 	{
-		this.customIdentityInfo = new IdentityInfo<TSecurityContext, TSecurityContextIdent>(identityPath);
+		this.IdentitySetupAction = s => s.SetId(identityPath);
 
 		return this;
 	}
@@ -47,8 +49,7 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 		HierarchicalInfo<TSecurityContext> newHierarchicalInfo,
 		FullAncestorLinkInfo<TSecurityContext> newFullAncestorLinkInfo)
 	{
-		this.hierarchicalInfo = newHierarchicalInfo;
-		this.fullAncestorLinkInfo = newFullAncestorLinkInfo;
+		this.HierarchicalSetupAction = s => s.AddHierarchicalInfo(newHierarchicalInfo, newFullAncestorLinkInfo);
 
 		return this;
 	}
@@ -66,32 +67,6 @@ public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity ident
 
 		services.AddSingleton(securityContextInfo);
 		services.AddSingleton<SecurityContextInfo>(securityContextInfo);
-
-		if (this.customDisplayFunc != null)
-		{
-			services.AddSingleton(new DisplayObjectInfo<TSecurityContext>(this.customDisplayFunc));
-		}
-
-		if (this.customIdentityInfo != null)
-		{
-			services.AddSingleton(this.customIdentityInfo);
-		}
-
-		if (this.hierarchicalInfo != null)
-		{
-			services.AddSingleton(this.hierarchicalInfo);
-		}
-
-		if (this.fullAncestorLinkInfo != null)
-		{
-			services.AddSingleton<FullAncestorLinkInfo>(this.fullAncestorLinkInfo);
-			services.AddSingleton(this.fullAncestorLinkInfo);
-
-			var directLinkType =
-				typeof(FullAncestorLinkInfo<,>).MakeGenericType(this.fullAncestorLinkInfo.DomainObjectType, this.fullAncestorLinkInfo.DirectedLinkType);
-
-			services.Add(ServiceDescriptor.Singleton(directLinkType, this.fullAncestorLinkInfo));
-		}
 
 		foreach (var extension in this.extensions)
 		{

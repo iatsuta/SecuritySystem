@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework;
+using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.AvailableSecurity;
 using SecuritySystem.Builders._Factory;
@@ -20,6 +21,7 @@ using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource.DependencyInjection;
 using CommonFramework.VisualIdentitySource.DependencyInjection;
 
 using HierarchicalExpand.DependencyInjection;
@@ -32,14 +34,15 @@ public static class ServiceCollectionExtensions
 	{
 		public IServiceCollection AddSecuritySystem(Action<ISecuritySystemSettings> setupAction)
 		{
-			services.AddHierarchicalExpand();
-			services.AddVisualIdentitySource();
-
 			services.RegisterGeneralServices();
 
 			var settings = new SecuritySystemSettings();
 
 			setupAction(settings);
+
+			services.AddIdentitySource(s => settings.IdentitySetupActions.Foreach(action => action(s)));
+			services.AddHierarchicalExpand(s => settings.HierarchicalSetupActions.ForEach(action => action(s)));
+			services.AddVisualIdentitySource(s => settings.VisualIdentitySetupActions.ForEach(action => action(s)));
 
 			settings.Initialize(services);
 

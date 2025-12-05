@@ -46,8 +46,8 @@ public static class ServiceCollectionExtensions
 				.AddSecuritySystem(sss =>
 					sss
 						.SetQueryableSource<EfQueryableSource>()
-						.SetRawUserAuthenticationService<RawUserAuthenticationService>()
 						.SetGenericRepository<EfGenericRepository>()
+						.SetRawUserAuthenticationService<RawUserAuthenticationService>()
 
 						.AddUserSource<Employee>(usb => usb.SetRunAs(employee => employee.RunAs))
 

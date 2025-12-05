@@ -94,7 +94,7 @@ public abstract record SecurityPath<TDomainObject>
 
         public virtual bool Equals(ConditionPath? other) =>
             ReferenceEquals(this, other)
-            || (other is not null && ExpressionComparer.Value.Equals(this.FilterExpression, other.FilterExpression));
+            || (other is not null && ExpressionComparer.Default.Equals(this.FilterExpression, other.FilterExpression));
 
         public override int GetHashCode() => 0;
     }
@@ -144,7 +144,7 @@ public abstract record SecurityPath<TDomainObject>
             || (other is not null
                 && this.Required == other.Required
                 && this.Key == other.Key
-                && ExpressionComparer.Value.Equals(this.Expression, other.Expression));
+                && ExpressionComparer.Default.Equals(this.Expression, other.Expression));
 
         public override int GetHashCode() => this.Required.GetHashCode();
     }
@@ -185,7 +185,7 @@ public abstract record SecurityPath<TDomainObject>
             || (other is not null
                 && this.Required == other.Required
                 && this.Key == other.Key
-                && ExpressionComparer.Value.Equals(this.Expression, other.Expression));
+                && ExpressionComparer.Default.Equals(this.Expression, other.Expression));
 
         public override int GetHashCode() => this.Required.GetHashCode();
     }
@@ -209,7 +209,7 @@ public abstract record SecurityPath<TDomainObject>
             || (other is not null
                 && this.Required == other.Required
                 && this.NestedSecurityPath == other.NestedSecurityPath
-                && ExpressionComparer.Value.Equals(this.NestedExpression, other.NestedExpression));
+                && ExpressionComparer.Default.Equals(this.NestedExpression, other.NestedExpression));
 
         public override int GetHashCode() => this.Required.GetHashCode();
     }

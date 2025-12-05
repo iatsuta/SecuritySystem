@@ -1,6 +1,10 @@
 ﻿using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource.DependencyInjection;
 using CommonFramework.VisualIdentitySource;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
+
+using HierarchicalExpand.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,7 +42,17 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
     private Type securityAccessorInfinityStorageType = typeof(FakeSecurityAccessorInfinityStorage);
 
-    public bool InitializeDefaultRoles { get; set; } = true;
+
+
+
+    public readonly List<Action<IIdentitySourceSettings>> IdentitySetupActions = new();
+
+    public readonly List<Action<IVisualIdentitySourceSettings>> VisualIdentitySetupActions = new();
+
+    public readonly List<Action<IHierarchicalExpandSettings>> HierarchicalSetupActions = new();
+
+
+	public bool InitializeDefaultRoles { get; set; } = true;
 
     public ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule)
     {
@@ -50,14 +64,26 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(SecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
         where TSecurityContext : class, ISecurityContext
     {
-        this.registerActions.Add(sc =>
-        {
-            var builder = new SecurityContextInfoBuilder<TSecurityContext>(identity);
+	    var builder = new SecurityContextInfoBuilder<TSecurityContext>(identity);
 
-            setup?.Invoke(builder);
+	    setup?.Invoke(builder);
 
-            builder.Register(sc);
-        });
+	    if (builder.IdentitySetupAction != null)
+	    {
+            this.IdentitySetupActions.Add(builder.IdentitySetupAction);
+	    }
+
+	    if (builder.VisualIdentitySetupAction != null)
+	    {
+		    this.VisualIdentitySetupActions.Add(builder.VisualIdentitySetupAction);
+	    }
+
+	    if (builder.HierarchicalSetupAction != null)
+	    {
+		    this.HierarchicalSetupActions.Add(builder.HierarchicalSetupAction);
+	    }
+
+		this.registerActions.Add(sc => builder.Register(sc));
 
         return this;
     }
@@ -130,18 +156,15 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
 	    var userSourceBuilder = new UserSourceBuilder<TUser>();
 
-	    if (setupUserSource != null)
-	    {
-		    setupUserSource(userSourceBuilder);
-		}
+	    setupUserSource?.Invoke(userSourceBuilder);
 
-	    this.registerActions.Add(sc =>
+	    if (userSourceBuilder.VisualIdentitySetupAction != null)
 	    {
-		    if (userSourceBuilder.NamePath != null)
-		    {
-			    sc.AddSingleton(new VisualIdentityInfo<TUser>(userSourceBuilder.NamePath));
-		    }
+		    this.VisualIdentitySetupActions.Add(userSourceBuilder.VisualIdentitySetupAction);
+	    }
 
+		this.registerActions.Add(sc =>
+	    {
 			var info = new UserSourceInfo<TUser>(userSourceBuilder.FilterPath);
 
 		    sc.AddSingleton<UserSourceInfo>(info);
@@ -156,11 +179,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 		    {
 			    this.registerRunAsManagerAction = sc =>
 			    {
-				    if (this.registerGenericRepositoryAction == null)
-				    {
-					    throw new InvalidOperationException("GenericRepository must be initialized");
-				    }
-
 				    sc.AddSingleton(new UserSourceRunAsInfo<TUser>(userSourceBuilder.RunAsPath));
 				    sc.AddScoped<IRunAsManager, RunAsManager<TUser>>();
 				    sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
@@ -252,9 +270,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     {
         (this.registerQueryableSourceAction ?? throw new InvalidOperationException("QueryableSource must be initialized")).Invoke(services);
 
-        (this.registerRawUserAuthenticationServiceAction ?? throw new InvalidOperationException("RawUserAuthenticationService must be initialized")).Invoke(services);
+        (this.registerGenericRepositoryAction ?? throw new InvalidOperationException("GenericRepository must be initialized")).Invoke(services);
 
-        this.registerGenericRepositoryAction?.Invoke(services);
+		(this.registerRawUserAuthenticationServiceAction ?? throw new InvalidOperationException("RawUserAuthenticationService must be initialized")).Invoke(services);
 
         services.AddSingleton(new SecurityAdministratorRuleInfo(this.securityAdministratorRule));
 
