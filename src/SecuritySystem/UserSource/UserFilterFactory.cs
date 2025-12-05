@@ -4,7 +4,8 @@ using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.UserSource;

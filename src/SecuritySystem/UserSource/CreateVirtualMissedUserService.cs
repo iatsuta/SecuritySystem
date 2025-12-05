@@ -1,4 +1,5 @@
-﻿using SecuritySystem.Credential;
+﻿using CommonFramework.VisualIdentitySource;
+using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;

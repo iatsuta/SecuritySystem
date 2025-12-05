@@ -5,10 +5,8 @@ using GenericQueryable;
 
 using SecuritySystem.Expanders;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.Services;
-
 using System.Linq.Expressions;
-
+using CommonFramework.IdentitySource;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.VirtualPermission;

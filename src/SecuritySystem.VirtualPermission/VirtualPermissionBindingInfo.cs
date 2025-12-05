@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -16,6 +17,7 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole
 
 	public Expression<Func<TPermission, DateTime?>>? EndDateFilter { get; init; }
 
+	public Expression<Func<TPermission, string>>? CommentPath { get; init; }
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
 		Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
@@ -39,11 +41,18 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetStartDateFilter(
 		Expression<Func<TPermission, DateTime>> startDateFilter) =>
+
 		this with { StartDateFilter = startDateFilter };
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetEndDateFilter(
 		Expression<Func<TPermission, DateTime?>> endDateFilter) =>
+
 		this with { EndDateFilter = endDateFilter };
+
+	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetComment(
+		Expression<Func<TPermission, string>> commentPath) =>
+
+		this with { CommentPath = commentPath };
 
 	public IEnumerable<Type> GetSecurityContextTypes()
 	{

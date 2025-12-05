@@ -11,8 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
-using SecuritySystem.HierarchicalExpand;
 using SecuritySystem.VirtualPermission;
+
+using HierarchicalExpand;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 

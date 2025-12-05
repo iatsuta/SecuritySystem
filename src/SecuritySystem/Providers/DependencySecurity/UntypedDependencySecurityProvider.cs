@@ -1,8 +1,8 @@
 ﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
-
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
 using SecuritySystem.SecurityAccessor;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.Providers.DependencySecurity;
 

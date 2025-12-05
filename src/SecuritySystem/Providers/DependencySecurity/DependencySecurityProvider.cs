@@ -1,8 +1,8 @@
 ﻿using CommonFramework;
+using CommonFramework.GenericRepository;
 
 using SecuritySystem.RelativeDomainPathInfo;
 using SecuritySystem.SecurityAccessor;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.Providers.DependencySecurity;
 

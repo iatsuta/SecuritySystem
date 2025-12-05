@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.IdentitySource;
+using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.DomainServices.DependencySecurity._Base;
 using SecuritySystem.Expanders;
 
 using SecuritySystem.Providers;
 using SecuritySystem.Providers.DependencySecurity;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.DomainServices.DependencySecurity;
 

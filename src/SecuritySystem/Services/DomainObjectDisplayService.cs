@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using CommonFramework.VisualIdentitySource;
 
 namespace SecuritySystem.Services;
 

@@ -1,4 +1,6 @@
 ﻿using CommonFramework.DependencyInjection;
+using CommonFramework.GenericRepository;
+using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -223,13 +225,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetQueryableSource(Func<IServiceProvider, IQueryableSource> selector)
-    {
-        this.registerQueryableSourceAction = sc => sc.AddScoped(selector);
-
-        return this;
-    }
-
     public ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService
     {
@@ -249,13 +244,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         where TGenericRepository : class, IGenericRepository
     {
         this.registerGenericRepositoryAction = sc => sc.AddScoped<IGenericRepository, TGenericRepository>();
-
-        return this;
-    }
-
-    public ISecuritySystemSettings SetGenericRepository(Func<IServiceProvider, IGenericRepository> selector)
-    {
-        this.registerGenericRepositoryAction = sc => sc.AddScoped(selector);
 
         return this;
     }

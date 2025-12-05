@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
-
+using CommonFramework.IdentitySource;
+using HierarchicalExpand;
 using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.DependencyInjection;
 

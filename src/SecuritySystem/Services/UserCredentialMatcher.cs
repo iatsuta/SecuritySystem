@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
-
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Credential;

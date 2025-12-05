@@ -1,3 +1,0 @@
-﻿namespace SecuritySystem.Services;
-
-public record VisualIdentityPropertySourceSettings(IReadOnlyList<string> DefaultPropertyNames);

@@ -2,10 +2,12 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.VirtualPermission;
 

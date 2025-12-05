@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 

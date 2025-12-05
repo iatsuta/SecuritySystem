@@ -21,37 +21,41 @@ using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
-using CommonFramework.ExpressionEvaluate;
 
-using SecuritySystem.HierarchicalExpand;
-using SecuritySystem.AncestorDenormalization;
+using CommonFramework.ExpressionEvaluate;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
+
+using HierarchicalExpand.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
-    {
-	    public IServiceCollection RegisterDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setupAction)
+	{
+		public IServiceCollection AddSecuritySystem(Action<ISecuritySystemSettings> setupAction)
+		{
+			services.AddHierarchicalExpand();
+			services.AddVisualIdentitySource();
+
+			services.RegisterGeneralServices();
+
+			var settings = new SecuritySystemSettings();
+
+			setupAction(settings);
+
+			settings.Initialize(services);
+
+			return services;
+		}
+
+		public IServiceCollection RegisterDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setupAction)
 	    {
 		    var builder = new DomainSecurityServiceRootBuilder();
 
 		    setupAction(builder);
 
 		    builder.Register(services);
-
-		    return services;
-	    }
-
-	    public IServiceCollection AddSecuritySystem(Action<ISecuritySystemSettings> setupAction)
-	    {
-		    services.RegisterGeneralSecuritySystem();
-
-		    var settings = new SecuritySystemSettings();
-
-		    setupAction(settings);
-
-		    settings.Initialize(services);
 
 		    return services;
 	    }
@@ -86,42 +90,26 @@ public static class ServiceCollectionExtensions
 		    }
 	    }
 
-	    private IServiceCollection RegisterGeneralSecuritySystem()
+	    private IServiceCollection RegisterGeneralServices()
 	    {
 		    return services
 
-			    .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
-				.AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
+			    .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
 
+				.AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
+
+				.AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
 			    .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))
 			    .AddScoped(typeof(IUserSource<>), typeof(UserSource<>))
 			    .AddScoped(typeof(IUserQueryableSource<>), typeof(UserQueryableSource<>))
 			    .AddScoped(typeof(IUserNameResolver<>), typeof(UserNameResolver<>))
 			    .AddScoped(typeof(IUserFilterFactory<>), typeof(UserFilterFactory<>))
 
-				.AddScoped(typeof(IDenormalizedAncestorsService<>), typeof(DenormalizedAncestorsService<>))
-			    .AddScoped(typeof(IAncestorLinkExtractor<,>), typeof(AncestorLinkExtractor<,>))
+				.AddSingleton<SecurityAdministratorRuleFactory>()
 
-			    .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
-			    .AddSingleton<IRealTypeResolver, IdentityRealTypeResolver>()
-			    .AddScoped<IHierarchicalObjectExpanderFactory, HierarchicalObjectExpanderFactory>()
-
-			    .AddScoped(typeof(IDomainObjectExpander<>), typeof(DomainObjectExpander<>))
-
-			    .AddSingleton<SecurityAdministratorRuleFactory>()
-
-			    .AddSingleton(new IdentityPropertySourceSettings("Id"))
-			    .AddSingleton<IIdentityPropertyExtractor, IdentityPropertyExtractor>()
-			    .AddSingleton<IIdentityInfoSource, IdentityInfoSource>()
-
-			    .AddSingleton(new VisualIdentityPropertySourceSettings(["Login", "Name", "Code"]))
-			    .AddSingleton<IVisualIdentityPropertyExtractor, VisualIdentityPropertyExtractor>()
-			    .AddSingleton<IVisualIdentityInfoSource, VisualIdentityInfoSource>()
 			    .AddSingleton<IDomainObjectDisplayService, DomainObjectDisplayService>()
 
 			    .AddSingleton(typeof(IUserCredentialMatcher<>), typeof(UserCredentialMatcher<>))
-
-				.AddSingleton<IHierarchicalInfoSource, HierarchicalInfoSource>()
 
 			    .AddScoped<ISecurityContextStorage, SecurityContextStorage>()
 			    .AddScoped(typeof(LocalStorage<,>))

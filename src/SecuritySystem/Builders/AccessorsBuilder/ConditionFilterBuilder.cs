@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework.ExpressionEvaluate;
-
-using SecuritySystem.HierarchicalExpand;
+using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 

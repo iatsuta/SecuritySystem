@@ -1,4 +1,5 @@
-﻿using SecuritySystem.Services;
+﻿using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 

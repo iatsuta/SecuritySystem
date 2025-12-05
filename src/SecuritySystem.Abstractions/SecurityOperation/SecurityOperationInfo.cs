@@ -1,4 +1,4 @@
-﻿using SecuritySystem.HierarchicalExpand;
+﻿using HierarchicalExpand;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;

@@ -6,6 +6,8 @@ using System.Linq.Expressions;
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 namespace SecuritySystem.Services;
 

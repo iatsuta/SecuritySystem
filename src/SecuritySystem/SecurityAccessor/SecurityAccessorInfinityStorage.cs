@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
-
-using SecuritySystem.Services;
+using CommonFramework.GenericRepository;
+using CommonFramework.VisualIdentitySource;
 
 namespace SecuritySystem.SecurityAccessor;
 

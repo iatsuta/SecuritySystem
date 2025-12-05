@@ -7,26 +7,36 @@ using SecuritySystem.UserSource;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType>(
+public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType, TSecurityRoleIdent>(
 	IQueryableSource queryableSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
 	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
 	ITypedPrincipalConverter<TPrincipal> typedPrincipalConverter,
-	IPrincipalFilterFactory<TPrincipal> principalFilterFactory,
-	ISecurityRoleSource securityRoleSource,
+	IUserQueryableSource<TPrincipal> userQueryableSource,
+
+    IPermissionToSecurityRoleInfo<TPermission, TSecurityRole> permissionToSecurityRoleInfo,
+
+    IGenericRepository genericRepository,
+
     ISecurityContextInfoSource securityContextInfoSource,
+
     IPrincipalDomainService<TPrincipal> principalDomainService,
-    UserSourceInfo<TPrincipal> userSourceInfo,
-	IUserSource<TPrincipal> principalUserSource)
+	IUserSource<TPrincipal> principalUserSource,
+
+	ISecurityRoleSource securityRoleSource,
+	IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo,
+	ISecurityIdentityConverter<TSecurityRoleIdent> securityRoleIdentityConverter)
     : GeneralPrincipalSourceService<TPrincipal>(
 		    queryableSource,
 		    visualIdentityInfoSource,
 		    availablePrincipalSource,
             typedPrincipalConverter,
-		    principalFilterFactory),
+		    userQueryableSource),
 	    IPrincipalManagementService
 
 	where TPrincipal: class
+	where TSecurityRoleIdent : notnull
+	where TSecurityRole : class
 {
     public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
     {
@@ -40,7 +50,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     {
         var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        userSourceInfo.Name.Setter(principal, principalName);
+        this.NameAccessors.Setter(principal, principalName);
 
         await genericRepository.SaveAsync(principal, cancellationToken);
 
@@ -61,9 +71,9 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 		IEnumerable<TypedPermission> typedPermissions,
         CancellationToken cancellationToken)
     {
-        var dbPrincipal = await principalUserSource.GetUserAsync(principalId, cancellationToken);
+        var dbPrincipal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        var permissionMergeResult = dbPrincipal.Permissions.GetMergeResult(typedPermissions, p => p.Id, p => p.Id == TSecurityContextObjectIdent.Empty ? TSecurityContextObjectIdent.NewTSecurityContextIdent() : p.Id);
+		var permissionMergeResult = dbPrincipal.Permissions.GetMergeResult(typedPermissions, p => p.Id, p => p.Id == TSecurityContextObjectIdent.Empty ? TSecurityContextObjectIdent.NewTSecurityContextIdent() : p.Id);
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
@@ -98,14 +108,14 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         TypedPermission typedPermission,
         CancellationToken cancellationToken)
     {
-        if (typedPermission.Id != TSecurityContextObjectIdent.Empty || typedPermission.IsVirtual)
+        if (string.IsNullOrWhiteSpace(typedPermission.Id) || typedPermission.IsVirtual)
         {
             throw new Exception("wrong typed permission");
         }
 
         var securityRole = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole);
 
-        var dbRole = await securityRoleRepository.LoadAsync(securityRole.Id, cancellationToken);
+        var dbRole = await queryableSource.GetQueryable<TSecurityRole>().Where(securityRoleIdentityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(securityRole.Identity)).LoadAsync(securityRole.Id, cancellationToken);
 
         var newDbPermission = new TPermission(dbPrincipal)
                               {
@@ -155,7 +165,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
     private async Task<bool> UpdatePermission(TPermission dbPermission, TypedPermission typedPermission, CancellationToken cancellationToken)
     {
-        if (securityRoleSource.GetSecurityRole(dbPermission.Role.Id) != typedPermission.SecurityRole)
+        if (securityRoleSource.GetSecurityRole( dbPermission.Role.Id) != typedPermission.SecurityRole)
         {
             throw new SecuritySystemException("TPermission role can't be changed");
         }

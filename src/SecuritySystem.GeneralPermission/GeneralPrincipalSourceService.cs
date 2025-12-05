@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using CommonFramework;
 
 using GenericQueryable;
 
@@ -19,7 +17,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 	IUserQueryableSource<TPrincipal> userQueryableSource) : IPrincipalSourceService
 	where TPrincipal : class
 {
-	private readonly Expression<Func<TPrincipal, string>> namePath = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path;
+	protected readonly PropertyAccessors<TPrincipal, string> NameAccessors = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name;
 
 	private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
 
@@ -28,7 +26,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 		return await principalQueryable
 			.Pipe(
 				!string.IsNullOrWhiteSpace(nameFilter),
-				q => q.Where(namePath.Select(principalName => principalName.Contains(nameFilter))))
+				q => q.Where(this.NameAccessors.Path.Select(principalName => principalName.Contains(nameFilter))))
 			.Select(typedPrincipalConverter.GetToHeaderExpression())
 			.GenericToListAsync(cancellationToken);
 	}
@@ -54,7 +52,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 				{
 					CustomCredential = new SecurityRuleCredential.AnyUserCredential()
 				})
-			.Select(namePath)
+			.Select(this.NameAccessors.Path)
 			.GenericToListAsync(cancellationToken);
 	}
 }

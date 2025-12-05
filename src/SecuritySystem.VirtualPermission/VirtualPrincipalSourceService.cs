@@ -6,12 +6,14 @@ using GenericQueryable;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem.Management;
-using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 using SecuritySystem.Credential;
 
 using System.Linq.Expressions;
 using System.Reflection;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -140,7 +142,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 			bindingInfo.SecurityRole,
 			bindingInfo.StartDateFilter == null ? DateTime.MinValue : this.expressionEvaluator.Evaluate(bindingInfo.StartDateFilter, permission),
 			bindingInfo.EndDateFilter == null ? null : this.expressionEvaluator.Evaluate(bindingInfo.EndDateFilter, permission),
-			"Virtual Permission",
+			bindingInfo.CommentPath == null ? "Virtual Permission" : this.expressionEvaluator.Evaluate(bindingInfo.CommentPath, permission),
 			restrictions);
 	}
 

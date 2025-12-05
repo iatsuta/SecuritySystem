@@ -6,8 +6,7 @@ namespace SecuritySystem.RelativeDomainPathInfo;
 
 public record SingleRelativeDomainPathInfo<TFrom, TTo>(Expression<Func<TFrom, TTo>> Path) : IRelativeDomainPathInfo<TFrom, TTo>
 {
-    private readonly Func<TFrom, TTo> pathFunc = Path.Compile();
-
+	private readonly Lazy<Func<TFrom, TTo>> lazyPathFunc = new(Path.Compile);
 
     public IRelativeDomainPathInfo<TNewFrom, TTo> OverrideInput<TNewFrom>(Expression<Func<TNewFrom, TFrom>> selector)
     {
@@ -31,7 +30,7 @@ public record SingleRelativeDomainPathInfo<TFrom, TTo>(Expression<Func<TFrom, TT
 
     public IEnumerable<TTo> GetRelativeObjects(TFrom source)
     {
-        var relativeObject = this.pathFunc(source);
+        var relativeObject = this.lazyPathFunc.Value(source);
 
         if (relativeObject != null)
         {

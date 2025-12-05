@@ -1,6 +1,5 @@
-﻿using SecuritySystem.HierarchicalExpand;
-
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 

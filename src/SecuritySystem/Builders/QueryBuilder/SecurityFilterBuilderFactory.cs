@@ -1,13 +1,12 @@
 ﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
-
+using CommonFramework.IdentitySource;
+using HierarchicalExpand;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.HierarchicalExpand;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
