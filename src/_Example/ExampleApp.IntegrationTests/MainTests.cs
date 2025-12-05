@@ -1,10 +1,17 @@
 ﻿using CommonFramework.DependencyInjection;
+using CommonFramework.GenericRepository;
 
 using ExampleApp.Api.Controllers;
 using ExampleApp.Domain;
 using ExampleApp.Infrastructure.DependencyInjection;
+
+using GenericQueryable;
+
+using HierarchicalExpand;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Services;
 
 namespace ExampleApp.IntegrationTests;

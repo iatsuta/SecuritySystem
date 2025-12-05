@@ -1,12 +1,11 @@
-﻿using CommonFramework;
-
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.Configurator.Handlers;
 
@@ -14,8 +13,8 @@ public class UpdatePermissionsHandler(
     [CurrentUserWithoutRunAs] ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    IPrincipalManagementService principalManagementService,
-    IIdentityInfoSource identityInfoSource,
+    IDomainObjectIdentsParser domainObjectIdentsParser,
+	IPrincipalManagementService principalManagementService,
     IConfiguratorIntegrationEvents? configuratorIntegrationEvents = null) : BaseWriteHandler, IUpdatePermissionsHandler
 {
     public async Task Execute(HttpContext context, CancellationToken cancellationToken)
@@ -56,9 +55,7 @@ public class UpdatePermissionsHandler(
 
             let securityContextType = securityContextInfoSource.GetSecurityContextInfo(restriction.Name).Type
 
-            let identityType = identityInfoSource.GetIdentityInfo(securityContextType).IdentityType
-
-            let idents = new Func<IEnumerable<string>, Array>(ParseIdents<int>).CreateGenericMethod(identityType).Invoke<Array>(null!, restriction.Entities)
+            let idents = domainObjectIdentsParser.Parse(securityContextType, restriction.Entities)
 
             select (securityContextType, idents);
 
@@ -71,12 +68,6 @@ public class UpdatePermissionsHandler(
             permission.EndDate,
             permission.Comment,
             restrictionsRequest.ToDictionary());
-    }
-
-    private static Array ParseIdents<TIdent>(IEnumerable<string> untypedIdents)
-        where TIdent : IParsable<TIdent>
-    {
-        return untypedIdents.Select(ident => TIdent.Parse(ident, null)).ToArray();
     }
 
     private class RequestBodyDto
