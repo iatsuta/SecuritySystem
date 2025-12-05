@@ -1,6 +1,8 @@
-﻿namespace SecuritySystem.GeneralPermission;
+﻿using CommonFramework;
+
+namespace SecuritySystem.GeneralPermission;
 
 public interface IPermissionToSecurityRoleInfo<TPermission, TSecurityRole>
 {
-	PropertyAccessors<TPermission, TSecurityRole> ToPrincipal { get; }
+	PropertyAccessors<TPermission, TSecurityRole> ToSecurityRole { get; }
 }

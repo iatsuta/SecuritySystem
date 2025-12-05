@@ -1,5 +1,6 @@
 ﻿using CommonFramework;
-
+using CommonFramework.GenericRepository;
+using CommonFramework.VisualIdentitySource;
 using GenericQueryable;
 
 using SecuritySystem.Credential;

@@ -1,4 +1,7 @@
 ﻿using CommonFramework;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
+using GenericQueryable;
 using Microsoft.Extensions.Logging;
 
 using SecuritySystem.Services;

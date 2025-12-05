@@ -1,6 +1,8 @@
-﻿namespace SecuritySystem.GeneralPermission;
+﻿using CommonFramework;
 
-public interface IPermissionToPrincipalInfo<TPrincipal, TPermission>
+namespace SecuritySystem.GeneralPermission;
+
+public interface IPermissionToPrincipalInfo<TPermission, TPrincipal>
 {
 	PropertyAccessors<TPermission, TPrincipal> ToPrincipal { get; }
 }

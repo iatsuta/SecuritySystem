@@ -1,22 +1,30 @@
 ﻿using CommonFramework;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
+using GenericQueryable;
+
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TSecurityContextType, TSecurityRoleIdent>(
+public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityRoleIdent, TPermissionIdent>(
+    ISecurityRepository<TSecurityRole> securityRoleRepository,
 	IQueryableSource queryableSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
 	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
 	ITypedPrincipalConverter<TPrincipal> typedPrincipalConverter,
 	IUserQueryableSource<TPrincipal> userQueryableSource,
 
-    IPermissionToSecurityRoleInfo<TPermission, TSecurityRole> permissionToSecurityRoleInfo,
+    GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> generalPermissionSystemInfo,
 
-    IGenericRepository genericRepository,
+    IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
+
+	IGenericRepository genericRepository,
 
     ISecurityContextInfoSource securityContextInfoSource,
 
@@ -34,9 +42,14 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 		    userQueryableSource),
 	    IPrincipalManagementService
 
-	where TPrincipal: class
-	where TSecurityRoleIdent : notnull
+	where TPrincipal: class, new()
+	where TPermission : class, new()
 	where TSecurityRole : class
+	where TSecurityRoleIdent : notnull
+	where TPermissionIdent : notnull, IParsable<TPermissionIdent>, new()
+	where TPermissionRestriction : class
+	where TSecurityContextType : class
+	where TSecurityContextObjectIdent : notnull
 {
     public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
     {
@@ -73,7 +86,11 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     {
         var dbPrincipal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-		var permissionMergeResult = dbPrincipal.Permissions.GetMergeResult(typedPermissions, p => p.Id, p => p.Id == TSecurityContextObjectIdent.Empty ? TSecurityContextObjectIdent.NewTSecurityContextIdent() : p.Id);
+        var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(generalPermissionSystemInfo.ToPrincipal.Path.Select(p => p == dbPrincipal))
+	        .GenericToListAsync(cancellationToken);
+
+        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityInfo.Id.Getter,
+	        p => TPermissionIdent.TryParse(p.Id, null, out var id) ? id : new TPermissionIdent());
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
@@ -81,9 +98,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
         foreach (var oldDbPermission in permissionMergeResult.RemovingItems)
         {
-            dbPrincipal.RemoveDetail(oldDbPermission);
-
-            await permissionRepository.RemoveAsync(oldDbPermission, cancellationToken);
+	        await genericRepository.RemoveAsync(oldDbPermission, cancellationToken);
         }
 
         await principalDomainService.ValidateAsync(dbPrincipal, cancellationToken);
@@ -115,10 +130,14 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
         var securityRole = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole);
 
-        var dbRole = await queryableSource.GetQueryable<TSecurityRole>().Where(securityRoleIdentityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(securityRole.Identity)).LoadAsync(securityRole.Id, cancellationToken);
+        var dbRole = await securityRoleRepository.GetObjectAsync(securityRole.Identity, cancellationToken);
 
-        var newDbPermission = new TPermission(dbPrincipal)
-                              {
+        var newDbPermission = new TPermission();
+
+        generalPermissionSystemInfo.ToPrincipal.Setter(newDbPermission, dbPrincipal);
+        generalPermissionSystemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
+        generalPermissionSystemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
+		{
                                   Comment = typedPermission.Comment, Period = typedPermission.GetPeriod(), Role = dbRole
                               };
 
@@ -165,12 +184,17 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
     private async Task<bool> UpdatePermission(TPermission dbPermission, TypedPermission typedPermission, CancellationToken cancellationToken)
     {
-        if (securityRoleSource.GetSecurityRole( dbPermission.Role.Id) != typedPermission.SecurityRole)
-        {
-            throw new SecuritySystemException("TPermission role can't be changed");
-        }
+	    var dbSecurityRoleId = permissionToSecurityRoleInfo.ToSecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
+	    var dbSecurityRole = securityRoleSource.GetSecurityRole(new SecurityIdentity<TSecurityRoleIdent>(dbSecurityRoleId));
 
-        var restrictionMergeResult = dbPermission.Restrictions.GetMergeResult(
+	    if (dbSecurityRole != typedPermission.SecurityRole)
+	    {
+		    throw new SecuritySystemException("TPermission role can't be changed");
+	    }
+
+        var dbRestrictions =
+
+	    var restrictionMergeResult = dbPermission.Restrictions.GetMergeResult(
             typedPermission.Restrictions.ChangeKey(t => securityContextInfoSource.GetSecurityContextInfo(t).Id)
                            .SelectMany(pair => pair.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => (pair.Key, securityContextId))),
             r => (r.SecurityContextType.Id, r.SecurityContextId),

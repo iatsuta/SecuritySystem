@@ -8,6 +8,8 @@ using SecuritySystem.Services;
 using System.Linq.Expressions;
 
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.GeneralPermission;
 
