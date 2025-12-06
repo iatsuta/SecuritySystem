@@ -3,6 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+using SecuritySystem.AccessDenied;
 using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
 using SecuritySystem.DiTests.Services;

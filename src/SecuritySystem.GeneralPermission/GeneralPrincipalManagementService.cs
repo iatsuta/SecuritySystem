@@ -185,12 +185,12 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
     private async Task<bool> UpdatePermission(TPermission dbPermission, TypedPermission typedPermission, CancellationToken cancellationToken)
     {
-	    var dbSecurityRoleId = permissionToSecurityRoleInfo.ToSecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
+	    var dbSecurityRoleId = generalPermissionSystemInfo.ToSecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
 	    var dbSecurityRole = securityRoleSource.GetSecurityRole(new SecurityIdentity<TSecurityRoleIdent>(dbSecurityRoleId));
 
 	    if (dbSecurityRole != typedPermission.SecurityRole)
 	    {
-		    throw new SecuritySystemException("TPermission role can't be changed");
+		    throw new SecuritySystemException("Permission role can't be changed");
 	    }
 
         var dbRestrictions =

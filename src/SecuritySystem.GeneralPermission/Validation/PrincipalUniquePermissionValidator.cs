@@ -4,7 +4,7 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class PrincipalUniquePermissionValidator<TPrincipal> : IValidator<TPrincipal>
+public class PrincipalUniquePermissionValidator<TPrincipal> : ISecurityValidator<TPrincipal>
 {
     private readonly ISecurityContextStorage securityEntitySource;
 
@@ -28,7 +28,7 @@ public class PrincipalUniquePermissionValidator<TPrincipal> : IValidator<TPrinci
 
                       return !duplicates.Any();
                   })
-            .WithMessage(principal => $"TPrincipal \"{principal.Name}\" has duplicate permissions: {{{duplicatesVar}}}");
+            .WithMessage(principal => $"Principal \"{principal.Name}\" has duplicate permissions: {{{duplicatesVar}}}");
 	}
 
     public Task ValidateAsync(TPrincipal value, CancellationToken cancellationToken)

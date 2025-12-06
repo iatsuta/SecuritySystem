@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.Services;
 
-public interface IValidator<in T>
+public interface ISecurityValidator<in T>
 {
 	Task ValidateAsync(T value, CancellationToken cancellationToken);
 }

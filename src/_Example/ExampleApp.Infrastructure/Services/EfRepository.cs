@@ -1,6 +1,6 @@
 ﻿using ExampleApp.Application;
 
-using SecuritySystem;
+using SecuritySystem.AccessDenied;
 using SecuritySystem.Providers;
 
 namespace ExampleApp.Infrastructure.Services;

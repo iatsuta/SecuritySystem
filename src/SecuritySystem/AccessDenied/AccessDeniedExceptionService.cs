@@ -1,9 +1,9 @@
 ﻿using CommonFramework;
 using CommonFramework.IdentitySource;
+
 using SecuritySystem.Providers;
 
-// ReSharper disable once CheckNamespace
-namespace SecuritySystem;
+namespace SecuritySystem.AccessDenied;
 
 public class AccessDeniedExceptionService(IIdentityInfoSource identityInfoSource) : IAccessDeniedExceptionService
 {

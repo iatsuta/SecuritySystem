@@ -6,9 +6,9 @@ namespace SecuritySystem.GeneralPermission.Validation;
 public class PermissionGeneralValidator : AbstractValidator<TPermission>, IPermissionGeneralValidator
 {
     public PermissionGeneralValidator(
-        IValidator<PermissionRestriction> permissionRestrictionValidator,
-        [FromKeyedServices(PermissionRequiredContextValidator.Key)] IValidator<TPermission> permissionRequiredContextValidator,
-        [FromKeyedServices(PermissionDelegateValidator.Key)] IValidator<TPermission> permissionDelegateValidator)
+        ISecurityValidator<PermissionRestriction> permissionRestrictionValidator,
+        [FromKeyedServices(PermissionRequiredContextValidator.Key)] ISecurityValidator<TPermission> permissionRequiredContextValidator,
+        [FromKeyedServices(PermissionDelegateValidator.Key)] ISecurityValidator<TPermission> permissionDelegateValidator)
     {
         this.RuleForEach(permission => permission.Restrictions).SetValidator(permissionRestrictionValidator);
 

@@ -1,4 +1,3 @@
-﻿// ReSharper disable once CheckNamespace
-namespace SecuritySystem;
+﻿namespace SecuritySystem.AccessDenied;
 
 public class AccessDeniedException(string message) : SecuritySystemException(message);

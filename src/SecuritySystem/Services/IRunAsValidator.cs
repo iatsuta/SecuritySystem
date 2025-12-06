@@ -2,4 +2,4 @@
 
 namespace SecuritySystem.Services;
 
-public interface IRunAsValidator : IValidator<UserCredential>;
+public interface IRunAsValidator : ISecurityValidator<UserCredential>;

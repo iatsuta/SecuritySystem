@@ -1,7 +1,6 @@
 ﻿using SecuritySystem.Providers;
 
-// ReSharper disable once CheckNamespace
-namespace SecuritySystem;
+namespace SecuritySystem.AccessDenied;
 
 public interface IAccessDeniedExceptionService
 {

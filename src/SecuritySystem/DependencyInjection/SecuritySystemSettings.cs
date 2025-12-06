@@ -7,6 +7,7 @@ using HierarchicalExpand.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using SecuritySystem.AccessDenied;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
