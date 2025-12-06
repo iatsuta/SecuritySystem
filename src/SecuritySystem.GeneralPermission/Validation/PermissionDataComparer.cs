@@ -1,0 +1,85 @@
+﻿using CommonFramework;
+
+namespace SecuritySystem.GeneralPermission.Validation;
+
+public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+	GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
+		systemInfo)
+	: IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>>
+	where TPrincipal : class
+	where TPermission : class
+	where TSecurityRole : class
+	where TPermissionRestriction : class
+	where TSecurityContextType : class
+	where TSecurityContextObjectIdent : notnull
+{
+	protected virtual IEqualityComparer<IGrouping<TSecurityContextType, TSecurityContextObjectIdent>> RestrictionGroupComparer { get; } =
+
+		new EqualityComparerImpl<IGrouping<TSecurityContextType, TSecurityContextObjectIdent>>(
+			(g1, g2) => g1.Key == g2.Key && g1.SequenceEqual(g2),
+			g => g.Key.GetHashCode());
+
+	public bool Equals(PermissionData<TPermission, TPermissionRestriction>? permissionData,
+		PermissionData<TPermission, TPermissionRestriction>? otherPermissionData)
+	{
+		if (object.ReferenceEquals(permissionData, otherPermissionData))
+		{
+			return true;
+		}
+
+		if (permissionData is null || otherPermissionData is null)
+		{
+			return false;
+		}
+
+		return this.PureEquals(permissionData, otherPermissionData);
+	}
+
+	protected virtual bool PureEquals(
+		PermissionData<TPermission, TPermissionRestriction> permissionData,
+		PermissionData<TPermission, TPermissionRestriction> otherPermissionData)
+	{
+		return systemInfo.SecurityRole.Getter(permissionData.Permission) == systemInfo.SecurityRole.Getter(otherPermissionData.Permission)
+		       && (systemInfo.Period == null
+		           || this.IsIntersected(systemInfo.Period.Getter(permissionData.Permission), systemInfo.Period.Getter(otherPermissionData.Permission)))
+		       && this.EqualsRestrictions(permissionData, otherPermissionData);
+	}
+
+	protected virtual bool IsIntersected((DateTime StartDate, DateTime? EndDate) period, (DateTime StartDate, DateTime? EndDate) otherPeriod)
+	{
+		var periodEnd = period.EndDate ?? DateTime.MaxValue;
+		var otherPeriodEnd = otherPeriod.EndDate ?? DateTime.MaxValue;
+
+		return period.StartDate <= otherPeriodEnd && otherPeriod.StartDate <= periodEnd;
+	}
+
+	protected virtual bool EqualsRestrictions(
+		PermissionData<TPermission, TPermissionRestriction> permissionData,
+		PermissionData<TPermission, TPermissionRestriction> otherPermissionData)
+	{
+		return this.GetOrderedIdents(permissionData).SequenceEqual(this.GetOrderedIdents(otherPermissionData), this.RestrictionGroupComparer);
+	}
+
+	protected IEnumerable<IGrouping<TSecurityContextType, TSecurityContextObjectIdent>> GetOrderedIdents(
+		PermissionData<TPermission, TPermissionRestriction> permissionData)
+	{
+		return
+
+			from permissionRestriction in permissionData.Restrictions
+
+			orderby systemInfo.SecurityContextObjectId
+
+			group systemInfo.SecurityContextObjectId.Getter(permissionRestriction) by systemInfo.SecurityContextType.Getter(permissionRestriction)
+
+			into g
+
+			orderby g.Key
+
+			select g;
+	}
+
+	public int GetHashCode(PermissionData<TPermission, TPermissionRestriction> permissionData)
+	{
+		return permissionData.Restrictions.Count ^ systemInfo.SecurityRole.Getter(permissionData.Permission).GetHashCode();
+	}
+}

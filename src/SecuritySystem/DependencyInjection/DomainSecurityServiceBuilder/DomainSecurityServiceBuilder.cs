@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.RelativePath;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.DomainServices;
 using SecuritySystem.DomainServices.DependencySecurity;
-using SecuritySystem.RelativeDomainPathInfo;
 using SecuritySystem.SecurityRuleInfo;
 
 namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;

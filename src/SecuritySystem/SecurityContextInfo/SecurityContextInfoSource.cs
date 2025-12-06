@@ -3,22 +3,29 @@ namespace SecuritySystem;
 
 public class SecurityContextInfoSource : ISecurityContextInfoSource
 {
-    private readonly IReadOnlyDictionary<Type, SecurityContextInfo> byTypeSecurityContextInfoDict;
+    private readonly IReadOnlyDictionary<Type, SecurityContextInfo> typeDict;
 
-    private readonly IReadOnlyDictionary<Guid, SecurityContextInfo> byIdentSecurityContextInfoDict;
+    private readonly IReadOnlyDictionary<SecurityIdentity, SecurityContextInfo> identityDict;
 
-    public SecurityContextInfoSource(IEnumerable<SecurityContextInfo> securityContextInfoList)
+
+    private readonly IReadOnlyDictionary<string, SecurityContextInfo> nameDict;
+
+	public SecurityContextInfoSource(IEnumerable<SecurityContextInfo> securityContextInfoList)
     {
         this.SecurityContextInfoList = securityContextInfoList.ToList();
-        this.byTypeSecurityContextInfoDict = this.SecurityContextInfoList.ToDictionary(v => v.Type);
-        this.byIdentSecurityContextInfoDict = this.byTypeSecurityContextInfoDict.Values.ToDictionary(v => v.Id);
-    }
+        this.typeDict = this.SecurityContextInfoList.ToDictionary(v => v.Type);
+        this.identityDict = this.typeDict.Values.ToDictionary(v => v.Identity);
+        this.nameDict = this.typeDict.Values.ToDictionary(v => v.Name);
+	}
 
     public IReadOnlyList<SecurityContextInfo> SecurityContextInfoList { get; }
 
     public virtual SecurityContextInfo GetSecurityContextInfo(Type securityContextType) =>
-        this.byTypeSecurityContextInfoDict[securityContextType];
+        this.typeDict[securityContextType];
 
-    public SecurityContextInfo GetSecurityContextInfo(Guid securityContextTypeId) =>
-        this.byIdentSecurityContextInfoDict[securityContextTypeId];
+    public SecurityContextInfo GetSecurityContextInfo(string securityContextTypeName) =>
+	    this.nameDict[securityContextTypeName];
+
+	public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity securityContextIdentity) =>
+        this.identityDict[securityContextIdentity];
 }

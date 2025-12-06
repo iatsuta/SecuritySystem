@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
-using SecuritySystem.HierarchicalExpand;
+using HierarchicalExpand;
 using static SecuritySystem.DomainSecurityRule;
 
 // ReSharper disable once CheckNamespace

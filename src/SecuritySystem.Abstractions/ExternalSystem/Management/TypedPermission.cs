@@ -1,10 +1,9 @@
 ﻿namespace SecuritySystem.ExternalSystem.Management;
 
 public record TypedPermission(
-    Guid Id,
+    string Id,
     bool IsVirtual,
     SecurityRole SecurityRole,
-    DateTime StartDate,
-    DateTime? EndDate,
+    (DateTime StartDate, DateTime? EndDate) Period,
     string Comment,
     IReadOnlyDictionary<Type, Array> Restrictions);

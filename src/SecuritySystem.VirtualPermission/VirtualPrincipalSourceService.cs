@@ -1,170 +1,199 @@
 ﻿using CommonFramework;
+using CommonFramework.ExpressionEvaluate;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
-using SecuritySystem.Credential;
+using GenericQueryable;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.ExternalSystem.Management;
-using SecuritySystem.Services;
+using SecuritySystem.UserSource;
+using SecuritySystem.Credential;
 
 using System.Linq.Expressions;
 using System.Reflection;
 
-using CommonFramework.ExpressionEvaluate;
-
-using GenericQueryable;
-
 namespace SecuritySystem.VirtualPermission;
 
-public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
-    IServiceProvider serviceProvider,
-    IExpressionEvaluatorStorage expressionEvaluatorStorage,
-    IQueryableSource queryableSource,
-    IIdentityInfoSource identityInfoSource,
-    VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo) : IPrincipalSourceService
+public class VirtualPrincipalSourceService<TPrincipal, TPermission>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
 
-    where TPrincipal : class
-    where TPermission : class
+	where TPrincipal : class
+	where TPermission : class
 {
-    private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission>));
+	private readonly Lazy<IPrincipalSourceService> lazyPrincipalSourceService = new(() =>
+		{
+			var principalIdentityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
 
-    private readonly IdentityInfo<TPrincipal, Guid> principalIdentityInfo = identityInfoSource.GetIdentityInfo<TPrincipal, Guid>();
+			var permissionIdentityInfo = identityInfoSource.GetIdentityInfo<TPermission>();
 
-    private readonly IdentityInfo<TPermission, Guid> permissionIdentityInfo = identityInfoSource.GetIdentityInfo<TPermission, Guid>();
+			var innerServiceType = typeof(VirtualPrincipalSourceService<,,,>).MakeGenericType(typeof(TPrincipal), typeof(TPermission),
+				principalIdentityInfo.IdentityType, permissionIdentityInfo.IdentityType);
 
-    public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
-        string nameFilter,
-        int limit,
-        CancellationToken cancellationToken = default)
-    {
-        var principalNamePath = bindingInfo.PrincipalNamePath;
+			return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, principalIdentityInfo, permissionIdentityInfo);
+		});
 
-        var toPrincipalAnonHeaderExpr =
-            ExpressionEvaluateHelper.InlineEvaluate(ee =>
-                ExpressionHelper.Create((TPrincipal principal) =>
-                    new { Id = ee.Evaluate(principalIdentityInfo.IdPath, principal), Name = ee.Evaluate(principalNamePath, principal) }));
+	private IPrincipalSourceService PrincipalSourceService => this.lazyPrincipalSourceService.Value;
 
-        var anonHeaders = await queryableSource
-            .GetQueryable<TPermission>()
-            .Where(bindingInfo.GetFilter(serviceProvider))
-            .Select(bindingInfo.PrincipalPath)
-            .Where(
-                string.IsNullOrWhiteSpace(nameFilter)
-                    ? _ => true
-                    : bindingInfo.PrincipalNamePath.Select(principalName => principalName.Contains(nameFilter)))
-            .OrderBy(bindingInfo.PrincipalNamePath)
-            .Take(limit)
-            .Select(toPrincipalAnonHeaderExpr)
-            .Distinct()
-            .GenericToListAsync(cancellationToken);
+	public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+	{
+		return this.PrincipalSourceService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
+	}
 
-        return anonHeaders.Select(anonHeader => new TypedPrincipalHeader(anonHeader.Id, anonHeader.Name, true));
-    }
+	public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	{
+		return this.PrincipalSourceService.TryGetPrincipalAsync(userCredential, cancellationToken);
+	}
 
-    public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default) =>
-        userCredential switch
-        {
-            UserCredential.NamedUserCredential { Name: var principalName } => this.TryGetPrincipalAsync(
-                bindingInfo.PrincipalNamePath.Select(name => principalName == name),
-                cancellationToken),
+	public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
+	{
+		return this.PrincipalSourceService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
+	}
+}
 
-            UserCredential.IdentUserCredential { Id: var principalId } => this.TryGetPrincipalAsync(
-                principalIdentityInfo.IdPath.Select(id => principalId == id),
-                cancellationToken),
+public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalIdent, TPermissionIdent>(
+	IServiceProvider serviceProvider,
+	IExpressionEvaluatorStorage expressionEvaluatorStorage,
+	IQueryableSource queryableSource,
+	IUserQueryableSource<TPrincipal> userQueryableSource,
+	VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+	IIdentityInfoSource identityInfoSource,
+	IVisualIdentityInfoSource visualIdentityInfoSource,
+	IdentityInfo<TPrincipal, TPrincipalIdent> principalIdentityInfo,
+	IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo) : IPrincipalSourceService
 
-            _ => throw new ArgumentOutOfRangeException(nameof(userCredential))
-        };
+	where TPrincipal : class
+	where TPermission : class
+	where TPrincipalIdent : IParsable<TPrincipalIdent>
+	where TPermissionIdent : notnull
+{
+	private readonly Expression<Func<TPrincipal, string>> principalNamePath = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path;
 
-    public async Task<TypedPrincipal?> TryGetPrincipalAsync(Expression<Func<TPrincipal, bool>> filter, CancellationToken cancellationToken)
-    {
-        var principal = await queryableSource.GetQueryable<TPrincipal>()
-            .Where(filter)
-            .GenericSingleOrDefaultAsync(cancellationToken);
+	private readonly IExpressionEvaluator expressionEvaluator =
+		expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalIdent, TPermissionIdent>));
 
-        if (principal == null)
-        {
-            return null;
-        }
-        else
-        {
-            var header = new TypedPrincipalHeader(principalIdentityInfo.IdFunc(principal), this.expressionEvaluator.Evaluate(bindingInfo.PrincipalNamePath, principal),
-                true);
+	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
+		string nameFilter,
+		int limit,
+		CancellationToken cancellationToken)
+	{
+		var toPrincipalAnonHeaderExpr =
+			ExpressionEvaluateHelper.InlineEvaluate(ee =>
+				ExpressionHelper.Create((TPrincipal principal) =>
+					new { Id = ee.Evaluate(principalIdentityInfo.Id.Path, principal), Name = ee.Evaluate(principalNamePath, principal) }));
 
-            var permissions = await queryableSource.GetQueryable<TPermission>()
-                .Where(bindingInfo.GetFilter(serviceProvider))
-                .Where(bindingInfo.PrincipalPath.Select(filter))
-                .GenericToListAsync(cancellationToken);
+		var anonHeaders = await queryableSource
+			.GetQueryable<TPermission>()
+			.Where(bindingInfo.GetFilter(serviceProvider))
+			.Select(bindingInfo.PrincipalPath)
+			.Where(
+				string.IsNullOrWhiteSpace(nameFilter)
+					? _ => true
+					: principalNamePath.Select(principalName => principalName.Contains(nameFilter)))
+			.OrderBy(principalNamePath)
+			.Take(limit)
+			.Select(toPrincipalAnonHeaderExpr)
+			.Distinct()
+			.GenericToListAsync(cancellationToken);
 
-            return new TypedPrincipal(header, permissions.Select(this.ToTypedPermission).ToList());
-        }
-    }
+		return anonHeaders.Select(anonHeader => new TypedPrincipalHeader(anonHeader.Id.ToString()!, anonHeader.Name, true));
+	}
 
-    private TypedPermission ToTypedPermission(TPermission permission)
-    {
-        var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
+	public async Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	{
+		var principal = await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
 
-        var restrictions = bindingInfo
-            .GetSecurityContextTypes()
-            .Select(identityInfoSource.GetIdentityInfo)
-            .Select(identityInfo => 
-                (identityInfo.DomainObjectType, getRestrictionsMethod
-                .MakeGenericMethod(identityInfo.DomainObjectType, identityInfo.IdentityType)
-                .Invoke<Array>(this, permission, identityInfo)))
-            .ToDictionary();
+		if (principal == null)
+		{
+			return null;
+		}
+		else
+		{
+			var header = new TypedPrincipalHeader(principalIdentityInfo.Id.Getter(principal).ToString()!,
+				this.expressionEvaluator.Evaluate(principalNamePath, principal),
+				true);
 
-        return new TypedPermission(
-            permissionIdentityInfo.IdFunc(permission),
-            true,
-            bindingInfo.SecurityRole,
-            bindingInfo.StartDateFilter == null ? DateTime.MinValue : this.expressionEvaluator.Evaluate(bindingInfo.StartDateFilter, permission),
-            bindingInfo.EndDateFilter == null ? null : this.expressionEvaluator.Evaluate(bindingInfo.EndDateFilter, permission),
-            "Virtual Permission",
-            restrictions);
-    }
+			var permissions = await queryableSource.GetQueryable<TPermission>()
+				.Where(bindingInfo.GetFilter(serviceProvider))
+				.Where(bindingInfo.PrincipalPath.Select(p => p == principal))
+				.GenericToListAsync(cancellationToken);
 
-    public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(
-        IEnumerable<SecurityRole> securityRoles,
-        CancellationToken cancellationToken = default)
-    {
-        if (securityRoles.Contains(bindingInfo.SecurityRole))
-        {
-            return await queryableSource.GetQueryable<TPermission>()
-                .Where(bindingInfo.GetFilter(serviceProvider))
-                .Select(bindingInfo.PrincipalPath)
-                .Select(bindingInfo.PrincipalNamePath)
-                .GenericToListAsync(cancellationToken);
-        }
-        else
-        {
-            return [];
-        }
-    }
-    private Array GetRestrictionArray<TSecurityContext, TIdent>(TPermission permission, IdentityInfo<TSecurityContext, TIdent> identityInfo)
-        where TSecurityContext : ISecurityContext
-        where TIdent : notnull
-    {
-        return this.GetRestrictionIdents(permission, identityInfo).ToArray();
-    }
+			return new TypedPrincipal(header, permissions.Select(this.ToTypedPermission).ToList());
+		}
+	}
 
-    private IEnumerable<TIdent> GetRestrictionIdents<TSecurityContext, TIdent>(TPermission permission, IdentityInfo<TSecurityContext, TIdent> identityInfo)
-        where TSecurityContext : ISecurityContext
-        where TIdent : notnull
-    {
-        foreach (var restrictionPath in bindingInfo.RestrictionPaths)
-        {
-            if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
-            {
-                var securityContext = this.expressionEvaluator.Evaluate(singlePath, permission);
+	private TypedPermission ToTypedPermission(TPermission permission)
+	{
+		var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-                if (securityContext != null)
-                {
-                    yield return identityInfo.IdFunc(securityContext);
-                }
-            }
-            else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
-            {
-                foreach (var securityContext in this.expressionEvaluator.Evaluate(manyPath, permission))
-                {
-                    yield return identityInfo.IdFunc(securityContext);
-                }
-            }
-        }
-    }
+		var restrictions = bindingInfo
+			.GetSecurityContextTypes()
+			.Select(identityInfoSource.GetIdentityInfo)
+			.Select(identityInfo =>
+				(identityInfo.DomainObjectType, getRestrictionsMethod
+					.MakeGenericMethod(identityInfo.DomainObjectType, identityInfo.IdentityType)
+					.Invoke<Array>(this, permission, identityInfo)))
+			.ToDictionary();
+
+		return new TypedPermission(
+			permissionIdentityInfo.Id.Getter(permission).ToString()!,
+			true,
+			bindingInfo.SecurityRole,
+			bindingInfo.PeriodFilter == null ? (DateTime.MinValue, null) : this.expressionEvaluator.Evaluate(bindingInfo.PeriodFilter, permission),
+			bindingInfo.CommentPath == null ? "Virtual Permission" : this.expressionEvaluator.Evaluate(bindingInfo.CommentPath, permission),
+			restrictions);
+	}
+
+	public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(
+		IEnumerable<SecurityRole> securityRoles,
+		CancellationToken cancellationToken)
+	{
+		if (securityRoles.Contains(bindingInfo.SecurityRole))
+		{
+			return await queryableSource.GetQueryable<TPermission>()
+				.Where(bindingInfo.GetFilter(serviceProvider))
+				.Select(bindingInfo.PrincipalPath)
+				.Select(principalNamePath)
+				.GenericToListAsync(cancellationToken);
+		}
+		else
+		{
+			return [];
+		}
+	}
+
+	private Array GetRestrictionArray<TSecurityContext, TSecurityContextIdent>(TPermission permission,
+		IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+		where TSecurityContext : ISecurityContext
+		where TSecurityContextIdent : notnull
+	{
+		return this.GetRestrictionIdents(permission, identityInfo).ToArray();
+	}
+
+	private IEnumerable<TSecurityContextIdent> GetRestrictionIdents<TSecurityContext, TSecurityContextIdent>(TPermission permission,
+		IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+		where TSecurityContext : ISecurityContext
+		where TSecurityContextIdent : notnull
+	{
+		foreach (var restrictionPath in bindingInfo.Restrictions)
+		{
+			if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
+			{
+				var securityContext = this.expressionEvaluator.Evaluate(singlePath, permission);
+
+				if (securityContext != null)
+				{
+					yield return identityInfo.Id.Getter(securityContext);
+				}
+			}
+			else if (restrictionPath is Expression<Func<TPermission, IEnumerable<TSecurityContext>>> manyPath)
+			{
+				foreach (var securityContext in this.expressionEvaluator.Evaluate(manyPath, permission))
+				{
+					yield return identityInfo.Id.Getter(securityContext);
+				}
+			}
+		}
+	}
 }

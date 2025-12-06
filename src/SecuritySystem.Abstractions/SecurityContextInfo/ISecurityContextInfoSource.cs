@@ -7,5 +7,7 @@ public interface ISecurityContextInfoSource
 
     SecurityContextInfo GetSecurityContextInfo(Type securityContextType);
 
-    SecurityContextInfo GetSecurityContextInfo(Guid securityContextTypeId);
+    SecurityContextInfo GetSecurityContextInfo(string securityContextTypeName);
+
+	SecurityContextInfo GetSecurityContextInfo(SecurityIdentity securityContextIdentity);
 }

@@ -1,4 +1,5 @@
 ﻿using CommonFramework.DependencyInjection;
+using CommonFramework.GenericRepository;
 
 using ExampleApp.Api.Controllers;
 using ExampleApp.Domain;
@@ -6,9 +7,11 @@ using ExampleApp.Infrastructure.DependencyInjection;
 
 using GenericQueryable;
 
+using HierarchicalExpand;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SecuritySystem.HierarchicalExpand;
+
 using SecuritySystem.Services;
 
 namespace ExampleApp.IntegrationTests;
@@ -33,25 +36,24 @@ public class MainTests : IAsyncLifetime
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         await scope.ServiceProvider.GetRequiredService<InitController>().TestInitialize();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-
     }
 
     [Theory]
     [MemberData(nameof(Impersonate_LoadTestObjects_DataCorrected_Cases))]
     public async Task Impersonate_LoadTestObjects_DataCorrected(string runAs, string[] expectedBuList)
     {
-        // Arrange
-        var cancellationToken = CancellationToken.None;
-        await using var scope = this.RootServiceProvider.CreateAsyncScope();
+		// Arrange
+		var cancellationToken = TestContext.Current.CancellationToken;
+		await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
@@ -81,7 +83,7 @@ public class MainTests : IAsyncLifetime
     public async Task Impersonate_LoadBuByAncestorView_DataCorrected(string runAs, string[] expectedBuList)
     {
         // Arrange
-        var cancellationToken = CancellationToken.None;
+        var cancellationToken = TestContext.Current.CancellationToken;
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
@@ -119,9 +121,9 @@ public class MainTests : IAsyncLifetime
     [Fact]
     public async Task InvokeExpandWithParents_ForRootBu_DataCorrected()
     {
-        // Arrange
-        var cancellationToken = CancellationToken.None;
-        await using var scope = this.RootServiceProvider.CreateAsyncScope();
+		// Arrange
+		var cancellationToken = TestContext.Current.CancellationToken;
+		await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
         var hierarchicalObjectExpanderFactory = scope.ServiceProvider.GetRequiredService<IHierarchicalObjectExpanderFactory>();

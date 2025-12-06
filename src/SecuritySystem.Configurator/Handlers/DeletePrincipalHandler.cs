@@ -2,6 +2,7 @@
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
+using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
 
@@ -17,9 +18,9 @@ public class DeletePrincipalHandler(
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = new Guid((string?)context.Request.RouteValues["id"]!);
+        var principalId = (string)context.Request.RouteValues["id"]!;
 
-        var principal = await principalManagementService.RemovePrincipalAsync(principalId, false, cancellationToken);
+        var principal = await principalManagementService.RemovePrincipalAsync(new UserCredential.UntypedIdentUserCredential(principalId), false, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
             await configuratorIntegrationEvents.PrincipalRemovedAsync(principal, cancellationToken);

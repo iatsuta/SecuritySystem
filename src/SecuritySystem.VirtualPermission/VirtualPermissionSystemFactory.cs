@@ -5,26 +5,24 @@ using SecuritySystem.ExternalSystem;
 namespace SecuritySystem.VirtualPermission;
 
 public class VirtualPermissionSystemFactory<TPrincipal, TPermission> : IPermissionSystemFactory
-    where TPermission : class
+	where TPermission : class
 {
-    private readonly IServiceProvider serviceProvider;
+	private readonly IServiceProvider serviceProvider;
 
-    private readonly VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo;
+	private readonly VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo;
 
-    public VirtualPermissionSystemFactory(
-        IServiceProvider serviceProvider,
-        VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
-        IVirtualPermissionBindingInfoValidator validator)
-    {
-        this.serviceProvider = serviceProvider;
-        this.bindingInfo = bindingInfo;
+	public VirtualPermissionSystemFactory(
+		IServiceProvider serviceProvider,
+		VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+		IVirtualPermissionBindingInfoValidator validator)
+	{
+		this.serviceProvider = serviceProvider;
+		this.bindingInfo = bindingInfo;
 
-        validator.Validate(this.bindingInfo);
-    }
+		validator.Validate(this.bindingInfo);
+	}
 
-    public IPermissionSystem Create(SecurityRuleCredential securityRuleCredential) =>
-        ActivatorUtilities.CreateInstance<VirtualPermissionSystem<TPrincipal, TPermission>>(
-            this.serviceProvider,
-            this.bindingInfo,
-            securityRuleCredential);
+	public IPermissionSystem Create(SecurityRuleCredential securityRuleCredential) =>
+
+		ActivatorUtilities.CreateInstance<VirtualPermissionSystem<TPrincipal, TPermission>>(this.serviceProvider, securityRuleCredential, this.bindingInfo);
 }
