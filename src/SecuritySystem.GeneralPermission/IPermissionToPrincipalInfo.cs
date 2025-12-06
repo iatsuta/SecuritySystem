@@ -4,5 +4,5 @@ namespace SecuritySystem.GeneralPermission;
 
 public interface IPermissionToPrincipalInfo<TPermission, TPrincipal>
 {
-	PropertyAccessors<TPermission, TPrincipal> ToPrincipal { get; }
+	PropertyAccessors<TPermission, TPrincipal> Principal { get; }
 }

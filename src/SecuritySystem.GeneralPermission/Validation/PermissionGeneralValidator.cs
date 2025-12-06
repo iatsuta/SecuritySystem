@@ -3,7 +3,7 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class PermissionGeneralValidator : AbstractValidator<TPermission>, IPermissionGeneralValidator
+public class PermissionGeneralValidator : ISecurityValidator<TPermission>, IPermissionGeneralValidator
 {
     public PermissionGeneralValidator(
         ISecurityValidator<PermissionRestriction> permissionRestrictionValidator,

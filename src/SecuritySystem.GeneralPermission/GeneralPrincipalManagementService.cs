@@ -3,228 +3,239 @@ using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
+using GenericQueryable;
+
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
-using GenericQueryable;
-
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityRoleIdent, TPermissionIdent>(
-    ISecurityRepository<TSecurityRole> securityRoleRepository,
+public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+	TSecurityContextObjectIdent, TSecurityRoleIdent, TPermissionIdent, TSecurityContextTypeIdent>(
+	ISecurityRepository<TSecurityRole> securityRoleRepository,
 	IQueryableSource queryableSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
 	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
 	ITypedPrincipalConverter<TPrincipal> typedPrincipalConverter,
 	IUserQueryableSource<TPrincipal> userQueryableSource,
 
-    GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> generalPermissionSystemInfo,
+	ISecurityRoleSource securityRoleSource,
 
-    IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
+	GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
+		systemInfo,
 
 	IGenericRepository genericRepository,
-    ISecurityRepository<TSecurityContextType> securityContextTypeRepository,
+	ISecurityRepository<TSecurityContextType> securityContextTypeRepository,
 
-    ISecurityContextInfoSource securityContextInfoSource,
+	ISecurityContextInfoSource securityContextInfoSource,
 
-    IPrincipalDomainService<TPrincipal> principalDomainService,
+	IPrincipalDomainService<TPrincipal> principalDomainService,
 	IUserSource<TPrincipal> principalUserSource,
 
-	ISecurityRoleSource securityRoleSource,
+	IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
+	IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo,
 	IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo,
-	ISecurityIdentityConverter<TSecurityRoleIdent> securityRoleIdentityConverter,
-    ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentityConverter)
-    : GeneralPrincipalSourceService<TPrincipal>(
-		    queryableSource,
-		    visualIdentityInfoSource,
-		    availablePrincipalSource,
-            typedPrincipalConverter,
-		    userQueryableSource),
-	    IPrincipalManagementService
 
-	where TPrincipal: class, new()
+	ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentityConverter)
+	: GeneralPrincipalSourceService<TPrincipal>(
+			queryableSource,
+			visualIdentityInfoSource,
+			availablePrincipalSource,
+			typedPrincipalConverter,
+			userQueryableSource),
+		IPrincipalManagementService
+
+	where TPrincipal : class, new()
 	where TPermission : class, new()
 	where TSecurityRole : class
 	where TSecurityRoleIdent : notnull
-	where TPermissionIdent : notnull, IParsable<TPermissionIdent>, new()
+	where TPermissionIdent : IParsable<TPermissionIdent>, new()
 	where TPermissionRestriction : class, new()
 	where TSecurityContextType : class
 	where TSecurityContextObjectIdent : notnull
+	where TSecurityContextTypeIdent : notnull
 {
-    public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
-    {
-        return await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
-    }
+	public async Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
+	{
+		return await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
+	}
 
-    public async Task<object> UpdatePrincipalNameAsync(
+	public async Task<object> UpdatePrincipalNameAsync(
 		UserCredential userCredential,
 		string principalName,
-        CancellationToken cancellationToken)
-    {
-        var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
+		CancellationToken cancellationToken)
+	{
+		var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        this.NameAccessors.Setter(principal, principalName);
+		this.NameAccessors.Setter(principal, principalName);
 
-        await genericRepository.SaveAsync(principal, cancellationToken);
+		await genericRepository.SaveAsync(principal, cancellationToken);
 
-        return principal;
-    }
+		return principal;
+	}
 
-    public async Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken)
-    {
-        var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
+	public async Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken)
+	{
+		var principal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        await principalDomainService.RemoveAsync(principal, force, cancellationToken);
+		await principalDomainService.RemoveAsync(principal, force, cancellationToken);
 
-        return principal;
-    }
+		return principal;
+	}
 
-    public async Task<MergeResult<object, object>> UpdatePermissionsAsync(
+	public async Task<MergeResult<object, object>> UpdatePermissionsAsync(
 		UserCredential userCredential,
 		IEnumerable<TypedPermission> typedPermissions,
-        CancellationToken cancellationToken)
-    {
-        var dbPrincipal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
+		CancellationToken cancellationToken)
+	{
+		var dbPrincipal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(generalPermissionSystemInfo.ToPrincipal.Path.Select(p => p == dbPrincipal))
-	        .GenericToListAsync(cancellationToken);
+		var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(systemInfo.Principal.Path.Select(p => p == dbPrincipal))
+			.GenericToListAsync(cancellationToken);
 
-        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityInfo.Id.Getter,
-	        p => TPermissionIdent.TryParse(p.Id, null, out var id) ? id : new TPermissionIdent());
+		var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityInfo.Id.Getter,
+			p => TPermissionIdent.TryParse(p.Id, null, out var id) ? id : new TPermissionIdent());
 
-        var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
+		var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
-        var updatedPermissions = await this.UpdatePermissionsAsync(permissionMergeResult.CombineItems, cancellationToken);
+		var updatedPermissions = await this.UpdatePermissionsAsync(permissionMergeResult.CombineItems, cancellationToken);
 
-        foreach (var oldDbPermission in permissionMergeResult.RemovingItems)
-        {
-	        await genericRepository.RemoveAsync(oldDbPermission, cancellationToken);
-        }
+		foreach (var oldDbPermission in permissionMergeResult.RemovingItems)
+		{
+			await genericRepository.RemoveAsync(oldDbPermission, cancellationToken);
+		}
 
-        await principalDomainService.ValidateAsync(dbPrincipal, cancellationToken);
+		await principalDomainService.ValidateAsync(dbPrincipal, cancellationToken);
 
-        return new MergeResult<object, object>(
-            newPermissions,
-            updatedPermissions.Select(pair => (object)pair.Item1).Select(v => (v, v)),
-            permissionMergeResult.RemovingItems);
-    }
+		return new MergeResult<object, object>(
+			newPermissions,
+			updatedPermissions.Select(pair => (object)pair.Item1).Select(v => (v, v)),
+			permissionMergeResult.RemovingItems);
+	}
 
-    private async Task<IReadOnlyList<TPermission>> CreatePermissionsAsync(
-        TPrincipal dbPrincipal,
-        IEnumerable<TypedPermission> typedPermissions,
-        CancellationToken cancellationToken)
-    {
-        return await typedPermissions.SyncWhenAll(
-                   typedPermission => this.CreatePermissionAsync(dbPrincipal, typedPermission, cancellationToken));
-    }
+	private async Task<IReadOnlyList<TPermission>> CreatePermissionsAsync(
+		TPrincipal dbPrincipal,
+		IEnumerable<TypedPermission> typedPermissions,
+		CancellationToken cancellationToken)
+	{
+		return await typedPermissions.SyncWhenAll(typedPermission => this.CreatePermissionAsync(dbPrincipal, typedPermission, cancellationToken));
+	}
 
-    private async Task<TPermission> CreatePermissionAsync(
-        TPrincipal dbPrincipal,
-        TypedPermission typedPermission,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(typedPermission.Id) || typedPermission.IsVirtual)
-        {
-            throw new Exception("wrong typed permission");
-        }
+	private async Task<TPermission> CreatePermissionAsync(
+		TPrincipal dbPrincipal,
+		TypedPermission typedPermission,
+		CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(typedPermission.Id) || typedPermission.IsVirtual)
+		{
+			throw new Exception("wrong typed permission");
+		}
 
-        var securityRole = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole);
+		var securityRole = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole);
 
-        var dbRole = await securityRoleRepository.GetObjectAsync(securityRole.Identity, cancellationToken);
+		var dbRole = await securityRoleRepository.GetObjectAsync(securityRole.Identity, cancellationToken);
 
-        var newDbPermission = new TPermission();
+		var newDbPermission = new TPermission();
 
-        generalPermissionSystemInfo.ToPrincipal.Setter(newDbPermission, dbPrincipal);
-		generalPermissionSystemInfo.ToSecurityRole.Setter(newDbPermission, dbRole);
+		systemInfo.Principal.Setter(newDbPermission, dbPrincipal);
+		systemInfo.SecurityRole.Setter(newDbPermission, dbRole);
 
-		generalPermissionSystemInfo.Period?.Setter(newDbPermission, (typedPermission.StartDate, typedPermission.EndDate));
-		generalPermissionSystemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
+		systemInfo.Period?.Setter(newDbPermission, typedPermission.Period);
+		systemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
 
-        foreach (var restrictionGroup in typedPermission.Restrictions)
-        {
-	        var securityContextTypeIdentity = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Identity;
+		foreach (var restrictionGroup in typedPermission.Restrictions)
+		{
+			var securityContextTypeIdentity = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Identity;
 
-	        var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, cancellationToken);
+			var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, cancellationToken);
 
-            foreach (TSecurityContextObjectIdent securityContextId in restrictionGroup.Value)
-            {
-	            var dbPermissionRestriction = new TPermissionRestriction();
+			foreach (TSecurityContextObjectIdent securityContextId in restrictionGroup.Value)
+			{
+				var dbPermissionRestriction = new TPermissionRestriction();
 
-	            generalPermissionSystemInfo.ToPermission.Setter(dbPermissionRestriction, newDbPermission);
-	            generalPermissionSystemInfo.ToSecurityContextObjectId.Setter(dbPermissionRestriction, securityContextId);
-	            generalPermissionSystemInfo.ToSecurityContextType.Setter(dbPermissionRestriction, dbSecurityContextType);
-            }
-        }
+				systemInfo.Permission.Setter(dbPermissionRestriction, newDbPermission);
+				systemInfo.SecurityContextObjectId.Setter(dbPermissionRestriction, securityContextId);
+				systemInfo.SecurityContextType.Setter(dbPermissionRestriction, dbSecurityContextType);
+			}
+		}
 
-        await permissionRepository.SaveAsync(newDbPermission, cancellationToken);
+		await genericRepository.SaveAsync(newDbPermission, cancellationToken);
 
-        return newDbPermission;
-    }
+		return newDbPermission;
+	}
 
-    private async Task<IReadOnlyList<(TPermission, TypedPermission)>> UpdatePermissionsAsync(
-        IReadOnlyList<(TPermission, TypedPermission)> permissionPairs,
-        CancellationToken cancellationToken)
-    {
-        var preResult = await permissionPairs.SyncWhenAll(
-                            async permissionPair => new
-                                                    {
-                                                        permissionPair,
-                                                        Updated = await this.UpdatePermission(
-                                                                      permissionPair.Item1,
-                                                                      permissionPair.Item2,
-                                                                      cancellationToken)
-                                                    });
+	private async Task<IReadOnlyList<(TPermission, TypedPermission)>> UpdatePermissionsAsync(
+		IReadOnlyList<(TPermission, TypedPermission)> permissionPairs,
+		CancellationToken cancellationToken)
+	{
+		var preResult = await permissionPairs.SyncWhenAll(async permissionPair => new
+		{
+			permissionPair,
+			Updated = await this.UpdatePermission(
+				permissionPair.Item1,
+				permissionPair.Item2,
+				cancellationToken)
+		});
 
-        return preResult
-               .Where(pair => pair.Updated)
-               .Select(pair => pair.permissionPair)
-               .ToList();
-    }
+		return preResult
+			.Where(pair => pair.Updated)
+			.Select(pair => pair.permissionPair)
+			.ToList();
+	}
 
-    private async Task<bool> UpdatePermission(TPermission dbPermission, TypedPermission typedPermission, CancellationToken cancellationToken)
-    {
-	    var dbSecurityRoleId = generalPermissionSystemInfo.ToSecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
-	    var dbSecurityRole = securityRoleSource.GetSecurityRole(new SecurityIdentity<TSecurityRoleIdent>(dbSecurityRoleId));
+	private async Task<bool> UpdatePermission(TPermission dbPermission, TypedPermission typedPermission, CancellationToken cancellationToken)
+	{
+		var dbSecurityRoleId = systemInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
+		var dbSecurityRole = securityRoleSource.GetSecurityRole(new SecurityIdentity<TSecurityRoleIdent>(dbSecurityRoleId));
 
-	    if (dbSecurityRole != typedPermission.SecurityRole)
-	    {
-		    throw new SecuritySystemException("Permission role can't be changed");
-	    }
+		if (dbSecurityRole != typedPermission.SecurityRole)
+		{
+			throw new SecuritySystemException("Permission role can't be changed");
+		}
 
-        var dbRestrictions =
+		var dbRestrictions = await queryableSource.GetQueryable<TPermissionRestriction>()
+			.Where(systemInfo.Permission.Path.Select(p => p == dbPermission))
+			.GenericToListAsync(cancellationToken);
 
-	    var restrictionMergeResult = dbPermission.Restrictions.GetMergeResult(
-            typedPermission.Restrictions.ChangeKey(t => securityContextInfoSource.GetSecurityContextInfo(t).Id)
-                           .SelectMany(pair => pair.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => (pair.Key, securityContextId))),
-            r => (r.SecurityContextType.Id, r.SecurityContextId),
-            pair => pair);
+		var restrictionMergeResult = dbRestrictions.GetMergeResult(
+			typedPermission.Restrictions
+				.ChangeKey(t => securityContextTypeIdentityConverter.Convert(securityContextInfoSource.GetSecurityContextInfo(t).Identity).Id)
+				.SelectMany(pair => pair.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => (pair.Key, securityContextId))),
+			pr => (
+				systemInfo.SecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter).Invoke(pr),
+				systemInfo.SecurityContextObjectId.Getter.Invoke(pr)),
+			pair => pair);
 
-        if (restrictionMergeResult.IsEmpty
-            && dbPermission.Comment == typedPermission.Comment
-            && dbPermission.Period ==  typedPermission.GetPeriod())
-        {
-            return false;
-        }
+		if (restrictionMergeResult.IsEmpty
+		    && (systemInfo.Comment == null || systemInfo.Comment.Getter(dbPermission) == typedPermission.Comment)
+		    && (systemInfo.Period == null || systemInfo.Period.Getter(dbPermission) == typedPermission.Period))
+		{
+			return false;
+		}
 
-        dbPermission.Comment = typedPermission.Comment;
-        dbPermission.Period = typedPermission.GetPeriod();
+		systemInfo.Comment?.Setter.Invoke(dbPermission, typedPermission.Comment);
+		systemInfo.Period?.Setter.Invoke(dbPermission, typedPermission.Period);
 
-        foreach (var restriction in restrictionMergeResult.AddingItems)
-        {
-            _ = new PermissionRestriction(dbPermission)
-                {
-                    SecurityContextId = restriction.securityContextId,
-                    TSecurityContextType = await securityContextTypeRepository.LoadAsync(restriction.Key, cancellationToken)
-                };
-        }
+		foreach (var restriction in restrictionMergeResult.AddingItems)
+		{
+			var newPermissionRestriction = new TPermissionRestriction();
 
-        foreach (var dbRestriction in restrictionMergeResult.RemovingItems)
-        {
-            dbPermission.RemoveDetail(dbRestriction);
-        }
+			var dbSecurityContextType =
+				await securityContextTypeRepository.GetObjectAsync(new SecurityIdentity<TSecurityContextTypeIdent>(restriction.Key), cancellationToken);
 
-        return true;
-    }
+			systemInfo.SecurityContextObjectId.Setter(newPermissionRestriction, restriction.securityContextId);
+			systemInfo.SecurityContextType.Setter(newPermissionRestriction, dbSecurityContextType);
+
+			await genericRepository.SaveAsync(newPermissionRestriction, cancellationToken);
+		}
+
+		foreach (var dbRestriction in restrictionMergeResult.RemovingItems)
+		{
+			await genericRepository.RemoveAsync(dbRestriction, cancellationToken);
+		}
+
+		return true;
+	}
 }

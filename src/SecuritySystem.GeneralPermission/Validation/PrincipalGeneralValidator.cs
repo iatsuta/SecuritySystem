@@ -1,13 +1,15 @@
-﻿namespace SecuritySystem.GeneralPermission.Validation;
+﻿using SecuritySystem.Services;
 
-public class PrincipalGeneralValidator : AbstractValidator<TPrincipal>, IPrincipalGeneralValidator
+namespace SecuritySystem.GeneralPermission.Validation;
+
+public class PrincipalGeneralValidator<TPrincipal, TPermission> : ISecurityValidator<TPrincipal>
 {
-    public PrincipalGeneralValidator(
-        IPrincipalUniquePermissionValidator uniquePermissionValidator,
-        IPermissionGeneralValidator permissionGeneralValidator)
-    {
-        this.Include(uniquePermissionValidator);
+	public PrincipalGeneralValidator(
+		ISecurityValidator<TPermission> uniquePermissionValidator,
+		IPermissionGeneralValidator permissionGeneralValidator)
+	{
+		this.Include(uniquePermissionValidator);
 
-        this.RuleForEach(principal => principal.Permissions).SetValidator(permissionGeneralValidator);
-    }
+		this.RuleForEach(principal => principal.Permissions).SetValidator(permissionGeneralValidator);
+	}
 }

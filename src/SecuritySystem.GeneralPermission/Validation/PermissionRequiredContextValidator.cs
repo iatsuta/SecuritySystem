@@ -2,7 +2,7 @@
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class PermissionRequiredContextValidator : AbstractValidator<TPermission>
+public class PermissionRequiredContextValidator : ISecurityValidator<TPermission>
 {
     public const string Key = "RequiredContext";
 

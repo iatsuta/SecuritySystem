@@ -1,80 +1,34 @@
 ﻿using CommonFramework;
-using SecuritySystem.ExternalSystem.SecurityContextStorage;
+using CommonFramework.VisualIdentitySource;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class PrincipalUniquePermissionValidator<TPrincipal> : ISecurityValidator<TPrincipal>
+public class PrincipalUniquePermissionValidator<TPrincipal, TPermission, TPermissionRestriction>(
+	IVisualIdentityInfoSource visualIdentityInfoSource,
+	IDisplayPermissionService<TPermission, TPermissionRestriction> displayPermissionService,
+	IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>> comparer)
+	: ISecurityValidator<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>>
 {
-    private readonly ISecurityContextStorage securityEntitySource;
+	private readonly VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
 
-    private readonly ISecurityContextInfoSource securityContextInfoSource;
+	public async Task ValidateAsync(PrincipalData<TPrincipal, TPermission, TPermissionRestriction> principalData, CancellationToken cancellationToken)
+	{
+		var duplicates = await principalData
+			.PermissionDataList
+			.GroupBy(permission => permission, comparer)
+			.Where(g => g.Count() > 1)
+			.ToAsyncEnumerable()
+			.ToListAsync(cancellationToken);
 
-    public PrincipalUniquePermissionValidator(ISecurityContextStorage securityEntitySource, ISecurityContextInfoSource securityContextInfoSource)
-    {
-        var duplicatesVar = "Duplicates";
+		if (duplicates.Count > 1)
+		{
+			var messageBody = duplicates.Join(",", g => $"({displayPermissionService.ToString(g.Key)})");
 
-        this.securityEntitySource = securityEntitySource;
-        this.securityContextInfoSource = securityContextInfoSource;
+			var message = $"Principal \"{principalVisualIdentityInfo.Name.Getter(principalData.Principal)}\" has duplicate permissions: {messageBody}";
 
-        this.RuleFor(principal => principal.Permissions)
-            .Must((_, permissions, context) =>
-                  {
-                      var duplicates = this.GetDuplicates(permissions).ToList();
-
-                      context.MessageFormatter.AppendArgument(
-                          duplicatesVar,
-                          duplicates.Join(",", g => $"({this.GetFormattedPermission(g.Key)})"));
-
-                      return !duplicates.Any();
-                  })
-            .WithMessage(principal => $"Principal \"{principal.Name}\" has duplicate permissions: {{{duplicatesVar}}}");
+			throw new SecuritySystemException(message);
+		}
 	}
-
-    public Task ValidateAsync(TPrincipal value, CancellationToken cancellationToken)
-    {
-	    throw new NotImplementedException();
-    }
-
-	protected virtual IEnumerable<IGrouping<TPermission, TPermission>> GetDuplicates(IEnumerable<TPermission> permissions)
-    {
-        var comparer = new EqualityComparerImpl<TPermission>(this.IsDuplicate);
-
-        return permissions.GroupBy(permission => permission, comparer).Where(g => g.Count() > 1);
-    }
-
-    protected virtual bool IsDuplicate(TPermission permission, TPermission otherPermission)
-    {
-        return permission.Role == otherPermission.Role
-               && permission.Period.IsIntersected(otherPermission.Period)
-               && permission.GetOrderedSecurityContextIdents().SequenceEqual(otherPermission.GetOrderedSecurityContextIdents());
-    }
-
-    protected virtual string GetFormattedPermission(TPermission permission, string separator = " | ")
-    {
-        if (permission == null) throw new ArgumentNullException(nameof(permission));
-
-        return this.GetPermissionVisualParts(permission).Join(separator);
-    }
-
-    private IEnumerable<string> GetPermissionVisualParts(TPermission permission)
-    {
-        if (permission == null) throw new ArgumentNullException(nameof(permission));
-
-        yield return $"Role: {permission.Role}";
-
-        yield return $"Period: {permission.Period}";
-
-        foreach (var securityContextTypeGroup in permission.Restrictions.GroupBy(fi => fi.SecurityContextType, fi => fi.SecurityContextId))
-        {
-            var securityContextInfo = this.securityContextInfoSource.GetSecurityContextInfo(securityContextTypeGroup.Key.Id);
-
-            var securityEntities = this.securityEntitySource
-                                       .GetTyped(securityContextInfo.Type)
-                                       .Pipe(v => (ITypedSecurityContextStorage<TSecurityContextObjectIdent>)v)
-                                       .GetSecurityContextsByIdents(securityContextTypeGroup);
-
-            yield return $"{securityContextTypeGroup.Key.Name.ToPluralize()}: {securityEntities.Select(v => v.Name).Join(", ")}";
-        }
-    }
 }

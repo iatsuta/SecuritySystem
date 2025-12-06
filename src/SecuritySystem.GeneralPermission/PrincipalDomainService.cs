@@ -106,7 +106,7 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
     public async Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken)
     {
         if (!force && await queryableSource.GetQueryable<TPermission>()
-                .GenericAnyAsync(permissionToPrincipalInfo.ToPrincipal.Path.Select(p => p == principal), cancellationToken))
+                .GenericAnyAsync(permissionToPrincipalInfo.Principal.Path.Select(p => p == principal), cancellationToken))
         {
             throw new InvalidOperationException($"Removing principal \"{userSourceInfo.Name.Getter(principal)}\" must be empty");
         }

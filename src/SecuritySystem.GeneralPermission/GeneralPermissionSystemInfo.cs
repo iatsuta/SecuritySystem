@@ -3,14 +3,14 @@
 namespace SecuritySystem.GeneralPermission;
 
 public record GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-	PropertyAccessors<TPermission, TPrincipal> ToPrincipal,
-	PropertyAccessors<TPermission, TSecurityRole> ToSecurityRole,
-	PropertyAccessors<TPermissionRestriction, TPermission> ToPermission,
-	PropertyAccessors<TPermissionRestriction, TSecurityContextType> ToSecurityContextType,
-	PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> ToSecurityContextObjectId,
+	PropertyAccessors<TPermission, TPrincipal> Principal,
+	PropertyAccessors<TPermission, TSecurityRole> SecurityRole,
+	PropertyAccessors<TPermissionRestriction, TPermission> Permission,
+	PropertyAccessors<TPermissionRestriction, TSecurityContextType> SecurityContextType,
+	PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> SecurityContextObjectId,
 	PropertyAccessors<TPermission, string>? Comment,
 	PropertyAccessors<TPermission, (DateTime StartDate, DateTime? EndDate)>? Period)
-	: GeneralPermissionSystemInfo<TPrincipal>,
+	:// GeneralPermissionSystemInfo<TPrincipal>,
 		IPermissionToPrincipalInfo<TPermission, TPrincipal>
 
 	where TPrincipal : class
@@ -20,10 +20,15 @@ public record GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole
 	where TSecurityContextType : class
 	where TSecurityContextObjectIdent : notnull
 {
-	public override Type PermissionType { get; } = typeof(TPermission);
+	//public override Type PrincipalType { get; } = typeof(TPermission);
+	//public abstract Type PermissionType { get; }
 }
 
-public abstract record GeneralPermissionSystemInfo<TPrincipal>
-{
-	public abstract Type PermissionType { get; }
-}
+//public abstract record GeneralPermissionSystemInfo
+//{
+//	public abstract Type PrincipalType { get; }
+//	public abstract Type PermissionType { get; }
+//	public abstract Type PrincipalType { get; }
+//	public abstract Type PrincipalType { get; }
+//	public abstract Type PrincipalType { get; }
+//}

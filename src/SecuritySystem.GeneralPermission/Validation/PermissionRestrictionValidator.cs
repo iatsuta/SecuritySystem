@@ -1,10 +1,12 @@
 ﻿using CommonFramework;
 using CommonFramework.IdentitySource;
+
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class PermissionRestrictionValidator : AbstractValidator<PermissionRestriction>
+public class PermissionRestrictionValidator<TPermissionRestriction> : ISecurityValidator<TPermissionRestriction>
 {
     private readonly ISecurityContextInfoSource securityContextInfoSource;
 

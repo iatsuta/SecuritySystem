@@ -87,6 +87,7 @@ public class AvailablePermissionSource<TPrincipal, TPermission, TSecurityContext
 
     public IEnumerable<Expression<Func<TPermission, bool>>> GetFilterExpressionElements(AvailablePermissionFilter<TSecurityContextObjectIdent> filter)
     {
+        if (sesys)
         yield return permission => permission.Period.Contains(today);
 
         if (filter.PrincipalName != null)
@@ -94,7 +95,7 @@ public class AvailablePermissionSource<TPrincipal, TPermission, TSecurityContext
             yield return permission => filter.PrincipalName == permission.TPrincipal.Name;
         }
 
-        if (this.SecurityRoleIdents != null)
+        if (filter.SecurityRoleIdents != null)
         {
             yield return permission => this.SecurityRoleIdents.Contains(permission.Role.Id);
         }

@@ -56,9 +56,9 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 			if (restrictionFilterInfo == null)
 			{
 				return permission => restrictionQueryable
-					.Where(restriction => ee.Evaluate(info.ToPermission.Path, restriction) == permission)
-					.Where(restriction => ee.Evaluate(isSecurityContextTypeExpr, ee.Evaluate(securityContextTypeIdentityInfo.Id.Path, ee.Evaluate(info.ToSecurityContextType.Path, restriction))))
-					.Select(restriction => ee.Evaluate(convertToTargetIdentExpr, ee.Evaluate(info.ToSecurityContextObjectId.Path, restriction)));
+					.Where(restriction => ee.Evaluate(info.Permission.Path, restriction) == permission)
+					.Where(restriction => ee.Evaluate(isSecurityContextTypeExpr, ee.Evaluate(securityContextTypeIdentityInfo.Id.Path, ee.Evaluate(info.SecurityContextType.Path, restriction))))
+					.Select(restriction => ee.Evaluate(convertToTargetIdentExpr, ee.Evaluate(info.SecurityContextObjectId.Path, restriction)));
 			}
 			else
 			{
