@@ -9,8 +9,7 @@ public record GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole
 	PropertyAccessors<TPermissionRestriction, TSecurityContextType> ToSecurityContextType,
 	PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> ToSecurityContextObjectId,
 	PropertyAccessors<TPermission, string>? Comment,
-	PropertyAccessors<TPermission, DateTime>? StartDate,
-	PropertyAccessors<TPermission, DateTime?>? EndDate)
+	PropertyAccessors<TPermission, (DateTime StartDate, DateTime? EndDate)>? Period)
 	: GeneralPermissionSystemInfo<TPrincipal>,
 		IPermissionToPrincipalInfo<TPermission, TPrincipal>
 

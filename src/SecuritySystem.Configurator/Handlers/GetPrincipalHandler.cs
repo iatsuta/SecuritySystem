@@ -47,8 +47,8 @@ public class GetPrincipalHandler(
 					Role = typedPermission.SecurityRole.Name,
 					RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.ToString()!,
 					Comment = typedPermission.Comment,
-					StartDate = typedPermission.StartDate,
-					EndDate = typedPermission.EndDate,
+					StartDate = typedPermission.Period.StartDate,
+					EndDate = typedPermission.Period.EndDate,
 					Contexts = typedPermission
 						.Restrictions
 						.Select(restriction =>

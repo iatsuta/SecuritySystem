@@ -61,13 +61,12 @@ public class UpdatePermissionsHandler(
 
 
         return new TypedPermission(
-            permission.PermissionId,
-            permission.IsVirtual,
-            securityRoleSource.GetSecurityRole(permission.RoleName),
-            permission.StartDate,
-            permission.EndDate,
-            permission.Comment,
-            restrictionsRequest.ToDictionary());
+	        permission.PermissionId,
+	        permission.IsVirtual,
+	        securityRoleSource.GetSecurityRole(permission.RoleName),
+	        (permission.StartDate, permission.EndDate),
+	        permission.Comment,
+	        restrictionsRequest.ToDictionary());
     }
 
     private class RequestBodyDto

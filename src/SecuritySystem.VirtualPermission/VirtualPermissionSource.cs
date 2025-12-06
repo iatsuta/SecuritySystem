@@ -45,14 +45,15 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 
 	private IQueryable<TPermission> GetPermissionQuery(SecurityRuleCredential? customSecurityRuleCredential)
 	{
-		var lazyToday = LazyHelper.Create(() => timeProvider.GetLocalNow().Date);
+		var today = timeProvider.GetLocalNow().Date;
 
 		//TODO: inject SecurityContextRestrictionFilterInfo
 		return queryableSource
 			.GetQueryable<TPermission>()
 			.Where(bindingInfo.GetFilter(serviceProvider))
-			.PipeMaybe(bindingInfo.StartDateFilter, (q, filter) => q.Where(filter.Select(startDate => startDate <= lazyToday.Value)))
-			.PipeMaybe(bindingInfo.EndDateFilter, (q, filter) => q.Where(filter.Select(endDate => endDate == null || lazyToday.Value <= endDate)))
+			.PipeMaybe(bindingInfo.PeriodFilter,
+				(q, filter) => q.Where(filter.Select(period =>
+					period.StartDate <= today && (period.EndDate == null || today <= period.EndDate))))
 			.PipeMaybe(
 				userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),
 				(q, principalName) => q.Where(this.fullNamePath.Select(name => name == principalName)));

@@ -13,9 +13,7 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole
 
 	public Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter { get; init; } = _ => _ => true;
 
-	public Expression<Func<TPermission, DateTime>>? StartDateFilter { get; init; }
-
-	public Expression<Func<TPermission, DateTime?>>? EndDateFilter { get; init; }
+	public Expression<Func<TPermission, (DateTime StartDate, DateTime? EndDate)>>? PeriodFilter { get; init; }
 
 	public Expression<Func<TPermission, string>>? CommentPath { get; init; }
 
@@ -39,15 +37,10 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole
 
 		this with { GetFilter = sp => this.GetFilter(sp).BuildAnd(getFilter(sp)) };
 
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetStartDateFilter(
-		Expression<Func<TPermission, DateTime>> startDateFilter) =>
+	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetPeriodFilter(
+		Expression<Func<TPermission, (DateTime StartDate, DateTime? EndDate)>> periodFilter) =>
 
-		this with { StartDateFilter = startDateFilter };
-
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetEndDateFilter(
-		Expression<Func<TPermission, DateTime?>> endDateFilter) =>
-
-		this with { EndDateFilter = endDateFilter };
+		this with { PeriodFilter = periodFilter };
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetComment(
 		Expression<Func<TPermission, string>> commentPath) =>

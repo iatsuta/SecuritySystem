@@ -140,8 +140,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 			permissionIdentityInfo.Id.Getter(permission).ToString()!,
 			true,
 			bindingInfo.SecurityRole,
-			bindingInfo.StartDateFilter == null ? DateTime.MinValue : this.expressionEvaluator.Evaluate(bindingInfo.StartDateFilter, permission),
-			bindingInfo.EndDateFilter == null ? null : this.expressionEvaluator.Evaluate(bindingInfo.EndDateFilter, permission),
+			bindingInfo.PeriodFilter == null ? (DateTime.MinValue, null) : this.expressionEvaluator.Evaluate(bindingInfo.PeriodFilter, permission),
 			bindingInfo.CommentPath == null ? "Virtual Permission" : this.expressionEvaluator.Evaluate(bindingInfo.CommentPath, permission),
 			restrictions);
 	}

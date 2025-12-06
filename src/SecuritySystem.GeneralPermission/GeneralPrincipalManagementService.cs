@@ -25,6 +25,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
 
 	IGenericRepository genericRepository,
+    ISecurityRepository<TSecurityContextType> securityContextTypeRepository,
 
     ISecurityContextInfoSource securityContextInfoSource,
 
@@ -33,7 +34,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
 	ISecurityRoleSource securityRoleSource,
 	IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo,
-	ISecurityIdentityConverter<TSecurityRoleIdent> securityRoleIdentityConverter)
+	ISecurityIdentityConverter<TSecurityRoleIdent> securityRoleIdentityConverter,
+    ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentityConverter)
     : GeneralPrincipalSourceService<TPrincipal>(
 		    queryableSource,
 		    visualIdentityInfoSource,
@@ -47,7 +49,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 	where TSecurityRole : class
 	where TSecurityRoleIdent : notnull
 	where TPermissionIdent : notnull, IParsable<TPermissionIdent>, new()
-	where TPermissionRestriction : class
+	where TPermissionRestriction : class, new()
 	where TSecurityContextType : class
 	where TSecurityContextObjectIdent : notnull
 {
@@ -135,25 +137,24 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         var newDbPermission = new TPermission();
 
         generalPermissionSystemInfo.ToPrincipal.Setter(newDbPermission, dbPrincipal);
-        generalPermissionSystemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
-        generalPermissionSystemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
-		{
-                                  Comment = typedPermission.Comment, Period = typedPermission.GetPeriod(), Role = dbRole
-                              };
+		generalPermissionSystemInfo.ToSecurityRole.Setter(newDbPermission, dbRole);
+
+		generalPermissionSystemInfo.Period?.Setter(newDbPermission, (typedPermission.StartDate, typedPermission.EndDate));
+		generalPermissionSystemInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
 
         foreach (var restrictionGroup in typedPermission.Restrictions)
         {
-            var securityContextTypeId = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Id;
+	        var securityContextTypeIdentity = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Identity;
+
+	        var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, cancellationToken);
 
             foreach (TSecurityContextObjectIdent securityContextId in restrictionGroup.Value)
             {
-                _ = new PermissionRestriction(newDbPermission)
-                    {
-                        SecurityContextId = securityContextId,
-                        TSecurityContextType = await securityContextTypeRepository.LoadAsync(
-                                                  securityContextTypeId,
-                                                  cancellationToken)
-                    };
+	            var dbPermissionRestriction = new TPermissionRestriction();
+
+	            generalPermissionSystemInfo.ToPermission.Setter(dbPermissionRestriction, newDbPermission);
+	            generalPermissionSystemInfo.ToSecurityContextObjectId.Setter(dbPermissionRestriction, securityContextId);
+	            generalPermissionSystemInfo.ToSecurityContextType.Setter(dbPermissionRestriction, dbSecurityContextType);
             }
         }
 

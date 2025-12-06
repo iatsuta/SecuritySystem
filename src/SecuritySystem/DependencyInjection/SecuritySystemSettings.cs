@@ -1,7 +1,6 @@
 ﻿using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource.DependencyInjection;
-using CommonFramework.VisualIdentitySource;
 using CommonFramework.VisualIdentitySource.DependencyInjection;
 
 using HierarchicalExpand.DependencyInjection;
