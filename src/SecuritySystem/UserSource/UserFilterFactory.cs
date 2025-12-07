@@ -4,8 +4,10 @@ using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
+
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.UserSource;
@@ -36,6 +38,7 @@ public class UserFilterFactory<TUser>(
 public class UserFilterFactory<TUser, TIdent>(
 	IdentityInfo<TUser, TIdent> identityInfo,
 	VisualIdentityInfo<TUser> visualIdentityInfo,
+	IFormatProviderSource formatProviderSource,
 	ISecurityIdentityConverter<TIdent> identityConverter) : IUserFilterFactory<TUser>
 	where TUser : class
 	where TIdent : IParsable<TIdent>
@@ -61,7 +64,7 @@ public class UserFilterFactory<TUser, TIdent>(
 				}
 			}
 
-			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, null, out var id):
+			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id):
 				return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id));
 
 			default:

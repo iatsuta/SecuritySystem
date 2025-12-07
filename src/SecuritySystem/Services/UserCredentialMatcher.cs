@@ -1,6 +1,8 @@
 ﻿using System.Numerics;
+
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Credential;
@@ -30,7 +32,10 @@ public class UserCredentialMatcher<TUser>(
 }
 
 
-public class UserCredentialMatcher<TUser, TIdent>(IdentityInfo<TUser, TIdent> identityInfo, VisualIdentityInfo<TUser> visualIdentityInfo)
+public class UserCredentialMatcher<TUser, TIdent>(
+	IdentityInfo<TUser, TIdent> identityInfo,
+	VisualIdentityInfo<TUser> visualIdentityInfo,
+	IFormatProviderSource formatProviderSource)
 	: IUserCredentialMatcher<TUser>
 	where TIdent : IEqualityOperators<TIdent, TIdent, bool>, IParsable<TIdent>
 {
@@ -44,7 +49,7 @@ public class UserCredentialMatcher<TUser, TIdent>(IdentityInfo<TUser, TIdent> id
 			case UserCredential.NamedUserCredential { Name: var name }:
 				return name.Equals(visualIdentityInfo.Name.Getter(user), StringComparison.CurrentCultureIgnoreCase);
 
-			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, null, out var id):
+			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id):
 				return this.IsMatch(id, user);
 
 			default:

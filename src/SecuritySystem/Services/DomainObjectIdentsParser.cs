@@ -15,7 +15,7 @@ public class DomainObjectIdentsParser(IServiceProvider serviceProvider, IIdentit
 			{
 				var identityInfo = identityInfoSource.GetIdentityInfo(domainObjectType);
 
-				return (IIdentsParser)serviceProvider.GetRequiredService(typeof(IdentsParser<>).MakeGenericType(identityInfo.IdentityType));
+				return (IIdentsParser)serviceProvider.GetRequiredService(typeof(IIdentsParser<>).MakeGenericType(identityInfo.IdentityType));
 			})
 			.Parse(idents);
 

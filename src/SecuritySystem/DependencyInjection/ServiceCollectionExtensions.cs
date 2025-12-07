@@ -1,4 +1,5 @@
-﻿using CommonFramework;
+﻿using System.Globalization;
+using CommonFramework;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.AvailableSecurity;
@@ -64,7 +65,8 @@ public static class ServiceCollectionExtensions
 	    {
 		    return services
 
-			    .AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
+			    .AddSingleton<IFormatProviderSource>(new FormatProviderSource(CultureInfo.CurrentCulture))
+				.AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
 				.AddSingleton<IDomainObjectIdentsParser, DomainObjectIdentsParser>()
 
 			    .AddSingleton(typeof(ISecurityRepository<>), typeof(SecurityRepository<>))

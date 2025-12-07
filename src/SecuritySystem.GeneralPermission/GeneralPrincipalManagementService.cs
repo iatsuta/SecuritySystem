@@ -37,6 +37,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 	IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
 	IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo,
 	IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo,
+	IFormatProviderSource formatProviderSource,
 
 	ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentityConverter)
 	: GeneralPrincipalSourceService<TPrincipal>(
@@ -96,7 +97,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 			.GenericToListAsync(cancellationToken);
 
 		var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityInfo.Id.Getter,
-			p => TPermissionIdent.TryParse(p.Id, null, out var id) ? id : new TPermissionIdent());
+			p => TPermissionIdent.TryParse(p.Id, formatProviderSource.FormatProvider, out var id) ? id : new TPermissionIdent());
 
 		var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
