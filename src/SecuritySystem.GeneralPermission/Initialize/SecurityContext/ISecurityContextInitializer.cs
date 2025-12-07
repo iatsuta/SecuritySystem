@@ -1,7 +1,6 @@
 ﻿using CommonFramework;
 
-
-namespace SecuritySystem.GeneralPermission.Initialize;
+namespace SecuritySystem.GeneralPermission.Initialize.SecurityContext;
 
 public interface ISecurityContextInitializer<TSecurityContextType> : ISecurityInitializer
 {

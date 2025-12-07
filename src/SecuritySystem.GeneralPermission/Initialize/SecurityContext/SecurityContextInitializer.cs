@@ -3,10 +3,9 @@ using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using GenericQueryable;
 using Microsoft.Extensions.Logging;
-
 using SecuritySystem.Services;
 
-namespace SecuritySystem.GeneralPermission.Initialize;
+namespace SecuritySystem.GeneralPermission.Initialize.SecurityContext;
 
 public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTypeIdent>(
     IQueryableSource queryableSource,

@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
+using SecuritySystem.GeneralPermission.AvailableSecurityRoleSource;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -90,7 +91,7 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 
 	public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
 	{
-		return ActivatorUtilities.CreateInstance<GeneralAvailableSecurityRoleSource>(serviceProvider, securityRuleCredential)
+		return ActivatorUtilities.CreateInstance<GeneralAvailableSecurityRoleSource<,,>>(serviceProvider, securityRuleCredential)
 								 .GetAvailableSecurityRoles(cancellationToken);
 	}
 

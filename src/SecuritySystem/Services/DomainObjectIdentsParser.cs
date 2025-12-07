@@ -1,39 +1,22 @@
 ﻿using System.Collections.Concurrent;
-using System.Linq.Expressions;
 
-using CommonFramework;
 using CommonFramework.IdentitySource;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.Services;
 
-public class DomainObjectIdentsParser(IIdentityInfoSource identityInfoSource) : IDomainObjectIdentsParser
+public class DomainObjectIdentsParser(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IDomainObjectIdentsParser
 {
-	private readonly ConcurrentDictionary<Type, Func<IEnumerable<string>, Array>> funcCache = new();
+	private readonly ConcurrentDictionary<Type, IIdentsParser> parsersCache = new();
 
-	public Array Parse(Type domainObjectType, IEnumerable<string> idents)
-	{
-		var func = funcCache.GetOrAdd(domainObjectType, _ =>
-		{
-			var identityInfo = identityInfoSource.GetIdentityInfo(domainObjectType);
+	public Array Parse(Type domainObjectType, IEnumerable<string> idents) =>
+		parsersCache.GetOrAdd(domainObjectType, _ =>
+			{
+				var identityInfo = identityInfoSource.GetIdentityInfo(domainObjectType);
 
-			return (Func<IEnumerable<string>, Array>)new Func<Expression<Func<IEnumerable<string>, string[]>>>(GetParseExpression<string>)
-				.CreateGenericMethod(identityInfo.IdentityType)
-				.Invoke<LambdaExpression>(null)
-				.Compile();
-		});
+				return (IIdentsParser)serviceProvider.GetRequiredService(typeof(IdentsParser<>).MakeGenericType(identityInfo.IdentityType));
+			})
+			.Parse(idents);
 
-		return func(idents);
-	}
-
-	private static Expression<Func<IEnumerable<string>, TIdent[]>> GetParseExpression<TIdent>()
-		where TIdent : IParsable<TIdent>
-	{
-		return idents => Parse<TIdent>(idents);
-	}
-
-	private static TIdent[] Parse<TIdent>(IEnumerable<string> idents)
-		where TIdent : IParsable<TIdent>
-	{
-		return idents.Select(v => TIdent.Parse(v, null)).ToArray();
-	}
 }

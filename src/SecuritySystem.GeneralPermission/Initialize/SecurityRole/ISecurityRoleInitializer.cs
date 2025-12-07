@@ -1,7 +1,6 @@
 ﻿using CommonFramework;
 
-
-namespace SecuritySystem.GeneralPermission.Initialize;
+namespace SecuritySystem.GeneralPermission.Initialize.SecurityRole;
 
 public interface ISecurityRoleInitializer<TSecurityRole> : ISecurityInitializer
 {

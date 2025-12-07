@@ -64,7 +64,8 @@ public static class ServiceCollectionExtensions
 	    {
 		    return services
 
-			    .AddSingleton<IDomainObjectIdentsParser, DomainObjectIdentsParser>()
+			    .AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
+				.AddSingleton<IDomainObjectIdentsParser, DomainObjectIdentsParser>()
 
 			    .AddSingleton(typeof(ISecurityRepository<>), typeof(SecurityRepository<>))
 				.AddSingleton(typeof(ISecurityIdentityFilterFactory<>), typeof(SecurityIdentityFilterFactory<>))

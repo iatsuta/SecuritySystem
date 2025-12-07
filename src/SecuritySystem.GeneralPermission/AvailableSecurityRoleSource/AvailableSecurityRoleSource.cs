@@ -1,20 +1,26 @@
-﻿namespace SecuritySystem.GeneralPermission;
+﻿using CommonFramework;
+using CommonFramework.IdentitySource;
 
-public class GeneralAvailableSecurityRoleSource<TPermission>(
+using GenericQueryable;
+
+namespace SecuritySystem.GeneralPermission.AvailableSecurityRoleSource;
+
+public class GeneralAvailableSecurityRoleSource<TPermission, TSecurityRole, TSecurityRoleIdent>(
+	IPermissionToSecurityRoleInfo<TPermission, TSecurityRole> permissionToSecurityRoleInfo,
 	IAvailablePermissionSource<TPermission> availablePermissionSource,
 	ISecurityRoleSource securityRoleSource,
+	IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentity,
 	SecurityRuleCredential securityRuleCredential)
+	where TSecurityRoleIdent : notnull
 {
 	public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
 	{
-		var dbRequest =
+		var dbRolesIdents = await availablePermissionSource
+			.GetAvailablePermissionsQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
+			.Select(permissionToSecurityRoleInfo.ToSecurityRole.Path.Select(securityRoleIdentity.Id.Path))
+			.Distinct()
+			.GenericToListAsync(cancellationToken);
 
-			from permission in availablePermissionSource.GetAvailablePermissionsQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
-
-			select permission.Role.Id;
-
-		var dbRolesIdents = await dbRequest.Distinct().GenericToListAsync(cancellationToken);
-
-		return dbRolesIdents.Select(securityRoleSource.GetSecurityRole);
+		return dbRolesIdents.Select(ident => securityRoleSource.GetSecurityRole(new SecurityIdentity<TSecurityRoleIdent>(ident)));
 	}
 }
