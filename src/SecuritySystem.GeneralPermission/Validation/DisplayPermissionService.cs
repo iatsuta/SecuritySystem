@@ -8,25 +8,26 @@ public class DisplayPermissionService<TPermission, TPermissionRestriction> : IDi
 {
 	public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData)
 	{
-		return this.GetPermissionVisualParts(permissionData).Join(separator);
+		return this.GetPermissionVisualParts(permissionData).Join(" | ");
 	}
 
 	private IEnumerable<string> GetPermissionVisualParts(PermissionData<TPermission, TPermissionRestriction> permissionData)
 	{
-		yield return $"Role: {permission.Role}";
+		throw new NotImplementedException();
+		//yield return $"Role: {permission.Role}";
 
-		yield return $"Period: {permission.Period}";
+		//yield return $"Period: {permission.Period}";
 
-		foreach (var securityContextTypeGroup in permission.Restrictions.GroupBy(fi => fi.SecurityContextType, fi => fi.SecurityContextId))
-		{
-			var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeGroup.Key.Id);
+		//foreach (var securityContextTypeGroup in permission.Restrictions.GroupBy(fi => fi.SecurityContextType, fi => fi.SecurityContextId))
+		//{
+		//	var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeGroup.Key.Id);
 
-			var securityEntities = securityEntitySource
-				.GetTyped(securityContextInfo.Type)
-				.Pipe(v => (ITypedSecurityContextStorage<TSecurityContextObjectIdent>)v)
-				.GetSecurityContextsByIdents(securityContextTypeGroup);
+		//	var securityEntities = securityEntitySource
+		//		.GetTyped(securityContextInfo.Type)
+		//		.Pipe(v => (ITypedSecurityContextStorage<TSecurityContextObjectIdent>)v)
+		//		.GetSecurityContextsByIdents(securityContextTypeGroup);
 
-			yield return $"{securityContextTypeGroup.Key.Name.ToPluralize()}: {securityEntities.Select(v => v.Name).Join(", ")}";
-		}
+		//	yield return $"{securityContextTypeGroup.Key.Name.ToPluralize()}: {securityEntities.Select(v => v.Name).Join(", ")}";
+		//}
 	}
 }

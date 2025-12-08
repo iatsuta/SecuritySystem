@@ -2,21 +2,20 @@
 
 namespace SecuritySystem.Services;
 
-public class SecurityIdentityConverter<TIdent> : ISecurityIdentityConverter<TIdent>
-    where TIdent : notnull
+public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProviderSource) : ISecurityIdentityConverter<TIdent>
+    where TIdent : IParsable<TIdent>
 {
     private readonly Expression<Func<TIdent, TIdent>> identityExpr = v => v;
 
     public SecurityIdentity<TIdent>? TryConvert(SecurityIdentity securityIdentity)
     {
-        if (securityIdentity is SecurityIdentity<TIdent> typedSecurityIdentity)
-        {
-            return typedSecurityIdentity;
-        }
-        else
-        {
-            return null;
-        }
+	    return securityIdentity switch
+	    {
+		    SecurityIdentity<TIdent> typedSecurityIdentity => typedSecurityIdentity,
+		    SecurityIdentity<string> { Id: var stringId } when TIdent.TryParse(stringId, formatProviderSource.FormatProvider, out var id) =>
+			    new SecurityIdentity<TIdent>(id),
+		    _ => null
+	    };
     }
 
     public SecurityIdentity<TIdent> Convert(SecurityIdentity securityIdentity)

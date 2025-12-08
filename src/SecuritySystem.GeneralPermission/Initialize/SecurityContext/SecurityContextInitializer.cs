@@ -1,8 +1,12 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
+
 using GenericQueryable;
+
 using Microsoft.Extensions.Logging;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Initialize.SecurityContext;
@@ -13,10 +17,11 @@ public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTy
     ISecurityContextInfoSource securityContextInfoSource,
     ILogger<SecurityContextInitializer<TSecurityContextType, TSecurityContextTypeIdent>> logger,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> identityInfo,
-    ISecurityIdentityConverter<TSecurityContextTypeIdent> identityConverter,
+    VisualIdentityInfo<TSecurityContextType> visualIdentityInfo,
+	ISecurityIdentityConverter<TSecurityContextTypeIdent> identityConverter,
     InitializerSettings settings)
     : ISecurityContextInitializer<TSecurityContextType>
-	where TSecurityContextType : class
+	where TSecurityContextType : class, new()
 	where TSecurityContextTypeIdent : notnull
 {
     public async Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken)
@@ -40,7 +45,7 @@ public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTy
                 {
                     foreach (var removingItem in mergeResult.RemovingItems)
                     {
-                        logger.LogDebug("SecurityContextType removed: {Name} {Id}", removingItem.Name, removingItem.Id);
+                        logger.LogDebug("SecurityContextType removed: {Name} {Id}", visualIdentityInfo.Name.Getter(removingItem), identityInfo.Id.Getter(removingItem));
 
                         await genericRepository.RemoveAsync(removingItem, cancellationToken);
                     }
@@ -52,22 +57,25 @@ public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTy
 
         foreach (var securityContextInfo in mergeResult.AddingItems)
         {
-            var securityContextType = new TSecurityContextType { Name = securityContextInfo.Name };
+	        var securityContextType = new TSecurityContextType();
 
-            logger.LogDebug("SecurityContextType created: {Name} {Id}", securityContextType.Name, securityContextType.Id);
+	        visualIdentityInfo.Name.Setter(securityContextType, securityContextInfo.Name);
+	        identityInfo.Id.Setter(securityContextType, identityConverter.Convert(securityContextInfo.Identity).Id);
 
-            await securityContextTypeRepository.InsertAsync(securityContextType, securityContextInfo.Id, cancellationToken);
+			logger.LogDebug("SecurityContextType created: {Name} {Id}", visualIdentityInfo.Name.Getter(securityContextType), identityInfo.Id.Getter(securityContextType));
+
+            await genericRepository.SaveAsync(securityContextType, cancellationToken);
         }
 
         foreach (var (securityContextType, securityContextInfo) in mergeResult.CombineItems)
         {
-            if (securityContextType.Name != securityContextInfo.Name)
+            if (visualIdentityInfo.Name.Getter(securityContextType) != securityContextInfo.Name)
             {
-                securityContextType.Name = securityContextInfo.Name;
+	            visualIdentityInfo.Name.Setter(securityContextType, securityContextInfo.Name);
 
-                logger.LogDebug("SecurityContextType updated: {Name} {Id}", securityContextInfo.Name, securityContextInfo.Id);
+                logger.LogDebug("SecurityContextType updated: {Name} {Id}", securityContextInfo.Name, identityInfo.Id.Getter(securityContextType));
 
-                await securityContextTypeRepository.SaveAsync(securityContextType, cancellationToken);
+                await genericRepository.SaveAsync(securityContextType, cancellationToken);
             }
         }
 

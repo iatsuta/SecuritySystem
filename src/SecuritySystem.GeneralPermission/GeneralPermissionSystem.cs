@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
+
 using SecuritySystem.GeneralPermission.AvailableSecurityRoleSource;
 
 namespace SecuritySystem.GeneralPermission;
@@ -69,10 +70,11 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 					.Where(restrictionFilterInfo.GetPureFilter(serviceProvider))
 					.Select(identityInfo.Id.Path);
 
-				return permission => permission.Restrictions
-					.Where(restriction => restriction.SecurityContextType.Id == securityContextTypeId)
-					.Where(restriction => securityContextQueryable.Contains(restriction.SecurityContextId))
-					.Select(restriction => restriction.SecurityContextId);
+				throw new NotImplementedException();
+				//return permission => permission.Restrictions
+				//	.Where(restriction => restriction.SecurityContextType.Id == securityContextTypeId)
+				//	.Where(restriction => securityContextQueryable.Contains(restriction.SecurityContextId))
+				//	.Select(restriction => restriction.SecurityContextId);
 			}
 		});
 	}
@@ -84,14 +86,14 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 
 	public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
 	{
-		return ActivatorUtilities.CreateInstance<GeneralPermissionSource>(
+		return ActivatorUtilities.CreateInstance<GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>>(
 			serviceProvider,
 			securityRule.TryApplyCredential(securityRuleCredential));
 	}
 
 	public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
 	{
-		return ActivatorUtilities.CreateInstance<GeneralAvailableSecurityRoleSource<,,>>(serviceProvider, securityRuleCredential)
+		return ActivatorUtilities.CreateInstance<GeneralAvailableSecurityRoleSource<TPrincipal, TPermission, TSecurityRole>>(serviceProvider, securityRuleCredential)
 								 .GetAvailableSecurityRoles(cancellationToken);
 	}
 

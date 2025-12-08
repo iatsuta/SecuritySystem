@@ -4,7 +4,7 @@ namespace SecuritySystem.GeneralPermission.Validation;
 
 public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
 	GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
-		systemInfo)
+		info)
 	: IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>>
 	where TPrincipal : class
 	where TPermission : class
@@ -39,9 +39,9 @@ public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPer
 		PermissionData<TPermission, TPermissionRestriction> permissionData,
 		PermissionData<TPermission, TPermissionRestriction> otherPermissionData)
 	{
-		return systemInfo.SecurityRole.Getter(permissionData.Permission) == systemInfo.SecurityRole.Getter(otherPermissionData.Permission)
-		       && (systemInfo.Period == null
-		           || this.IsIntersected(systemInfo.Period.Getter(permissionData.Permission), systemInfo.Period.Getter(otherPermissionData.Permission)))
+		return info.SecurityRole.Getter(permissionData.Permission) == info.SecurityRole.Getter(otherPermissionData.Permission)
+		       && (info.Period == null
+		           || this.IsIntersected(info.Period.Getter(permissionData.Permission), info.Period.Getter(otherPermissionData.Permission)))
 		       && this.EqualsRestrictions(permissionData, otherPermissionData);
 	}
 
@@ -67,9 +67,9 @@ public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPer
 
 			from permissionRestriction in permissionData.Restrictions
 
-			orderby systemInfo.SecurityContextObjectId
+			orderby info.SecurityContextObjectId
 
-			group systemInfo.SecurityContextObjectId.Getter(permissionRestriction) by systemInfo.SecurityContextType.Getter(permissionRestriction)
+			group info.SecurityContextObjectId.Getter(permissionRestriction) by info.SecurityContextType.Getter(permissionRestriction)
 
 			into g
 
@@ -80,6 +80,6 @@ public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPer
 
 	public int GetHashCode(PermissionData<TPermission, TPermissionRestriction> permissionData)
 	{
-		return permissionData.Restrictions.Count ^ systemInfo.SecurityRole.Getter(permissionData.Permission).GetHashCode();
+		return permissionData.Restrictions.Count ^ info.SecurityRole.Getter(permissionData.Permission).GetHashCode();
 	}
 }
