@@ -1,6 +1,5 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain;
-using ExampleApp.Domain.Auth;
 using ExampleApp.Infrastructure.Services;
 
 using GenericQueryable.EntityFramework;
@@ -11,9 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
-using SecuritySystem.VirtualPermission;
-
 using HierarchicalExpand;
+using ExampleApp.Domain.Auth.Virtual;
+using SecuritySystem.VirtualPermission.DependencyInjection;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 

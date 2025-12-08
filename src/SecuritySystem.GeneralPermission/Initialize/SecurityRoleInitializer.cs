@@ -5,7 +5,7 @@ using GenericQueryable;
 using Microsoft.Extensions.Logging;
 using SecuritySystem.Services;
 
-namespace SecuritySystem.GeneralPermission.Initialize.SecurityRole;
+namespace SecuritySystem.GeneralPermission.Initialize;
 
 public class SecurityRoleInitializer<TSecurityRole, TSecurityRoleIdent>(
     IQueryableSource queryableSource,

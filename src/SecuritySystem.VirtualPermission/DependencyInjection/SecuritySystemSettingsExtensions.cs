@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SecuritySystem.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
 
-namespace SecuritySystem.VirtualPermission;
+namespace SecuritySystem.VirtualPermission.DependencyInjection;
 
 public static class SecuritySystemSettingsExtensions
 {

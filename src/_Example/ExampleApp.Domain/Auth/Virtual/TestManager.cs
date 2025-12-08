@@ -1,4 +1,4 @@
-﻿namespace ExampleApp.Domain.Auth;
+﻿namespace ExampleApp.Domain.Auth.Virtual;
 
 public class TestManager
 {

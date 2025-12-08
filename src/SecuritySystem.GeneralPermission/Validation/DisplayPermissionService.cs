@@ -1,7 +1,5 @@
 ﻿using CommonFramework;
 
-using SecuritySystem.ExternalSystem.SecurityContextStorage;
-
 namespace SecuritySystem.GeneralPermission.Validation;
 
 public class DisplayPermissionService<TPermission, TPermissionRestriction> : IDisplayPermissionService<TPermission, TPermissionRestriction>

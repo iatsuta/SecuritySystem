@@ -1,5 +1,5 @@
 ﻿using ExampleApp.Domain;
-using ExampleApp.Domain.Auth;
+using ExampleApp.Domain.Auth.Virtual;
 using ExampleApp.Infrastructure;
 
 using HierarchicalExpand.AncestorDenormalization;

@@ -1,6 +1,5 @@
 ﻿using ExampleApp.Domain;
-using ExampleApp.Domain.Auth;
-
+using ExampleApp.Domain.Auth.Virtual;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExampleApp.Infrastructure;

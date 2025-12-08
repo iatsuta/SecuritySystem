@@ -6,10 +6,9 @@ using CommonFramework.VisualIdentitySource;
 using GenericQueryable;
 
 using Microsoft.Extensions.Logging;
-
 using SecuritySystem.Services;
 
-namespace SecuritySystem.GeneralPermission.Initialize.SecurityContext;
+namespace SecuritySystem.GeneralPermission.Initialize;
 
 public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTypeIdent>(
     IQueryableSource queryableSource,
