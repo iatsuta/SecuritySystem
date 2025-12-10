@@ -1,12 +1,9 @@
-﻿using CommonFramework;
-
-using SecuritySystem.Services;
+﻿using SecuritySystem.Services;
 
 namespace SecuritySystem;
 
-public class CurrentUser(IRawUserAuthenticationService rawUserAuthenticationService, IRunAsManager? runAsManager = null) : ICurrentUser
+public class CurrentUser(IRawUserAuthenticationService rawUserAuthenticationService, IRunAsManager? runAsManager = null)
+    : RawCurrentUser(rawUserAuthenticationService)
 {
-	private readonly Lazy<string> lazyRawName = LazyHelper.Create(rawUserAuthenticationService.GetUserName);
-
-    public string Name => runAsManager?.RunAsUser?.Name ?? this.lazyRawName.Value;
+    public override string Name => runAsManager?.RunAsUser?.Name ?? base.Name;
 }

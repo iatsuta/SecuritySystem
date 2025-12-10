@@ -9,5 +9,4 @@ public class PermissionRestriction
 	public virtual required SecurityContextType SecurityContextType { get; init; }
 
 	public virtual required Permission Permission { get; init; }
-
 }

@@ -10,7 +10,7 @@ using SecuritySystem.Services;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class UpdatePermissionsHandler(
-    [CurrentUserWithoutRunAs] ISecuritySystem securitySystem,
+    [WithoutRunAs] ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
     IDomainObjectIdentsParser domainObjectIdentsParser,

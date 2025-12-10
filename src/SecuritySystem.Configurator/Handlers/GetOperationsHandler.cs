@@ -7,7 +7,7 @@ using SecuritySystem.ExternalSystem.ApplicationSecurity;
 
 namespace SecuritySystem.Configurator.Handlers;
 
-public class GetOperationsHandler([CurrentUserWithoutRunAs]ISecuritySystem securitySystem, ISecurityRoleSource roleSource, ISecurityOperationInfoSource operationInfoSource)
+public class GetOperationsHandler([WithoutRunAs]ISecuritySystem securitySystem, ISecurityRoleSource roleSource, ISecurityOperationInfoSource operationInfoSource)
     : BaseReadHandler, IGetOperationsHandler
 {
     protected override async Task<object> GetDataAsync(HttpContext context, CancellationToken cancellationToken)

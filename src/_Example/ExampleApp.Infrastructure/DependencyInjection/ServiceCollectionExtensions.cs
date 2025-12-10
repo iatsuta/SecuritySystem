@@ -1,18 +1,18 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain;
+using ExampleApp.Domain.Auth.Virtual;
 using ExampleApp.Infrastructure.Services;
-
 using GenericQueryable.EntityFramework;
-
+using HierarchicalExpand;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
-using HierarchicalExpand;
-using ExampleApp.Domain.Auth.Virtual;
+using SecuritySystem.GeneralPermission;
+using SecuritySystem.GeneralPermission.DependencyInjection;
 using SecuritySystem.VirtualPermission.DependencyInjection;
+using AuthGeneral = ExampleApp.Domain.Auth.General;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 
@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
 						.SetRawUserAuthenticationService<RawUserAuthenticationService>()
 
 						.AddUserSource<Employee>(usb => usb.SetRunAs(employee => employee.RunAs))
+						.AddUserSource<AuthGeneral.Principal>()
 
 						.AddSecurityContext<BusinessUnit>(
 							new Guid("{E4AE968E-7B6B-4236-B381-9886C8E0FA34}"),
@@ -82,7 +83,14 @@ public static class ServiceCollectionExtensions
 								.AddRestriction(domainObject => domainObject.Location))
 
 						.AddVirtualPermission<Employee, Administrator>(
-							SecurityRole.Administrator, domainObject => domainObject.Employee));
+							SecurityRole.Administrator, domainObject => domainObject.Employee)
+
+						.AddGeneralPermission(
+							p => p.Principal,
+							p => p.SecurityRole,
+							pr => pr.Permission,
+							pr => pr.SecurityContextType,
+							(AuthGeneral.PermissionRestriction pr) => pr.SecurityContextId));
 		}
 	}
 }

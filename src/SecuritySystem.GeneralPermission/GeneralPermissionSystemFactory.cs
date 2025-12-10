@@ -4,6 +4,14 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.GeneralPermission;
 
+public class GeneralPermissionSystemFactory(IServiceProvider serviceProvider) : IPermissionSystemFactory
+{
+    public IPermissionSystem Create(SecurityRuleCredential securityRuleCredential)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class GeneralPermissionSystemFactory<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent,
 	TSecurityContextTypeIdent>(IServiceProvider serviceProvider) : IPermissionSystemFactory
 

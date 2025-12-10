@@ -8,7 +8,7 @@ using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.Configurator.Handlers;
 
-public class GetPrincipalsHandler([CurrentUserWithoutRunAs] ISecuritySystem securitySystem, IRootPrincipalSourceService principalSourceService)
+public class GetPrincipalsHandler([WithoutRunAs] ISecuritySystem securitySystem, IRootPrincipalSourceService principalSourceService)
 	: BaseReadHandler, IGetPrincipalsHandler
 {
 	protected override async Task<object> GetDataAsync(HttpContext context, CancellationToken cancellationToken)

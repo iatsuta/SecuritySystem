@@ -9,7 +9,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class GetBusinessRoleHandler(
-    [CurrentUserWithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs]ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityOperationInfoSource securityOperationInfoSource,
     IRootPrincipalSourceService principalSourceService)

@@ -10,6 +10,6 @@ public class CurrentUserSource<TUser>(ICurrentUser currentUser, IUserSource<TUse
 
     public ICurrentUserSource<User> ToSimple()
     {
-	    return new CurrentUserSource<User>(currentUser, userSource.ToSimple());
+        return new CurrentUserSource<User>(currentUser, userSource.ToSimple());
     }
 }

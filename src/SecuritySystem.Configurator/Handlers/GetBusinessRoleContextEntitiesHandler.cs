@@ -11,7 +11,7 @@ namespace SecuritySystem.Configurator.Handlers;
 public class GetBusinessRoleContextEntitiesHandler(
 	ISecurityContextStorage securityContextStorage,
 	ISecurityContextInfoSource securityContextInfoSource,
-	[CurrentUserWithoutRunAs] ISecuritySystem securitySystem)
+	[WithoutRunAs] ISecuritySystem securitySystem)
 	: BaseReadHandler, IGetBusinessRoleContextEntitiesHandler
 {
 	protected override async Task<object> GetDataAsync(HttpContext context, CancellationToken cancellationToken)

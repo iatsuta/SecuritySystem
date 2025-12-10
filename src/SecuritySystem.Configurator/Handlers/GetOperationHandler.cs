@@ -9,7 +9,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class GetOperationHandler(
-    [CurrentUserWithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs]ISecuritySystem securitySystem,
     ISecurityRoleSource roleSource,
     IRootPrincipalSourceService principalSourceService)
     : BaseReadHandler, IGetOperationHandler

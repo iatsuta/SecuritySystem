@@ -17,7 +17,7 @@ public class GetPrincipalHandler(
 	ISecurityContextStorage securityContextStorage,
 	ISecurityRoleSource securityRoleSource,
 	ISecurityContextInfoSource securityContextInfoSource,
-	[CurrentUserWithoutRunAs] ISecuritySystem securitySystem) : BaseReadHandler, IGetPrincipalHandler
+	[WithoutRunAs] ISecuritySystem securitySystem) : BaseReadHandler, IGetPrincipalHandler
 {
 	protected override async Task<object> GetDataAsync(HttpContext httpContext, CancellationToken cancellationToken)
 	{
