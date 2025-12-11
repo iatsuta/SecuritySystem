@@ -25,7 +25,7 @@
 //			var missedTypeInfoList = requiredSecurityContextTypes
 //				.Except(usedTypes)
 //				.Select(securityContextInfoSource.GetSecurityContextInfo)
-//				.Select(info => info.Name)
+//				.Select(bindingInfo => bindingInfo.Name)
 //				.ToList();
 
 //			context.MessageFormatter.AppendArgument("MissedTypes", missedTypeInfoList.Join(", "));

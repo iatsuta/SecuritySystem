@@ -1,7 +1,10 @@
 ﻿using SecuritySystem.DependencyInjection;
 
 using System.Linq.Expressions;
+
 using CommonFramework;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
@@ -11,7 +14,8 @@ public static class SecuritySystemSettingsExtensions
     {
         public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
             TSecurityContextObjectIdent>(
-            GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> info,
+            GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
+                bindingInfo,
             Action<IGeneralPermissionSettings<TPermission>>? setupAction = null)
             where TPrincipal : class
             where TPermission : class
@@ -20,8 +24,17 @@ public static class SecuritySystemSettingsExtensions
             where TSecurityContextType : class
             where TSecurityContextObjectIdent : notnull
         {
+            var settings = new GeneralPermissionSettings<TPrincipal, TPermission>();
+
+            setupAction?.Invoke(settings);
+
+            var finalBindingInfo = settings.ApplyOptionalPaths(bindingInfo);
+
             return securitySystemSettings
-                .AddPermissionSystem<GeneralPermissionSystemFactory>();
+                .AddPermissionSystem(sp => ActivatorUtilities
+                    .CreateInstance<
+                        GeneralPermissionSystemFactory<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+                            TSecurityContextObjectIdent>>(sp, finalBindingInfo));
         }
 
         public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
@@ -40,7 +53,7 @@ public static class SecuritySystemSettingsExtensions
             where TSecurityContextObjectIdent : notnull
         {
             return securitySystemSettings.AddGeneralPermission(
-                new GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+                new GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
                     TSecurityContextObjectIdent>(
                     principalPath.ToPropertyAccessors(),
                     securityRolePath.ToPropertyAccessors(),

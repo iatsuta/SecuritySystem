@@ -2,7 +2,9 @@
 
 using CommonFramework;
 using CommonFramework.IdentitySource;
+
 using HierarchicalExpand;
+
 using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
@@ -16,6 +18,9 @@ public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurit
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {
+    private readonly IPermissionRestrictionSource<TPermission, TSecurityContextIdent> permissionRestrictionSource =
+        permissionSystem.GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(securityContextRestriction?.Filter);
+
     public override Expression<Func<TPermission, bool>> GetAccessorsFilter(TDomainObject domainObject, HierarchicalExpandType expandType)
     {
         var securityObjects = this.GetSecurityObjects(domainObject).ToArray();
@@ -23,16 +28,16 @@ public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurit
         var allowGrandAccess = securityContextRestriction?.Required != true;
 
         var grandAccessExpr = allowGrandAccess
-                                  ? permissionSystem.GetGrandAccessExpr<TSecurityContext, TSecurityContextIdent>()
-                                  : _ => false;
+            ? permissionRestrictionSource.GetGrandAccessExpr()
+            : _ => false;
 
         if (securityObjects.Any())
         {
             var securityIdents = hierarchicalObjectExpanderFactory
-                                 .Create<TSecurityContextIdent>(typeof(TSecurityContext))
-                                 .Expand(securityObjects.Select(identityInfo.Id.Getter), expandType.Reverse());
+                .Create<TSecurityContextIdent>(typeof(TSecurityContext))
+                .Expand(securityObjects.Select(identityInfo.Id.Getter), expandType.Reverse());
 
-            return grandAccessExpr.BuildOr(permissionSystem.GetContainsIdentsExpr(securityIdents, securityContextRestriction?.Filter));
+            return grandAccessExpr.BuildOr(permissionRestrictionSource.GetContainsIdentsExpr(securityIdents));
         }
         else
         {

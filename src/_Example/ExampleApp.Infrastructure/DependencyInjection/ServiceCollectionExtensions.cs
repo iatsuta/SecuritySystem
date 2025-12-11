@@ -2,17 +2,22 @@
 using ExampleApp.Domain;
 using ExampleApp.Domain.Auth.Virtual;
 using ExampleApp.Infrastructure.Services;
+using AuthGeneral = ExampleApp.Domain.Auth.General;
+
 using GenericQueryable.EntityFramework;
+
 using HierarchicalExpand;
+
 using Microsoft.EntityFrameworkCore;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
-using SecuritySystem.GeneralPermission;
+
 using SecuritySystem.GeneralPermission.DependencyInjection;
 using SecuritySystem.VirtualPermission.DependencyInjection;
-using AuthGeneral = ExampleApp.Domain.Auth.General;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 

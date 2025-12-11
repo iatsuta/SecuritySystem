@@ -4,7 +4,7 @@ using SecuritySystem.Credential;
 
 namespace SecuritySystem.ExternalSystem.Management;
 
-public interface IPrincipalManagementService : IPrincipalSourceService
+public interface IPrincipalManagementService
 {
     Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default);
 

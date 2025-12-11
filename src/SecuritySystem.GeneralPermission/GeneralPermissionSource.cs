@@ -14,7 +14,7 @@ using HierarchicalExpand;
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>(
-    GeneralPermissionSystemInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> info,
+    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
     IAvailablePermissionSource<TPermission, TSecurityContextObjectIdent> availablePermissionSource,
     IRealTypeResolver realTypeResolver,
     IQueryableSource queryableSource,
@@ -40,12 +40,11 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPe
         return this.GetPermissionQuery().Any();
     }
 
-
     public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
     {
 	    return availablePermissionSource
 		    .GetAvailablePermissionsQueryable(securityRule)
-		    .GroupJoin(queryableSource.GetQueryable<TPermissionRestriction>(), v => v, info.Permission.Path,
+		    .GroupJoin(queryableSource.GetQueryable<TPermissionRestriction>(), v => v, bindingInfo.Permission.Path,
 			    (_, restrictions) => new { restrictions })
 		    .ToList()
 		    .Select(pair => this.ConvertPermission(pair.restrictions.ToList(), securityContextTypes))
@@ -61,7 +60,7 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPe
     {
 	    var availableFilter = availablePermissionSource.CreateFilter(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() });
 
-	    return this.GetSecurityPermissions(availableFilter).Where(permissionFilter).Select(info.Principal.Path.Select(principalVisualIdentityInfo.Name.Path));
+	    return this.GetSecurityPermissions(availableFilter).Where(permissionFilter).Select(bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path));
     }
 
     private IQueryable<TPermission> GetSecurityPermissions(AvailablePermissionFilter<TSecurityContextObjectIdent> availablePermissionFilter)
@@ -74,8 +73,8 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPe
 	    IEnumerable<Type> securityContextTypes)
     {
 	    var purePermission = restrictions.GroupBy(
-			    info.SecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter),
-			    info.SecurityContextObjectId.Getter)
+			    bindingInfo.SecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter),
+			    bindingInfo.SecurityContextObjectId.Getter)
 
 		    .ToDictionary(g => g.Key, g => g.ToList());
 

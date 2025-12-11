@@ -2,6 +2,7 @@
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -12,14 +13,14 @@ namespace SecuritySystem.GeneralPermission;
 
 //public class PrincipalDomainService<TPrincipal>(
 //    IServiceProvider serviceProvider,
-//    GeneralPermissionSystemInfo<TPrincipal> info,
+//    GeneralPermissionBindingInfo<TPrincipal> bindingInfo,
 //    IIdentityInfoSource identityInfoSource) : IPrincipalDomainService<TPrincipal>
 //{
 //    private readonly Lazy<IPrincipalDomainService<TPrincipal>> lazyInnerService = new(() =>
 //    {
 //        var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TPrincipal));
 
-//        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), info.PermissionType, identityInfo.IdentityType);
+//        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, identityInfo.IdentityType);
 
 //        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo);
 //    });

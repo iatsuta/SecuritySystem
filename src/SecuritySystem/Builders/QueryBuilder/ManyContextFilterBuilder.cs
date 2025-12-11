@@ -18,15 +18,18 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {
+    private readonly IPermissionRestrictionSource<TPermission, TSecurityContextIdent> permissionRestrictionSource =
+        permissionSystem.GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(securityContextRestriction?.Filter);
+
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(HierarchicalExpandType expandType)
     {
         var allowGrandAccess = securityContextRestriction?.Required != true;
 
         var grandAccessExpr = allowGrandAccess
-            ? permissionSystem.GetGrandAccessExpr<TSecurityContext, TSecurityContextIdent>()
+            ? permissionRestrictionSource.GetGrandAccessExpr()
             : _ => false;
 
-        var getIdents = permissionSystem.GetPermissionRestrictionsExpr<TSecurityContext, TSecurityContextIdent>(securityContextRestriction?.Filter);
+        var getIdents = permissionRestrictionSource.GetIdentsExpr();
 
         var expander = hierarchicalObjectExpanderFactory.Create<TSecurityContextIdent>(typeof(TSecurityContext));
 
