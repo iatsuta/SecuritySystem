@@ -9,9 +9,10 @@ public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRol
 	PropertyAccessors<TPermissionRestriction, TSecurityContextType> SecurityContextType,
 	PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> SecurityContextObjectId)
 	: GeneralPermissionBindingInfo<TPrincipal, TPermission>,
-		IPermissionToPrincipalInfo<TPermission, TPrincipal>
+		IPermissionToPrincipalInfo<TPermission, TPrincipal>,
+        IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>
 
-	where TPrincipal : class
+    where TPrincipal : class
 	where TPermission : class
 	where TSecurityRole : class
 	where TPermissionRestriction : class
@@ -26,6 +27,7 @@ public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRol
 
     public override Type SecurityContextObjectIdentType { get; } = typeof(TSecurityContextObjectIdent);
 }
+
 public abstract record GeneralPermissionBindingInfo<TPrincipal, TPermission> : GeneralPermissionBindingInfo
 {
     public override Type PrincipalType { get; } = typeof(TPrincipal);
@@ -50,4 +52,9 @@ public abstract record GeneralPermissionBindingInfo
     public abstract Type SecurityContextTypeType { get; }
 
     public abstract Type SecurityContextObjectIdentType { get; }
+}
+
+public interface IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>
+{
+    PropertyAccessors<TPermissionRestriction, TSecurityContextType> SecurityContextType { get; }
 }

@@ -3,8 +3,8 @@
 using CommonFramework;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
-using SecuritySystem.Credential;
 
+using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
