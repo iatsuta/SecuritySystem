@@ -15,7 +15,7 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
     IIdentityInfoSource identityInfoSource,
     GeneralPermissionBindingInfo bindingInfo) : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 {
-    private readonly Lazy<IPermissionRestrictionFilterFactory<TPermissionRestriction>> lazyInnerSource = new(() =>
+    private readonly Lazy<IPermissionRestrictionFilterFactory<TPermissionRestriction>> lazyInnerService = new(() =>
     {
         var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
 
@@ -34,7 +34,7 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
     public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>()
         where TSecurityContext : class, ISecurityContext
     {
-        return this.lazyInnerSource.Value.GetFilter<TSecurityContext>();
+        return this.lazyInnerService.Value.GetFilter<TSecurityContext>();
     }
 }
 

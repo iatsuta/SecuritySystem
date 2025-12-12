@@ -1,27 +1,12 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
-using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
-using HierarchicalExpand;
-
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.GeneralPermission.Validation;
 
 using System.Linq.Expressions;
 
-
 namespace SecuritySystem.GeneralPermission;
-
-//public interface ISecurityIdentityExtractor<TDomainObject>
-//{
-//    SecurityIdentity GetSecurityIdentity();
-//}
-
-//public class SecurityIdentityExtractor<TDomainObject>
-//{
-//    SecurityIdentity GetSecurityIdentity();
-//}
 
 public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,

@@ -13,7 +13,8 @@ public class GeneralPermissionSettings<TPrincipal, TPermission>
     public Expression<Func<TPermission, string>>? CommentPath { get; private set; }
 
 
-    public GeneralPermissionBindingInfo ApplyOptionalPaths(GeneralPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
+    public TGeneralPermissionBindingInfo ApplyOptionalPaths<TGeneralPermissionBindingInfo>(TGeneralPermissionBindingInfo bindingInfo)
+        where TGeneralPermissionBindingInfo : GeneralPermissionBindingInfo<TPrincipal, TPermission>
     {
         return bindingInfo
             .PipeMaybe(this.PeriodPath, (b, v) => b with { Period = v.ToPropertyAccessors() })

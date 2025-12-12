@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using System.Security.Principal;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 

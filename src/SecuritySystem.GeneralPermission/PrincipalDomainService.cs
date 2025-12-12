@@ -6,39 +6,40 @@ using CommonFramework.VisualIdentitySource;
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 namespace SecuritySystem.GeneralPermission;
 
-//public class PrincipalDomainService<TPrincipal>(
-//    IServiceProvider serviceProvider,
-//    GeneralPermissionBindingInfo<TPrincipal> bindingInfo,
-//    IIdentityInfoSource identityInfoSource) : IPrincipalDomainService<TPrincipal>
-//{
-//    private readonly Lazy<IPrincipalDomainService<TPrincipal>> lazyInnerService = new(() =>
-//    {
-//        var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TPrincipal));
+public class PrincipalDomainService<TPrincipal>(
+    IServiceProvider serviceProvider,
+    GeneralPermissionBindingInfo bindingInfo,
+    IIdentityInfoSource identityInfoSource) : IPrincipalDomainService<TPrincipal>
+{
+    private readonly Lazy<IPrincipalDomainService<TPrincipal>> lazyInnerService = new(() =>
+    {
+        var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TPrincipal));
 
-//        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, identityInfo.IdentityType);
+        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, identityInfo.IdentityType);
 
-//        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo);
-//    });
+        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo);
+    });
 
-//    private IPrincipalDomainService<TPrincipal> InnerService => this.lazyInnerService.Value;
+    private IPrincipalDomainService<TPrincipal> InnerService => this.lazyInnerService.Value;
 
-//    public Task<TPrincipal> GetOrCreateAsync(string name, CancellationToken cancellationToken) =>
-//        this.InnerService.GetOrCreateAsync(name, cancellationToken);
+    public Task<TPrincipal> GetOrCreateAsync(string name, CancellationToken cancellationToken) =>
+        this.InnerService.GetOrCreateAsync(name, cancellationToken);
 
-//    public Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken) =>
-//        this.InnerService.SaveAsync(principal, cancellationToken);
+    public Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken) =>
+        this.InnerService.SaveAsync(principal, cancellationToken);
 
-//    public Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken) =>
-//        this.InnerService.RemoveAsync(principal, force, cancellationToken);
+    public Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken) =>
+        this.InnerService.RemoveAsync(principal, force, cancellationToken);
 
-//    public Task ValidateAsync(TPrincipal principal, CancellationToken cancellationToken) =>
-//        this.InnerService.ValidateAsync(principal, cancellationToken);
-//}
+    public Task ValidateAsync(TPrincipal principal, CancellationToken cancellationToken) =>
+        this.InnerService.ValidateAsync(principal, cancellationToken);
+}
 
 public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 	IQueryableSource queryableSource,
