@@ -1,12 +1,11 @@
-﻿using System.Collections.Concurrent;
-using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using CommonFramework;
 using CommonFramework.IdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Services;
+
+using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -31,26 +30,42 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
             securityContextTypeIdentityInfo);
     });
 
-    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>(SecurityContextRestriction<TSecurityContext>? restriction)
+    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>(
+        SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        return this.lazyInnerService.Value.GetFilter(restriction);
+        return this.lazyInnerService.Value.GetFilter(restrictionFilterInfo);
     }
 }
 
 public class PermissionRestrictionFilterFactory<TPermissionRestriction, TSecurityContextType, TSecurityContextTypeIdent>(
     ISecurityContextInfoSource securityContextInfoSource,
+    IIdentityInfoSource identityInfoSource,
     ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentConverter,
     IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType> permissionRestrictionToSecurityContextTypeInfo,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo) : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 
     where TSecurityContextTypeIdent : notnull
 {
-    private readonly ConcurrentDictionary<Type, LambdaExpression> cache = new();
+    private readonly IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo =
+        identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
-    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>(SecurityContextRestriction<TSecurityContext>? restriction)
+    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>(SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
+        if (restrictionFilterInfo == null)
+        {
+            return baseFilter;
+        }
+        else
+        {
+            var securityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo)
+                .Where(restrictionFilterInfo.GetPureFilter(serviceProvider))
+                .Select(this.identityInfo.Id.Path);
+
+            return baseFilter.Select(idents => idents.Where(i => securityContextQueryable.Contains(i)));
+        }
+
         return (Expression<Func<TPermissionRestriction, bool>>)cache.GetOrAdd(typeof(TSecurityContext), _ =>
         {
             var securityContextTypeId = securityContextTypeIdentConverter.Convert(securityContextInfoSource.GetSecurityContextInfo<TSecurityContext>().Identity)

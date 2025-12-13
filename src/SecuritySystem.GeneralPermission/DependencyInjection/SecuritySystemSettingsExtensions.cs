@@ -38,7 +38,8 @@ public static class SecuritySystemSettingsExtensions
                 .AddExtensions(sc => sc
                     .AddSingleton(finalBindingInfo)
                     .AddSingleton<GeneralPermissionBindingInfo>(finalBindingInfo)
-                    .AddScoped(typeof(PermissionRestrictionFilterFactory<>), typeof(PermissionRestrictionFilterFactory<>))
+                    .AddSingleton(typeof(IPermissionRestrictionTypeFilterFactory<>), typeof(PermissionRestrictionTypeFilterFactory<>))
+                    .AddScoped(typeof(IPermissionRestrictionFilterFactory<>), typeof(PermissionRestrictionFilterFactory<>))
                     .AddSingleton(typeof(IRawPermissionConverter<>), typeof(RawPermissionConverter<>))
                     .AddScoped(typeof(IPrincipalDomainService<>), typeof(PrincipalDomainService<>))
                     .AddSingleton(typeof(IPermissionSecurityRoleFilterFactory<>), typeof(PermissionSecurityRoleFilterFactory<>))
