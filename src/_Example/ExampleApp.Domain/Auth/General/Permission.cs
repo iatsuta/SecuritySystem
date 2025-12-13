@@ -2,7 +2,7 @@
 
 public class Permission
 {
-	public required Guid Id { get; init; }
+	public Guid Id { get; init; }
 
 	public virtual required Principal Principal { get; init; }
 

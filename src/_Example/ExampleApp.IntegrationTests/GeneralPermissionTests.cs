@@ -1,6 +1,11 @@
-﻿using ExampleApp.Domain.Auth.General;
+﻿using ExampleApp.Application;
+using ExampleApp.Domain.Auth.General;
+using ExampleApp.IntegrationTests.Services;
+using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
+
+using SecuritySystem.GeneralPermission;
 using SecuritySystem.UserSource;
 
 namespace ExampleApp.IntegrationTests;
@@ -12,27 +17,41 @@ public class GeneralPermissionTests : TestBase
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
+        var principalName = "TestPrincipal";
+
+        var principalId = await this.CreateTestPrincipal(principalName, ExampleRoles.TestManager, cancellationToken);
+
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
+        var authenticationService = scope.ServiceProvider.GetRequiredService<TestRawUserAuthenticationService>();
+        authenticationService.CurrentUserName = principalName;
 
-        //p
-
-        var currentUserSource = scope.ServiceProvider.GetRequiredService<ICurrentUserSource<Principal>>();
-        var currentUser = currentUserSource.CurrentUser;
         // Act
+        var currentUserSource = scope.ServiceProvider.GetRequiredService<ICurrentUserSource<Principal>>();
 
         // Assert
+        principalId.Should().Be(currentUserSource.CurrentUser.Id);
     }
 
 
-    //private async Task CreateTestPermission(IServiceProvider serviceProvider, string principalName, CancellationToken cancellationToken)
-    //{
-    //    var principalDomainService = serviceProvider.GetRequiredService<IPrincipalDomainService<Principal>>();
+    private async Task<Guid> CreateTestPrincipal(string principalName, SecuritySystem.SecurityRole securityRole, CancellationToken cancellationToken)
+    {
+        await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
-    //    var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
+        var serviceProvider = scope.ServiceProvider;
 
-    //    var permission = new Permission { Principal = principal };
+        var securityRoleRepository = serviceProvider.GetRequiredService<IRepository<SecurityRole>>();
+        var permissionRepository = serviceProvider.GetRequiredService<IRepository<Permission>>();
 
-    //    return;
+        var dbSecurityRole = await securityRoleRepository.GetQueryable().GenericSingleAsync(sr => sr.Name == securityRole.Name, cancellationToken);
 
-    //}
+        var principalDomainService = serviceProvider.GetRequiredService<IPrincipalDomainService<Principal>>();
+
+        var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
+
+        var permission = new Permission { Principal = principal, SecurityRole = dbSecurityRole };
+
+        await permissionRepository.SaveAsync(permission, cancellationToken);
+
+        return principal.Id;
+    }
 }

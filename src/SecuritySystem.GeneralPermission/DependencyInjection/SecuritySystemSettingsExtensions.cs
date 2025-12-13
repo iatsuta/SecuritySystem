@@ -5,6 +5,8 @@ using SecuritySystem.DependencyInjection;
 using SecuritySystem.GeneralPermission.AvailableSecurity;
 using SecuritySystem.GeneralPermission.Initialize;
 using System.Linq.Expressions;
+using SecuritySystem.GeneralPermission.Validation;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
@@ -65,6 +67,9 @@ public static class SecuritySystemSettingsExtensions
 
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
+
+                    .AddKeyedScoped<ISecurityValidator<TPrincipal>, PrincipalGeneralValidator<TPrincipal>>(PrincipalGeneralValidator<TPrincipal>.Key)
+
                     .AddSingleton<InitializerSettings>()
                 );
         }

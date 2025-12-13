@@ -25,7 +25,8 @@ public abstract class TestBase : IAsyncLifetime
                 .AddScoped<InitController>()
                 .AddScoped<TestController>()
                 .AddSingleton(TimeProvider.System)
-                .ReplaceScoped<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
+                .AddScoped<TestRawUserAuthenticationService>()
+                .ReplaceScopedFrom<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
                 .AddValidator<DuplicateServiceUsageValidator>()
                 .Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });

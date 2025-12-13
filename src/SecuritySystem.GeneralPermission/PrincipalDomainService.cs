@@ -7,6 +7,7 @@ using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using SecuritySystem.GeneralPermission.Validation;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
@@ -14,16 +15,19 @@ namespace SecuritySystem.GeneralPermission;
 
 public class PrincipalDomainService<TPrincipal>(
     IServiceProvider serviceProvider,
-    GeneralPermissionBindingInfo bindingInfo,
-    IIdentityInfoSource identityInfoSource) : IPrincipalDomainService<TPrincipal>
+    IIdentityInfoSource identityInfoSource,
+	IVisualIdentityInfoSource visualIdentityInfoSource,
+    GeneralPermissionBindingInfo bindingInfo) : IPrincipalDomainService<TPrincipal>
 {
     private readonly Lazy<IPrincipalDomainService<TPrincipal>> lazyInnerService = new(() =>
     {
-        var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TPrincipal));
+        var identityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
+
+        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
 
         var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, identityInfo.IdentityType);
 
-        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo);
+        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
     });
 
     private IPrincipalDomainService<TPrincipal> InnerService => this.lazyInnerService.Value;
@@ -44,7 +48,7 @@ public class PrincipalDomainService<TPrincipal>(
 public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 	IQueryableSource queryableSource,
 	IGenericRepository genericRepository,
-	[FromKeyedServices("General")] ISecurityValidator<TPrincipal> principalGeneralValidator,
+	[FromKeyedServices(PrincipalGeneralValidator<TPrincipal>.Key)] ISecurityValidator<TPrincipal> principalGeneralValidator,
 	IEnumerable<IUserSource> userSources,
 	IPermissionToPrincipalInfo<TPermission, TPrincipal> permissionToPrincipalInfo,
 	ISecurityIdentityConverter<TPrincipalIdent> identityConverter,
