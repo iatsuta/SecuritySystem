@@ -4,7 +4,7 @@ using CommonFramework.VisualIdentitySource;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.GeneralPermission.AvailableSecurityRoleSource;
+using SecuritySystem.GeneralPermission.AvailableSecurity;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -12,6 +12,7 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
+    IAvailableSecurityRoleSource availableSecurityRoleSource,
     GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
     SecurityRuleCredential securityRuleCredential)
     : IPermissionSystem<TPermission>
@@ -48,11 +49,9 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
                 securityRule.TryApplyCredential(securityRuleCredential));
     }
 
-    public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
+    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
     {
-        return ActivatorUtilities
-            .CreateInstance<GeneralAvailableSecurityRoleSource<TPrincipal, TPermission, TSecurityRole>>(serviceProvider, securityRuleCredential)
-            .GetAvailableSecurityRoles(cancellationToken);
+        return await availableSecurityRoleSource.GetAvailableSecurityRoles(securityRuleCredential, cancellationToken);
     }
 
     IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)

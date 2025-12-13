@@ -1,4 +1,6 @@
-﻿using CommonFramework;
+﻿using System.Linq.Expressions;
+
+using CommonFramework;
 using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -6,9 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
 
-using System.Linq.Expressions;
-
-namespace SecuritySystem.GeneralPermission;
+namespace SecuritySystem.GeneralPermission.AvailableSecurity;
 
 public class AvailablePermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, GeneralPermissionBindingInfo bindingInfo) : IAvailablePermissionFilterFactory<TPermission>
 {

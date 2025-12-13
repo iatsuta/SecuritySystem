@@ -16,9 +16,10 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
 {
     private readonly Lazy<IPermissionSecurityRoleFilterFactory<TPermission>> lazyInnerService = new(() =>
     {
-        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
+        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
 
-        var innerServiceType = typeof(PermissionSecurityRoleFilterFactory<,,>).MakeGenericType(
+        var innerServiceType = typeof(PermissionSecurityRoleFilterFactory<,,,>).MakeGenericType(
+            bindingInfo.PrincipalType,
             typeof(TPermission),
             bindingInfo.SecurityRoleType,
             securityRoleIdentityInfo.IdentityType);
@@ -26,7 +27,6 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
         return (IPermissionSecurityRoleFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
             securityRoleIdentityInfo);
     });
 
@@ -34,9 +34,9 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
         this.lazyInnerService.Value.CreateFilter(identType, idents);
 }
 
-public class PermissionSecurityRoleFilterFactory<TPermission, TSecurityRole, TSecurityRoleIdent>(
+public class PermissionSecurityRoleFilterFactory<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
-    IPermissionToSecurityRoleInfo<TPermission, TSecurityRole> permissionToSecurityRoleInfo,
+    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole> permissionToSecurityRoleInfo,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo) : IPermissionSecurityRoleFilterFactory<TPermission>
     where TSecurityRoleIdent : notnull
 {
