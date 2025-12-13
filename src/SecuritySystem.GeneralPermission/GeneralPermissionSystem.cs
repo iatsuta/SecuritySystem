@@ -1,4 +1,5 @@
 ﻿using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ namespace SecuritySystem.GeneralPermission;
 public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
     GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
     SecurityRuleCredential securityRuleCredential)
     : IPermissionSystem<TPermission>
@@ -36,10 +38,13 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPe
 
     public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
+        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
+
         return ActivatorUtilities
             .CreateInstance<GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
                 TSecurityContextObjectIdent>>(
                 serviceProvider,
+                principalVisualIdentityInfo,
                 securityRule.TryApplyCredential(securityRuleCredential));
     }
 

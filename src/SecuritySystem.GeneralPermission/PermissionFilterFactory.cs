@@ -50,7 +50,7 @@ public class PermissionFilterFactory<TPermission, TPermissionRestriction>(
             var permissionQueryable = queryableSource
                 .GetQueryable<TPermissionRestriction>()
                 .Where(typeFilter)
-                .Select(bindingInfo.PermissionRestrictionToPermission.Path);
+                .Select(bindingInfo.Permission.Path);
 
             return permission => permissionQueryable.Contains(permission);
         }
