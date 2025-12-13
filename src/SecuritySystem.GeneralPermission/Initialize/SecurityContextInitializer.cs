@@ -5,10 +5,35 @@ using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
+
+public class SecurityContextInitializer<TSecurityContextType>(
+    IServiceProvider serviceProvider,
+    IIdentityInfoSource identityInfoSource,
+    IVisualIdentityInfoSource visualIdentityInfoSource) : ISecurityContextInitializer<TSecurityContextType>
+{
+    private readonly Lazy<ISecurityContextInitializer<TSecurityContextType>> lazyInnerService = new(() =>
+    {
+        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContextType>();
+
+        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TSecurityContextType>();
+
+        var innerServiceType = typeof(SecurityContextInitializer<,>).MakeGenericType(typeof(TSecurityContextType), identityInfo.IdentityType);
+
+        return (ISecurityContextInitializer<TSecurityContextType>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
+    });
+
+    public Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken) =>
+        this.lazyInnerService.Value.Init(cancellationToken);
+
+    Task ISecurityInitializer.Init(CancellationToken cancellationToken) =>
+        ((ISecurityInitializer)this.lazyInnerService.Value).Init(cancellationToken);
+}
 
 public class SecurityContextInitializer<TSecurityContextType, TSecurityContextTypeIdent>(
     IQueryableSource queryableSource,

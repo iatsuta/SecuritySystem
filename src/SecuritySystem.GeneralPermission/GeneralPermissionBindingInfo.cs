@@ -27,6 +27,8 @@ public abstract record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSe
 {
     public required PropertyAccessors<TPermission, TSecurityRole> SecurityRole { get; init; }
 
+    public PropertyAccessors<TSecurityRole, string>? SecurityRoleDescription { get; init; }
+
     public override Type SecurityRoleType { get; } = typeof(TSecurityRole);
 }
 
@@ -39,9 +41,9 @@ public abstract record GeneralPermissionBindingInfo<TPrincipal, TPermission> : G
 
     public override Type PermissionType { get; } = typeof(TPermission);
 
-    public PropertyAccessors<TPermission, string>? Comment { get; init; }
+    public PropertyAccessors<TPermission, string>? PermissionComment { get; init; }
 
-    public PropertyAccessors<TPermission, (DateTime StartDate, DateTime? EndDate)>? Period { get; init; }
+    public PropertyAccessors<TPermission, (DateTime StartDate, DateTime? EndDate)>? PermissionPeriod { get; init; }
 }
 
 public abstract record GeneralPermissionBindingInfo

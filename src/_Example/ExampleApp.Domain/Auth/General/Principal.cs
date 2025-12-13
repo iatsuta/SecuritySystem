@@ -2,7 +2,7 @@
 
 public class Principal
 {
-	public required Guid Id { get; init; }
+    public Guid Id { get; init; }
 
-	public required string Name { get; set; }
+    public string Name { get; init; } = null!;
 }

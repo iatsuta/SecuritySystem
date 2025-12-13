@@ -143,8 +143,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 		bindingInfo.Principal.Setter(newDbPermission, dbPrincipal);
 		bindingInfo.SecurityRole.Setter(newDbPermission, dbRole);
 
-		bindingInfo.Period?.Setter(newDbPermission, typedPermission.Period);
-		bindingInfo.Comment?.Setter(newDbPermission, typedPermission.Comment);
+		bindingInfo.PermissionPeriod?.Setter(newDbPermission, typedPermission.Period);
+		bindingInfo.PermissionComment?.Setter(newDbPermission, typedPermission.Comment);
 
 		foreach (var restrictionGroup in typedPermission.Restrictions)
 		{
@@ -210,14 +210,14 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 			pair => pair);
 
 		if (restrictionMergeResult.IsEmpty
-		    && (bindingInfo.Comment == null || bindingInfo.Comment.Getter(dbPermission) == typedPermission.Comment)
-		    && (bindingInfo.Period == null || bindingInfo.Period.Getter(dbPermission) == typedPermission.Period))
+		    && (bindingInfo.PermissionComment == null || bindingInfo.PermissionComment.Getter(dbPermission) == typedPermission.Comment)
+		    && (bindingInfo.PermissionPeriod == null || bindingInfo.PermissionPeriod.Getter(dbPermission) == typedPermission.Period))
 		{
 			return false;
 		}
 
-		bindingInfo.Comment?.Setter.Invoke(dbPermission, typedPermission.Comment);
-		bindingInfo.Period?.Setter.Invoke(dbPermission, typedPermission.Period);
+		bindingInfo.PermissionComment?.Setter.Invoke(dbPermission, typedPermission.Comment);
+		bindingInfo.PermissionPeriod?.Setter.Invoke(dbPermission, typedPermission.Period);
 
 		foreach (var restriction in restrictionMergeResult.AddingItems)
 		{

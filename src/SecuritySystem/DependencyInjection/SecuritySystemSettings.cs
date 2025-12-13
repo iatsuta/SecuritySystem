@@ -170,7 +170,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 		    sc.AddSingleton<UserSourceInfo>(info);
 		    sc.AddSingleton(info);
 
-		    sc.AddScoped(typeof(IMissedUserService<>), userSourceBuilder.MissedUserServiceType);
+		    sc.AddScoped(typeof(IMissedUserService<TUser>), userSourceBuilder.MissedUserServiceType);
 	    });
 
 	    if (userSourceBuilder.RunAsPath != null)

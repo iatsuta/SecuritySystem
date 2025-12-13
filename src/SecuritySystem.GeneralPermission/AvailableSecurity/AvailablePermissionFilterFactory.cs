@@ -43,13 +43,13 @@ public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
 
     private IEnumerable<Expression<Func<TPermission, bool>>> GetFilterElements(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        if (bindingInfo.Period != null)
+        if (bindingInfo.PermissionPeriod != null)
         {
             var today = timeProvider.GetUtcNow().Date;
 
             yield return
 
-                from period in bindingInfo.Period.Path
+                from period in bindingInfo.PermissionPeriod.Path
 
                 select period.StartDate <= today && (period.EndDate == null || today <= period.EndDate);
         }

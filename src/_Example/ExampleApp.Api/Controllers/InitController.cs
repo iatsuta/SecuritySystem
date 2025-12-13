@@ -1,11 +1,12 @@
 ﻿using ExampleApp.Domain;
+using ExampleApp.Domain.Auth.General;
 using ExampleApp.Domain.Auth.Virtual;
 using ExampleApp.Infrastructure;
 
 using HierarchicalExpand.AncestorDenormalization;
 
 using Microsoft.AspNetCore.Mvc;
-
+using SecuritySystem.GeneralPermission.Initialize;
 using SecuritySystem.Services;
 
 namespace ExampleApp.Api.Controllers;
@@ -15,7 +16,9 @@ namespace ExampleApp.Api.Controllers;
 public class InitController(
 	IRawUserAuthenticationService rawUserAuthenticationService,
 	IDenormalizedAncestorsService<BusinessUnit> denormalizedAncestorsService,
-	TestDbContext dbContext) : ControllerBase
+	ISecurityRoleInitializer<SecurityRole> securityRoleInitializer,
+    ISecurityContextInitializer<SecurityContextType> securityContextInitializer,
+    TestDbContext dbContext) : ControllerBase
 {
 	[HttpPost]
 	public async Task TestInitialize(CancellationToken cancellationToken = default)
@@ -65,5 +68,10 @@ public class InitController(
 		await denormalizedAncestorsService.SyncAllAsync(cancellationToken);
 
 		await dbContext.SaveChangesAsync(cancellationToken);
-	}
+
+        await securityRoleInitializer.Init(cancellationToken);
+        await securityContextInitializer.Init(cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

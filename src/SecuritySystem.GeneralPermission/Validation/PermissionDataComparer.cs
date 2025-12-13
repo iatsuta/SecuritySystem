@@ -40,8 +40,8 @@ public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPer
 		PermissionData<TPermission, TPermissionRestriction> otherPermissionData)
 	{
 		return bindingInfo.SecurityRole.Getter(permissionData.Permission) == bindingInfo.SecurityRole.Getter(otherPermissionData.Permission)
-		       && (bindingInfo.Period == null
-		           || this.IsIntersected(bindingInfo.Period.Getter(permissionData.Permission), bindingInfo.Period.Getter(otherPermissionData.Permission)))
+		       && (bindingInfo.PermissionPeriod == null
+		           || this.IsIntersected(bindingInfo.PermissionPeriod.Getter(permissionData.Permission), bindingInfo.PermissionPeriod.Getter(otherPermissionData.Permission)))
 		       && this.EqualsRestrictions(permissionData, otherPermissionData);
 	}
 

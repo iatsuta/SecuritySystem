@@ -1,13 +1,10 @@
-﻿using SecuritySystem.DependencyInjection;
-
-using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using CommonFramework;
 using CommonFramework.DependencyInjection;
-
 using Microsoft.Extensions.DependencyInjection;
-
+using SecuritySystem.DependencyInjection;
 using SecuritySystem.GeneralPermission.AvailableSecurity;
+using SecuritySystem.GeneralPermission.Initialize;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
@@ -19,7 +16,7 @@ public static class SecuritySystemSettingsExtensions
             TSecurityContextObjectIdent>(
             GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
                 bindingInfo,
-            Action<IGeneralPermissionSettings<TPermission>>? setupAction = null)
+            Action<IGeneralPermissionSettings<TPermission, TSecurityRole>>? setupAction = null)
             where TPrincipal : class
             where TPermission : class
             where TSecurityRole : class
@@ -27,7 +24,7 @@ public static class SecuritySystemSettingsExtensions
             where TSecurityContextType : class
             where TSecurityContextObjectIdent : notnull
         {
-            var settings = new GeneralPermissionSettings<TPrincipal, TPermission>();
+            var settings = new GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole>();
 
             setupAction?.Invoke(settings);
 
@@ -65,6 +62,10 @@ public static class SecuritySystemSettingsExtensions
                     .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
                     .AddScoped(typeof(IAvailablePermissionSource<>), typeof(AvailablePermissionSource<>))
                     .AddScoped<IAvailableSecurityRoleSource, GeneralAvailableSecurityRoleSource>()
+
+                    .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
+                    .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
+                    .AddSingleton<InitializerSettings>()
                 );
         }
 
@@ -75,7 +76,7 @@ public static class SecuritySystemSettingsExtensions
             Expression<Func<TPermissionRestriction, TPermission>> permissionPath,
             Expression<Func<TPermissionRestriction, TSecurityContextType>> securityContextTypePath,
             Expression<Func<TPermissionRestriction, TSecurityContextObjectIdent>> securityContextObjectIdPath,
-            Action<IGeneralPermissionSettings<TPermission>>? setupAction = null)
+            Action<IGeneralPermissionSettings<TPermission, TSecurityRole>>? setupAction = null)
             where TPrincipal : class
             where TPermission : class
             where TSecurityRole : class

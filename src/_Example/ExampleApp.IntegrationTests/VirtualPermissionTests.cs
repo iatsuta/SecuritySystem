@@ -1,59 +1,21 @@
-﻿using CommonFramework.DependencyInjection;
-using CommonFramework.GenericRepository;
-
-using ExampleApp.Api.Controllers;
+﻿using ExampleApp.Api.Controllers;
 using ExampleApp.Domain;
-using ExampleApp.Infrastructure.DependencyInjection;
 
-using GenericQueryable;
-
-using HierarchicalExpand;
-
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Services;
 
 namespace ExampleApp.IntegrationTests;
 
-public class MainTests : IAsyncLifetime
+public class VirtualPermissionTests : TestBase
 {
-    protected readonly IServiceProvider RootServiceProvider;
-
-    public MainTests()
-    {
-        var configuration = new ConfigurationBuilder().AddJsonFile("appSettings.json", false, true).Build();
-
-        this.RootServiceProvider =
-            new ServiceCollection()
-                .AddInfrastructure(configuration)
-                .AddScoped<InitController>()
-                .AddScoped<TestController>()
-                .AddSingleton(TimeProvider.System)
-                .ReplaceScoped<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
-                .AddValidator<DuplicateServiceUsageValidator>()
-                .Validate()
-                .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
-    }
-
-    public async ValueTask InitializeAsync()
-    {
-        await using var scope = this.RootServiceProvider.CreateAsyncScope();
-
-        await scope.ServiceProvider.GetRequiredService<InitController>().TestInitialize();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-    }
-
     [Theory]
     [MemberData(nameof(Impersonate_LoadTestObjects_DataCorrected_Cases))]
     public async Task Impersonate_LoadTestObjects_DataCorrected(string runAs, string[] expectedBuList)
     {
-		// Arrange
-		var cancellationToken = TestContext.Current.CancellationToken;
-		await using var scope = this.RootServiceProvider.CreateAsyncScope();
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
@@ -116,27 +78,5 @@ public class MainTests : IAsyncLifetime
         yield return ["TestRootUser", new[] { rootBu, bu_1, bu_1_1, bu_2, bu_2_1 }];
         yield return ["TestEmployee1", new[] { rootBu, bu_1, bu_1_1 }];
         yield return ["TestEmployee2", new[] { rootBu, bu_2, bu_2_1 }];
-    }
-
-    [Fact]
-    public async Task InvokeExpandWithParents_ForRootBu_DataCorrected()
-    {
-		// Arrange
-		var cancellationToken = TestContext.Current.CancellationToken;
-		await using var scope = this.RootServiceProvider.CreateAsyncScope();
-
-        var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
-        var hierarchicalObjectExpanderFactory = scope.ServiceProvider.GetRequiredService<IHierarchicalObjectExpanderFactory>();
-        var hierarchicalObjectExpander = hierarchicalObjectExpanderFactory.Create<Guid>(typeof(BusinessUnit));
-
-        var rootBuId = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Parent == null).Select(bu => bu.Id)
-            .GenericSingleAsync(cancellationToken);
-
-        // Act
-        var dict = hierarchicalObjectExpander.ExpandWithParents([rootBuId], HierarchicalExpandType.Parents);
-
-        // Assert
-        dict.Count.Should().Be(1);
-        dict.Should().BeEquivalentTo(new Dictionary<Guid, Guid> { { rootBuId, Guid.Empty } });
     }
 }

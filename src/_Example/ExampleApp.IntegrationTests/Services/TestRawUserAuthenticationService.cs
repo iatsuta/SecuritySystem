@@ -1,6 +1,6 @@
 ﻿using SecuritySystem.Services;
 
-namespace ExampleApp.IntegrationTests;
+namespace ExampleApp.IntegrationTests.Services;
 
 public class TestRawUserAuthenticationService : IRawUserAuthenticationService
 {

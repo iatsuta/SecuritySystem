@@ -13,7 +13,7 @@ public class UserSourceBuilder<TUser> : IUserSourceBuilder<TUser>
 
 	public Expression<Func<TUser, TUser?>>? RunAsPath { get; private set; }
 
-	public Type MissedUserServiceType { get; private set; } = typeof(ErrorMissedUserService<>);
+	public Type MissedUserServiceType { get; private set; } = typeof(ErrorMissedUserService<TUser>);
 
 	public IUserSourceBuilder<TUser> SetName(Expression<Func<TUser, string>> namePath)
 	{
