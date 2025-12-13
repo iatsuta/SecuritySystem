@@ -55,8 +55,9 @@ public static class ServiceCollectionExtensions
                         .SetGenericRepository<EfGenericRepository>()
                         .SetRawUserAuthenticationService<RawUserAuthenticationService>()
 
-                        .AddUserSource<Employee>(usb => usb.SetRunAs(employee => employee.RunAs))
-                        .AddUserSource<AuthGeneral.Principal>(usb => usb.SetMissedService<CreateVirtualMissedUserService<AuthGeneral.Principal>>())
+                        .AddUserSource<Employee>()
+                        .AddUserSource<AuthGeneral.Principal>(usb =>
+                            usb.SetRunAs(employee => employee.RunAs).SetMissedService<CreateVirtualMissedUserService<AuthGeneral.Principal>>())
 
                         .AddSecurityContext<BusinessUnit>(
                             new Guid("{E4AE968E-7B6B-4236-B381-9886C8E0FA34}"),
