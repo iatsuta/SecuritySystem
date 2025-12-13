@@ -31,10 +31,10 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
             securityContextTypeIdentityInfo);
     });
 
-    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>()
+    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>(SecurityContextRestriction<TSecurityContext>? restriction)
         where TSecurityContext : class, ISecurityContext
     {
-        return this.lazyInnerService.Value.GetFilter<TSecurityContext>();
+        return this.lazyInnerService.Value.GetFilter(restriction);
     }
 }
 
@@ -48,7 +48,7 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction, TSecurit
 {
     private readonly ConcurrentDictionary<Type, LambdaExpression> cache = new();
 
-    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>()
+    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>(SecurityContextRestriction<TSecurityContext>? restriction)
         where TSecurityContext : class, ISecurityContext
     {
         return (Expression<Func<TPermissionRestriction, bool>>)cache.GetOrAdd(typeof(TSecurityContext), _ =>

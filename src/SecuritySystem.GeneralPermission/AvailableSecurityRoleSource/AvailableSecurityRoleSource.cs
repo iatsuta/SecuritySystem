@@ -17,7 +17,7 @@ public class GeneralAvailableSecurityRoleSource<TPermission, TSecurityRole, TSec
 	{
 		var dbRolesIdents = await availablePermissionSource
 			.GetAvailablePermissionsQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
-			.Select(permissionToSecurityRoleInfo.ToSecurityRole.Path.Select(securityRoleIdentity.Id.Path))
+			.Select(permissionToSecurityRoleInfo.SecurityRole.Path.Select(securityRoleIdentity.Id.Path))
 			.Distinct()
 			.GenericToListAsync(cancellationToken);
 

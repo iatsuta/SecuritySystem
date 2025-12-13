@@ -63,9 +63,11 @@ public class GeneralPermissionRestrictionSource<TPrincipal, TPermission, TSecuri
 
         return ExpressionEvaluateHelper.InlineEvaluate<Func<TPermission, IEnumerable<TSecurityContextIdent>>>(ee =>
         {
+            var restrictionFilter = permissionRestrictionFilterFactory.GetFilter<TSecurityContext>();
+
             return permission => restrictionQueryable
                 .Where(restriction => ee.Evaluate(bindingInfo.Permission.Path, restriction) == permission)
-                .Where(permissionRestrictionFilterFactory.GetFilter<TSecurityContext>())
+                .Where(restrictionFilter)
                 .Select(restriction => ee.Evaluate(convertExpr, ee.Evaluate(bindingInfo.SecurityContextObjectId.Path, restriction)));
         });
     }

@@ -2,13 +2,9 @@
 
 namespace SecuritySystem.GeneralPermission;
 
-public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-	PropertyAccessors<TPermission, TPrincipal> Principal,
-	PropertyAccessors<TPermission, TSecurityRole> SecurityRole,
-	PropertyAccessors<TPermissionRestriction, TPermission> Permission,
-	PropertyAccessors<TPermissionRestriction, TSecurityContextType> SecurityContextType,
-	PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> SecurityContextObjectId)
-	: GeneralPermissionBindingInfo<TPrincipal, TPermission>,
+public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
+
+	: GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole>,
 		IPermissionToPrincipalInfo<TPermission, TPrincipal>,
         IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>
 
@@ -19,7 +15,12 @@ public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRol
 	where TSecurityContextType : class
 	where TSecurityContextObjectIdent : notnull
 {
-    public override Type SecurityRoleType { get; } = typeof(TSecurityRole);
+    public required PropertyAccessors<TPermissionRestriction, TPermission> Permission { get; init; }
+
+    public required PropertyAccessors<TPermissionRestriction, TSecurityContextType> SecurityContextType { get; init; }
+
+    public required PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> SecurityContextObjectId { get; init; }
+
 
     public override Type PermissionRestrictionType { get; } = typeof(TPermissionRestriction);
 
@@ -28,8 +29,18 @@ public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRol
     public override Type SecurityContextObjectIdentType { get; } = typeof(TSecurityContextObjectIdent);
 }
 
+public abstract record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole> : GeneralPermissionBindingInfo<TPrincipal, TPermission>, IPermissionToSecurityRoleInfo<TPermission, TSecurityRole>
+{
+    public required PropertyAccessors<TPermission, TSecurityRole> SecurityRole { get; init; }
+
+    public override Type SecurityRoleType { get; } = typeof(TSecurityRole);
+}
+
 public abstract record GeneralPermissionBindingInfo<TPrincipal, TPermission> : GeneralPermissionBindingInfo
 {
+    public required PropertyAccessors<TPermission, TPrincipal> Principal { get; init; }
+
+
     public override Type PrincipalType { get; } = typeof(TPrincipal);
 
     public override Type PermissionType { get; } = typeof(TPermission);
