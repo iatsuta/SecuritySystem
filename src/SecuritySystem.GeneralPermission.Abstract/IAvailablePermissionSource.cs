@@ -2,5 +2,5 @@
 
 public interface IAvailablePermissionSource<out TPermission>
 {
-    IQueryable<TPermission> GetAvailablePermissionsQueryable(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+    IQueryable<TPermission> GetQueryable(DomainSecurityRule.RoleBaseSecurityRule securityRule);
 }

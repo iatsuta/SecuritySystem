@@ -31,17 +31,17 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
             securityContextTypeIdentityInfo);
     });
 
-    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>()
+    public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>()
         where TSecurityContext : class, ISecurityContext
     {
-        return this.lazyInnerService.Value.GetFilter<TSecurityContext>();
+        return this.lazyInnerService.Value.CreateFilter<TSecurityContext>();
     }
 }
 
 public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSecurityContextType, TSecurityContextTypeIdent>(
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentConverter,
-    IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType> permissionRestrictionToSecurityContextTypeInfo,
+    IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType> bindingInfo,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo)
     : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
 
@@ -49,7 +49,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSec
 {
     private readonly ConcurrentDictionary<Type, LambdaExpression> cache = new();
 
-    public Expression<Func<TPermissionRestriction, bool>> GetFilter<TSecurityContext>()
+    public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>()
         where TSecurityContext : class, ISecurityContext
     {
         return (Expression<Func<TPermissionRestriction, bool>>)cache.GetOrAdd(typeof(TSecurityContext), _ =>
@@ -59,7 +59,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSec
 
             var isSecurityContextTypeExpr = ExpressionHelper.GetEqualityWithExpr(securityContextTypeId);
 
-            return permissionRestrictionToSecurityContextTypeInfo.SecurityContextType.Path.Select(securityContextTypeIdentityInfo.Id.Path)
+            return bindingInfo.SecurityContextType.Path.Select(securityContextTypeIdentityInfo.Id.Path)
                 .Select(isSecurityContextTypeExpr);
         });
     }

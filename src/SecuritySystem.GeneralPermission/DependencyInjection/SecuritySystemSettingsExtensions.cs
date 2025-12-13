@@ -43,7 +43,9 @@ public static class SecuritySystemSettingsExtensions
                     .AddSingleton(typeof(IRawPermissionConverter<>), typeof(RawPermissionConverter<>))
                     .AddScoped(typeof(IPrincipalDomainService<>), typeof(PrincipalDomainService<>))
                     .AddSingleton(typeof(IPermissionSecurityRoleFilterFactory<>), typeof(PermissionSecurityRoleFilterFactory<>))
-                    .AddSingleton(typeof(IAvailablePermissionFilterFactory<>), typeof(AvailablePermissionFilterFactory<>)))
+                    .AddSingleton(typeof(IAvailablePermissionFilterFactory<>), typeof(AvailablePermissionFilterFactory<>))
+                    .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
+                    .AddScoped(typeof(IAvailablePermissionSource<>), typeof(AvailablePermissionSource<>))
                 );
         }
 
@@ -64,12 +66,14 @@ public static class SecuritySystemSettingsExtensions
         {
             return securitySystemSettings.AddGeneralPermission(
                 new GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-                    TSecurityContextObjectIdent>(
-                    principalPath.ToPropertyAccessors(),
-                    securityRolePath.ToPropertyAccessors(),
-                    permissionPath.ToPropertyAccessors(),
-                    securityContextTypePath.ToPropertyAccessors(),
-                    securityContextObjectIdPath.ToPropertyAccessors()),
+                    TSecurityContextObjectIdent>
+                {
+                    Principal = principalPath.ToPropertyAccessors(),
+                    SecurityRole = securityRolePath.ToPropertyAccessors(),
+                    Permission = permissionPath.ToPropertyAccessors(),
+                    SecurityContextType = securityContextTypePath.ToPropertyAccessors(),
+                    SecurityContextObjectId = securityContextObjectIdPath.ToPropertyAccessors()
+                },
                 setupAction);
         }
     }

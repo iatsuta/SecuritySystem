@@ -6,7 +6,7 @@ public record GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRol
 
 	: GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole>,
 		IPermissionToPrincipalInfo<TPermission, TPrincipal>,
-        IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>
+        IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
 
     where TPrincipal : class
 	where TPermission : class
@@ -68,4 +68,11 @@ public abstract record GeneralPermissionBindingInfo
 public interface IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>
 {
     PropertyAccessors<TPermissionRestriction, TSecurityContextType> SecurityContextType { get; }
+}
+
+public interface
+    IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> :
+    IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>
+{
+    PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> SecurityContextObjectId { get; }
 }

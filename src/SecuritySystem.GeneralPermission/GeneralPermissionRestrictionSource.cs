@@ -31,7 +31,7 @@ public class GeneralPermissionRestrictionSource<TPrincipal, TPermission, TSecuri
 
     public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr()
     {
-        var restrictionFilter = permissionRestrictionFilterFactory.GetFilter(this.restrictionFilterInfo);
+        var restrictionFilter = permissionRestrictionFilterFactory.CreateFilter(this.restrictionFilterInfo);
 
         var restrictionQueryable = queryableSource.GetQueryable<TPermissionRestriction>();
 

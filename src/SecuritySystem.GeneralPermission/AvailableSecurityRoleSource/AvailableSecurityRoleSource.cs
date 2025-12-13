@@ -16,7 +16,7 @@ public class GeneralAvailableSecurityRoleSource<TPermission, TSecurityRole, TSec
 	public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
 	{
 		var dbRolesIdents = await availablePermissionSource
-			.GetAvailablePermissionsQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
+			.GetQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
 			.Select(permissionToSecurityRoleInfo.SecurityRole.Path.Select(securityRoleIdentity.Id.Path))
 			.Distinct()
 			.GenericToListAsync(cancellationToken);

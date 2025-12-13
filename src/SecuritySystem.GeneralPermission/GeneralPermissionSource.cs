@@ -10,18 +10,18 @@ namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
-    IAvailablePermissionSource<TPermission, TSecurityContextObjectIdent> availablePermissionSource,
+    IAvailablePermissionSource<TPermission> availablePermissionSource,
     IRawPermissionConverter<TPermissionRestriction> rawPermissionConverter,
     IQueryableSource queryableSource,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
 
-	where TPrincipal : class
-	where TPermission : class
-	where TSecurityRole : class
-	where TPermissionRestriction : class
-	where TSecurityContextType : class
-	where TSecurityContextObjectIdent : notnull
+    where TPrincipal : class
+    where TPermission : class
+    where TSecurityRole : class
+    where TPermissionRestriction : class
+    where TSecurityContextType : class
+    where TSecurityContextObjectIdent : notnull
 {
     public bool HasAccess()
     {
@@ -31,7 +31,7 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPe
     public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
     {
         return availablePermissionSource
-            .GetAvailablePermissionsQueryable(securityRule)
+            .GetQueryable(securityRule)
             .GroupJoin(queryableSource.GetQueryable<TPermissionRestriction>(), v => v, bindingInfo.Permission.Path,
                 (_, restrictions) => new { restrictions })
             .ToList()
@@ -41,18 +41,13 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TSecurityRole, TPe
 
     public IQueryable<TPermission> GetPermissionQuery()
     {
-        return this.GetSecurityPermissions(availablePermissionSource.CreateFilter(securityRule: securityRule));
+        return availablePermissionSource.GetQueryable(securityRule);
     }
 
     public IEnumerable<string> GetAccessors(Expression<Func<TPermission, bool>> permissionFilter)
     {
-	    var availableFilter = availablePermissionSource.CreateFilter(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() });
+        var availableFilter = availablePermissionSource.GetQueryable(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() });
 
-	    return this.GetSecurityPermissions(availableFilter).Where(permissionFilter).Select(bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path));
-    }
-
-    private IQueryable<TPermission> GetSecurityPermissions(AvailablePermissionFilter<TSecurityContextObjectIdent> availablePermissionFilter)
-    {
-	    return queryableSource.GetQueryable<TPermission>().Where(availablePermissionSource.ToFilterExpression(availablePermissionFilter));
+        return availableFilter.Select(bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path));
     }
 }

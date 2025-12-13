@@ -68,7 +68,7 @@ public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
 
         foreach (var securityContextRestriction in securityRule.GetSafeSecurityContextRestrictions())
         {
-            yield return permissionFilterFactory.GetSecurityContextFilter(securityContextRestriction);
+            yield return permissionFilterFactory.CreateFilter(securityContextRestriction);
         }
     }
 }
