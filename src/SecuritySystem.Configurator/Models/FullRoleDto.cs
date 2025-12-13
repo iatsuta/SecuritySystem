@@ -1,8 +1,8 @@
 ﻿namespace SecuritySystem.Configurator.Models;
 
-public class FullRoleDto : EntityDto
+public record FullRoleDto : EntityDto
 {
-    public bool IsVirtual { get; set; }
+    public bool IsVirtual { get; init; }
 
-    public List<RoleContextDto> Contexts { get; set; }
+    public required IReadOnlyList<RoleContextDto> Contexts { get; init; }
 }

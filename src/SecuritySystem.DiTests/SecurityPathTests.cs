@@ -1,5 +1,5 @@
 ﻿using CommonFramework;
-
+using CommonFramework.GenericRepository;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

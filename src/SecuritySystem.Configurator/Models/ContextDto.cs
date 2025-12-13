@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.Configurator.Models;
 
-public class ContextDto : EntityDto
+public record ContextDto : EntityDto
 {
-    public List<RestrictionDto> Entities { get; set; }
+    public required List<RestrictionDto> Entities { get; init; }
 }

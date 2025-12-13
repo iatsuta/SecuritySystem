@@ -1,20 +1,20 @@
 ﻿namespace SecuritySystem.Configurator.Models;
 
-public class PermissionDto
+public record PermissionDto
 {
-    public Guid Id { get; set; }
+    public required string Id { get; init; }
 
-    public string Role { get; set; }
+    public required string Role { get; init; }
 
-    public Guid RoleId { get; set; }
+    public required string RoleId { get; init; }
 
-    public string Comment { get; set; }
+    public required string Comment { get; init; }
 
-    public List<ContextDto> Contexts { get; set; }
+    public required IReadOnlyList<ContextDto> Contexts { get; init; }
 
-    public DateTime StartDate { get; set; }
+    public required DateTime StartDate { get; init; }
 
-    public DateTime? EndDate { get; set; }
+    public required DateTime? EndDate { get; init; }
 
-    public bool IsVirtual { get; set; }
+    public required bool IsVirtual { get; init; }
 }

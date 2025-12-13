@@ -1,10 +1,8 @@
 ﻿using CommonFramework;
 using CommonFramework.DictionaryCache;
-
+using CommonFramework.IdentitySource;
+using HierarchicalExpand;
 using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.HierarchicalExpand;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
@@ -38,9 +36,9 @@ public class SecurityContextStorage : ISecurityContextStorage
             .Invoke<ITypedSecurityContextStorage>(this);
     }
 
-    private ITypedSecurityContextStorage<TIdent> GetTypedInternal<TSecurityContext, TIdent>()
+    private ITypedSecurityContextStorage<TSecurityContextIdent> GetTypedInternal<TSecurityContext, TSecurityContextIdent>()
         where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull
+        where TSecurityContextIdent : notnull
     {
         var hierarchicalInfo = this.serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(typeof(TSecurityContext)));
 
@@ -48,11 +46,11 @@ public class SecurityContextStorage : ISecurityContextStorage
 
             hierarchicalInfo == null
 
-                ? ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(PlainTypedSecurityContextStorage<TSecurityContext, TIdent>))
+                ? ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(PlainTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>))
 
-                : ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TIdent>), hierarchicalInfo);
+                : ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>), hierarchicalInfo);
 
-        var typedSecurityContextStorage = (ITypedSecurityContextStorage<TIdent>)untypedSecurityContextStorageType;
+        var typedSecurityContextStorage = (ITypedSecurityContextStorage<TSecurityContextIdent>)untypedSecurityContextStorageType;
 
         return typedSecurityContextStorage.WithCache();
     }

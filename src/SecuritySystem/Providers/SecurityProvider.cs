@@ -2,6 +2,7 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+
 using SecuritySystem.SecurityAccessor;
 
 namespace SecuritySystem.Providers
@@ -24,7 +25,7 @@ namespace SecuritySystem.Providers
 
 
         public abstract Expression<Func<TDomainObject, bool>> SecurityFilter { get; }
-        
+
         public virtual IQueryable<TDomainObject> InjectFilter(IQueryable<TDomainObject> queryable) => queryable.Where(this.SecurityFilter);
 
         public virtual bool HasAccess(TDomainObject domainObject) => this.lazyHasAccessFunc.Value(domainObject);

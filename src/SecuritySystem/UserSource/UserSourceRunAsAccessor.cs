@@ -1,14 +1,12 @@
-﻿using CommonFramework;
+﻿using System.Linq.Expressions;
+using CommonFramework;
 
 namespace SecuritySystem.UserSource;
 
-public class UserSourceRunAsAccessor<TUser>(UserSourceRunAsAccessorData<TUser> data) : IUserSourceRunAsAccessor<TUser>
+public record UserSourceRunAsInfo<TUser>(PropertyAccessors<TUser, TUser?> RunAs)
 {
-    private readonly Func<TUser, TUser?> getRunAsFunc = data.Path.Compile();
-
-    private readonly Action<TUser, TUser?> setRunAsAction = data.Path.ToSetLambdaExpression().Compile();
-
-    public TUser? GetRunAs(TUser user) => this.getRunAsFunc(user);
-
-    public void SetRunAs(TUser user, TUser? targetUser) => this.setRunAsAction(user, targetUser);
+	public UserSourceRunAsInfo(Expression<Func<TUser, TUser?>> runAsPath)
+		: this(new PropertyAccessors<TUser, TUser?>(runAsPath))
+	{
+	}
 }

@@ -1,19 +1,20 @@
 ﻿using System.Linq.Expressions;
 
-using Microsoft.Extensions.DependencyInjection;
+using HierarchicalExpand;
 
-using SecuritySystem.HierarchicalExpand;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
 
 public interface ISecurityContextInfoBuilder<TSecurityContext>
+	where TSecurityContext : class, ISecurityContext
 {
     ISecurityContextInfoBuilder<TSecurityContext> SetName(string name);
 
     ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> displayFunc);
 
-    ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
-        where TIdent : struct;
+    ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TSecurityContextIdent>(Expression<Func<TSecurityContext, TSecurityContextIdent>> identityPath)
+        where TSecurityContextIdent : struct;
 
     ISecurityContextInfoBuilder<TSecurityContext> SetHierarchicalInfo(
         HierarchicalInfo<TSecurityContext> hierarchicalInfo,

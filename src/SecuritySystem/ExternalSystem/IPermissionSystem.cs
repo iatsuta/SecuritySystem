@@ -1,8 +1,4 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
-
-namespace SecuritySystem.ExternalSystem;
+﻿namespace SecuritySystem.ExternalSystem;
 
 public interface IPermissionSystem
 {
@@ -15,20 +11,9 @@ public interface IPermissionSystem
 
 public interface IPermissionSystem<TPermission> : IPermissionSystem
 {
-    Expression<Func<TPermission, IEnumerable<TIdent>>> GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(
-        SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
+    IPermissionRestrictionSource<TPermission, TSecurityContextIdent> GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull;
-
-    Expression<Func<TPermission, bool>> GetGrandAccessExpr<TSecurityContext>()
-        where TSecurityContext : class, ISecurityContext;
-
-    Expression<Func<TPermission, bool>> GetContainsIdentsExpr<TSecurityContext, TIdent>(IEnumerable<TIdent> idents,
-        SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
-        where TSecurityContext : class, ISecurityContext
-        where TIdent : notnull =>
-        this.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(restrictionFilterInfo)
-            .Select(restrictionIdents => restrictionIdents.Any(restrictionIdent => idents.Contains(restrictionIdent)));
+        where TSecurityContextIdent : notnull;
 
     new IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule);
 }

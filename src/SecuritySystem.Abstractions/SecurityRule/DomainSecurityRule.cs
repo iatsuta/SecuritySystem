@@ -1,5 +1,5 @@
 ﻿using CommonFramework;
-using SecuritySystem.HierarchicalExpand;
+using HierarchicalExpand;
 using SecuritySystem.Providers;
 
 // ReSharper disable once CheckNamespace

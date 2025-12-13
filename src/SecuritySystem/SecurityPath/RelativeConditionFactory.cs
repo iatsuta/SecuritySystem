@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
-
-using SecuritySystem.RelativeDomainPathInfo;
+using CommonFramework.RelativePath;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;

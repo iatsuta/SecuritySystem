@@ -1,4 +1,5 @@
-﻿using SecuritySystem.ExternalSystem;
+﻿using SecuritySystem.AccessDenied;
+using SecuritySystem.ExternalSystem;
 using SecuritySystem.SecurityRuleInfo;
 
 // ReSharper disable once CheckNamespace

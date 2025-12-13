@@ -2,33 +2,36 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource;
+using HierarchicalExpand;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo)
+    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     : SecurityFilterBuilder<TPermission, TDomainObject>
     where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+    where TSecurityContextIdent : notnull
 {
-    public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(
-        HierarchicalExpandType expandType)
+    private readonly IPermissionRestrictionSource<TPermission, TSecurityContextIdent> permissionRestrictionSource =
+        permissionSystem.GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(securityContextRestriction?.Filter);
+
+    public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(HierarchicalExpandType expandType)
     {
         var allowGrandAccess = securityContextRestriction?.Required != true;
 
         var grandAccessExpr = allowGrandAccess
-            ? permissionSystem.GetGrandAccessExpr<TSecurityContext>()
+            ? permissionRestrictionSource.GetGrandAccessExpr()
             : _ => false;
 
-        var getIdents = permissionSystem.GetPermissionRestrictionsExpr<TSecurityContext, TIdent>(securityContextRestriction?.Filter);
+        var getIdents = permissionRestrictionSource.GetIdentsExpr();
 
-        var expander = hierarchicalObjectExpanderFactory.Create<TIdent>(typeof(TSecurityContext));
+        var expander = hierarchicalObjectExpanderFactory.Create<TSecurityContextIdent>(typeof(TSecurityContext));
 
         var expandExpression = expander.GetExpandExpression(expandType);
 
@@ -48,7 +51,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                     return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
                                                          || ee.Evaluate(securityPath.SecurityPathQ, domainObject)
-                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
                 else
                 {
@@ -57,7 +60,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                                                                   || !ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any()
 
                                                                   || ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any(item =>
-                                                                      ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                                      ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
             }
             else
@@ -67,7 +70,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                     return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
 
                                                          || ee.Evaluate(securityPath.Expression, domainObject)
-                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                             .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
                 else
                 {
@@ -76,7 +79,7 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
                                                          || !ee.Evaluate(securityPath.Expression, domainObject).Any()
 
                                                          || ee.Evaluate(securityPath.Expression, domainObject).Any(item =>
-                                                             ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.IdPath, item)));
+                                                             ee.Evaluate(getIdents, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
             }
         });

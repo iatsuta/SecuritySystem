@@ -1,7 +1,7 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain;
-
 using GenericQueryable;
+
 using Microsoft.AspNetCore.Mvc;
 
 using SecuritySystem;
@@ -12,7 +12,7 @@ namespace ExampleApp.Api.Controllers;
 [Route("api/[controller]/[action]")]
 [ApiController]
 public class TestController(
-    ICurrentUserSource<Employee> currentUserSource,
+    ICurrentUserSource<Employee> currentEmployeeSource,
     IRepositoryFactory<TestObject> testObjectRepositoryFactory,
     IRepositoryFactory<BusinessUnit> buRepositoryFactory,
     IRepositoryFactory<Employee> employeeRepositoryFactory) : ControllerBase
@@ -30,7 +30,7 @@ public class TestController(
     [HttpGet]
     public async Task<string> GetCurrentUserLogin(CancellationToken cancellationToken = default)
     {
-        return currentUserSource.CurrentUser.Login;
+        return currentEmployeeSource.CurrentUser.Login;
     }
 
     [HttpGet]

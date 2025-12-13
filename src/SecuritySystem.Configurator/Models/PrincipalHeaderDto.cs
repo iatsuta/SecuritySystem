@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.Configurator.Models;
 
-public class PrincipalHeaderDto : EntityDto
+public record PrincipalHeaderDto : EntityDto
 {
-    public bool IsVirtual { get; set; }
+    public bool IsVirtual { get; init; }
 }

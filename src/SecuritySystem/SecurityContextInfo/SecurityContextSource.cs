@@ -1,4 +1,4 @@
-﻿using SecuritySystem.Services;
+﻿using CommonFramework.GenericRepository;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;

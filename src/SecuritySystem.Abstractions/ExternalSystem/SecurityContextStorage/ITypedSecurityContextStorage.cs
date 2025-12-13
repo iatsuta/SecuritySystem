@@ -7,14 +7,14 @@ public interface ITypedSecurityContextStorage
     IEnumerable<SecurityContextData<object>> GetSecurityContextsByIdents(Array securityContextIdents);
 }
 
-public interface ITypedSecurityContextStorage<TIdent> : ITypedSecurityContextStorage
-    where TIdent : notnull
+public interface ITypedSecurityContextStorage<TSecurityContextIdent> : ITypedSecurityContextStorage
+    where TSecurityContextIdent : notnull
 {
-    new IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts();
+    new IEnumerable<SecurityContextData<TSecurityContextIdent>> GetSecurityContexts();
 
-    IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsByIdents(IEnumerable<TIdent> securityContextIdents);
+    IEnumerable<SecurityContextData<TSecurityContextIdent>> GetSecurityContextsByIdents(IEnumerable<TSecurityContextIdent> securityContextIdents);
 
-    IEnumerable<SecurityContextData<TIdent>> GetSecurityContextsWithMasterExpand(TIdent startSecurityEntityId);
+    IEnumerable<SecurityContextData<TSecurityContextIdent>> GetSecurityContextsWithMasterExpand(TSecurityContextIdent startSecurityEntityId);
 
-    bool IsExists (TIdent securityContextId);
+    bool IsExists (TSecurityContextIdent securityContextId);
 }

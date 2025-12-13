@@ -8,7 +8,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class CreatePrincipalHandler(
-    [CurrentUserWithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs]ISecuritySystem securitySystem,
     IPrincipalManagementService principalManagementService,
     IConfiguratorIntegrationEvents? configuratorIntegrationEvents = null)
     : BaseWriteHandler, ICreatePrincipalHandler

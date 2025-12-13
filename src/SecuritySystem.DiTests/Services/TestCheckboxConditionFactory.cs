@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.RelativePath;
 
 using SecuritySystem.DiTests.DomainObjects;
-using SecuritySystem.RelativeDomainPathInfo;
 
 namespace SecuritySystem.DiTests.Services;
 
