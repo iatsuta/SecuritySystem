@@ -43,7 +43,8 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 		    entity.HasIndex(e => e.Login).IsUnique();
 
 		    entity.Property(e => e.Login).IsRequired().HasMaxLength(DefaultMaxLength);
-	    }
+            entity.HasOne(e => e.RunAs).WithMany().HasForeignKey($"{nameof(Employee.RunAs)}{DefaultIdPostfix}").IsRequired(false);
+        }
 
 	    {
 		    var entity = modelBuilder.Entity<Location>().ToTable(nameof(Location), DefaultSchema);
@@ -151,7 +152,6 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
             entity.HasIndex(e => e.Name).IsUnique();
 
             entity.Property(e => e.Name).IsRequired().HasMaxLength(DefaultMaxLength);
-            entity.HasOne(e => e.RunAs).WithMany().HasForeignKey($"{nameof(Principal.RunAs)}{DefaultIdPostfix}").IsRequired(false);
         }
     }
 

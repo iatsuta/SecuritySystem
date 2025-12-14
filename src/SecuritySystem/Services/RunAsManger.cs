@@ -15,15 +15,18 @@ public class RunAsManager<TUser>(
 	UserSourceRunAsInfo<TUser> userSourceRunAsInfo,
 	IGenericRepository genericRepository,
 	IUserCredentialMatcher<TUser> userCredentialMatcher,
-	IDefaultUserConverter<TUser> toDefaultUserConverter)
+	IDefaultUserConverter<TUser> toDefaultUserConverter,
+    ErrorMissedUserService<TUser> missedUserService)
 	: IRunAsManager
 	where TUser : class
 {
-	private readonly Lazy<TUser> lazyNativeCurrentUser = new(() => userSource.GetUser(rawUserAuthenticationService.GetUserName()));
+	private readonly Lazy<TUser?> lazyNativeTryCurrentUser = new(() => userSource.TryGetUser(rawUserAuthenticationService.GetUserName()));
 
-	private TUser NativeCurrentUser => this.lazyNativeCurrentUser.Value;
+	private TUser? NativeTryCurrentUser => this.lazyNativeTryCurrentUser.Value;
 
-	private TUser? NativeRunAsUser => userSourceRunAsInfo.RunAs.Getter(this.NativeCurrentUser);
+    private TUser NativeCurrentUser => this.NativeTryCurrentUser ?? missedUserService.GetUser(rawUserAuthenticationService.GetUserName());
+
+    private TUser? NativeRunAsUser => this.NativeTryCurrentUser == null ? null : userSourceRunAsInfo.RunAs.Getter(this.NativeTryCurrentUser);
 
 	private UserCredential PureCredential { get; } = rawUserAuthenticationService.GetUserName();
 

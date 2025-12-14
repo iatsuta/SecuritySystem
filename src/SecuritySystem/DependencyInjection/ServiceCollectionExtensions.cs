@@ -65,6 +65,8 @@ public static class ServiceCollectionExtensions
         {
             return services
 
+                .AddSingleton(typeof(ErrorMissedUserService<>))
+
                 .AddSingleton<IFormatProviderSource>(new FormatProviderSource(CultureInfo.CurrentCulture))
                 .AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
                 .AddSingleton<IDomainObjectIdentsParser, DomainObjectIdentsParser>()
