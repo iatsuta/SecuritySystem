@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
+
 using CommonFramework.IdentitySource;
+
 using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.GeneralPermission;
