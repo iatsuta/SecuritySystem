@@ -1,31 +1,51 @@
 ﻿using CommonFramework;
+using CommonFramework.VisualIdentitySource;
+
+using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class DisplayPermissionService<TPermission, TPermissionRestriction> : IDisplayPermissionService<TPermission, TPermissionRestriction>
+public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
+    IDomainObjectDisplayService domainObjectDisplayService,
+    ISecurityContextInfoSource securityContextInfoSource,
+    ISecurityContextStorage securityContextStorage,
+    VisualIdentityInfo<TSecurityContextType> securityContextTypeVisualIdentityInfo)
+    : IDisplayPermissionService<TPermission, TPermissionRestriction>
+    where TSecurityRole : class
+    where TSecurityContextType : class
+    where TSecurityContextObjectIdent : notnull
 {
-	public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData)
-	{
-		return this.GetPermissionVisualParts(permissionData).Join(" | ");
-	}
+    public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData)
+    {
+        return this.GetPermissionVisualParts(permissionData).Join(" | ");
+    }
 
-	private IEnumerable<string> GetPermissionVisualParts(PermissionData<TPermission, TPermissionRestriction> permissionData)
-	{
-		throw new NotImplementedException();
-		//yield return $"Role: {permission.Role}";
+    private IEnumerable<string> GetPermissionVisualParts(PermissionData<TPermission, TPermissionRestriction> permissionData)
+    {
+        var permission = permissionData.Permission;
 
-		//yield return $"Period: {permission.Period}";
+        yield return $"Role: {domainObjectDisplayService.ToString(bindingInfo.SecurityRole.Getter(permissionData.Permission))}";
 
-		//foreach (var securityContextTypeGroup in permission.Restrictions.GroupBy(fi => fi.SecurityContextType, fi => fi.SecurityContextId))
-		//{
-		//	var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeGroup.Key.Id);
+        if (bindingInfo.PermissionPeriod != null)
+        {
+            yield return $"Period: {bindingInfo.PermissionPeriod.Getter(permission)}";
+        }
 
-		//	var securityEntities = securityEntitySource
-		//		.GetTyped(securityContextInfo.Type)
-		//		.Pipe(v => (ITypedSecurityContextStorage<TSecurityContextObjectIdent>)v)
-		//		.GetSecurityContextsByIdents(securityContextTypeGroup);
+        foreach (var securityContextTypeGroup in permissionData.Restrictions.GroupBy(
+                     bindingInfo.SecurityContextType.Getter,
+                     bindingInfo.SecurityContextObjectId.Getter))
+        {
+            var securityContextTypeName = securityContextTypeVisualIdentityInfo.Name.Getter(securityContextTypeGroup.Key);
 
-		//	yield return $"{securityContextTypeGroup.Key.Name.ToPluralize()}: {securityEntities.Select(v => v.Name).Join(", ")}";
-		//}
-	}
+            var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeName);
+
+            var securityEntities = securityContextStorage
+                .GetTyped(securityContextInfo.Type)
+                .GetSecurityContextsByIdents(securityContextTypeGroup.ToArray());
+
+            yield return $"{securityContextTypeName}: {securityEntities.Select(v => v.Name).Join(", ")}";
+        }
+    }
 }

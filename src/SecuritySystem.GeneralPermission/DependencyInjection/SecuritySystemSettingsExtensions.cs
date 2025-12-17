@@ -1,10 +1,14 @@
-﻿using CommonFramework;
+﻿using System.Linq.Expressions;
+
+using CommonFramework;
 using CommonFramework.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.DependencyInjection;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.GeneralPermission.AvailableSecurity;
 using SecuritySystem.GeneralPermission.Initialize;
-using System.Linq.Expressions;
 using SecuritySystem.GeneralPermission.Validation;
 using SecuritySystem.Services;
 
@@ -68,7 +72,7 @@ public static class SecuritySystemSettingsExtensions
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
-                    .AddKeyedScoped<ISecurityValidator<TPrincipal>, PrincipalGeneralValidator<TPrincipal>>(PrincipalGeneralValidator<TPrincipal>.Key)
+                    .AddKeyedScoped<ISecurityValidator<PrincipalData>, PrincipalRootValidator>(PrincipalRootValidator.Key)
 
                     .AddSingleton<InitializerSettings>()
                 );

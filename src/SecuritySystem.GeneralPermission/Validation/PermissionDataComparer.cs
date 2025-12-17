@@ -1,5 +1,7 @@
 ﻿using CommonFramework;
 
+using SecuritySystem.ExternalSystem.Management;
+
 namespace SecuritySystem.GeneralPermission.Validation;
 
 public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(

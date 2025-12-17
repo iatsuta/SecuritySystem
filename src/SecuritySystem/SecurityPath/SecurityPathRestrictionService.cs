@@ -14,13 +14,9 @@ public class SecurityPathRestrictionService(IServiceProvider serviceProvider)
         SecurityPath<TDomainObject> securityPath,
         SecurityPathRestriction restriction)
     {
-        var visitedSecurityPath = this.VisitSecurityContexts(securityPath, restriction);
-
-        var addConditionFactoryResult = restriction.ConditionFactoryTypes.Aggregate(visitedSecurityPath, this.TryAddConditionFactory);
-
-        var addRelativeConditionResult = restriction.RelativeConditions.Aggregate(addConditionFactoryResult, this.TryAddRelativeCondition);
-
-        return addRelativeConditionResult;
+        return this.VisitSecurityContexts(securityPath, restriction)
+            .Pipe(v => restriction.ConditionFactoryTypes.Aggregate(v, this.TryAddConditionFactory))
+            .Pipe(v => restriction.RelativeConditions.Aggregate(v, this.TryAddRelativeCondition));
     }
 
     private SecurityPath<TDomainObject> VisitSecurityContexts<TDomainObject>(
@@ -69,9 +65,9 @@ public class SecurityPathRestrictionService(IServiceProvider serviceProvider)
 
         var untypedConditionFactory = ActivatorUtilities.CreateInstance(serviceProvider, factoryType, conditionInfo);
 
-        var conditionFactory = (IFactory<Expression<Func<TDomainObject, bool>>>?)untypedConditionFactory;
+        var conditionFactory = (IFactory<Expression<Func<TDomainObject, bool>>?>)untypedConditionFactory;
 
-        var condition = conditionFactory?.Create();
+        var condition = conditionFactory.Create();
 
         if (condition != null)
         {
@@ -108,7 +104,7 @@ public class SecurityPathRestrictionService(IServiceProvider serviceProvider)
                     SecurityPath<TDomainObject>>(
                     this.VisitNestedSecurityContexts);
 
-            var args = pathType.GetGenericArguments().ToArray();
+            var args = pathType.GetGenericArguments();
 
             var method = func.Method.GetGenericMethodDefinition().MakeGenericMethod(args);
 

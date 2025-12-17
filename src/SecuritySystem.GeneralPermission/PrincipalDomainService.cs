@@ -6,7 +6,7 @@ using CommonFramework.VisualIdentitySource;
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.GeneralPermission.Validation;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
@@ -25,7 +25,7 @@ public class PrincipalDomainService<TPrincipal>(
 
         var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
 
-        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, identityInfo.IdentityType);
+        var innerServiceType = typeof(PrincipalDomainService<,,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, bindingInfo.PermissionRestrictionType, identityInfo.IdentityType);
 
         return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
     });
@@ -35,20 +35,17 @@ public class PrincipalDomainService<TPrincipal>(
     public Task<TPrincipal> GetOrCreateAsync(string name, CancellationToken cancellationToken) =>
         this.InnerService.GetOrCreateAsync(name, cancellationToken);
 
-    public Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken) =>
+    public Task SaveAsync(PrincipalData<TPrincipal> principal, CancellationToken cancellationToken) =>
         this.InnerService.SaveAsync(principal, cancellationToken);
 
     public Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken) =>
         this.InnerService.RemoveAsync(principal, force, cancellationToken);
-
-    public Task ValidateAsync(TPrincipal principal, CancellationToken cancellationToken) =>
-        this.InnerService.ValidateAsync(principal, cancellationToken);
 }
 
-public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
+public class PrincipalDomainService<TPrincipal, TPermission, TPermissionRestriction, TPrincipalIdent>(
 	IQueryableSource queryableSource,
 	IGenericRepository genericRepository,
-	[FromKeyedServices(PrincipalGeneralValidator<TPrincipal>.Key)] ISecurityValidator<TPrincipal> principalGeneralValidator,
+	[FromKeyedServices(PrincipalRootValidator.Key)] ISecurityValidator<PrincipalData> principalRootValidator,
 	IEnumerable<IUserSource> userSources,
 	IPermissionToPrincipalInfo<TPermission, TPrincipal> permissionToPrincipalInfo,
 	ISecurityIdentityConverter<TPrincipalIdent> identityConverter,
@@ -57,6 +54,7 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 	where TPrincipal : class, new()
 	where TPrincipalIdent : notnull
 	where TPermission : class
+    where TPermissionRestriction : class
 {
 	public async Task<TPrincipal> GetOrCreateAsync(string name, CancellationToken cancellationToken)
 	{
@@ -102,11 +100,23 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 		return identRequest.SingleOrDefault();
 	}
 
-	public async Task SaveAsync(TPrincipal principal, CancellationToken cancellationToken)
-	{
-		await this.ValidateAsync(principal, cancellationToken);
+	public async Task SaveAsync(PrincipalData<TPrincipal> basePrincipalData, CancellationToken cancellationToken)
+    {
+        var principalData = (PrincipalData<TPrincipal, TPermission, TPermissionRestriction>)basePrincipalData;
 
-		await genericRepository.SaveAsync(principal, cancellationToken);
+        await principalRootValidator.ValidateAsync(principalData, cancellationToken);
+
+        await genericRepository.SaveAsync(principalData.Principal, cancellationToken);
+
+        foreach (var permissionData in principalData.PermissionDataList)
+        {
+            await genericRepository.SaveAsync(permissionData.Permission, cancellationToken);
+
+            foreach (var permissionRestriction in permissionData.Restrictions)
+            {
+                await genericRepository.SaveAsync(permissionRestriction, cancellationToken);
+            }
+        }
 	}
 
 	public async Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken)
@@ -118,10 +128,5 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 		}
 
 		await genericRepository.RemoveAsync(principal, cancellationToken);
-	}
-
-	public async Task ValidateAsync(TPrincipal principal, CancellationToken cancellationToken)
-	{
-		await principalGeneralValidator.ValidateAsync(principal, cancellationToken);
 	}
 }

@@ -21,22 +21,22 @@ public class FakePrincipalManagementService : IPrincipalManagementService
         throw new NotImplementedException();
     }
 
-    public Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
+    public Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public Task<object> UpdatePrincipalNameAsync(UserCredential userCredential, string principalName, CancellationToken cancellationToken)
+    public Task<PrincipalData> UpdatePrincipalNameAsync(UserCredential userCredential, string principalName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken)
+    public Task<PrincipalData> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MergeResult<object, object>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken)
+    public Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
