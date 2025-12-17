@@ -26,7 +26,6 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
         this.identityDict = this.typeDict.Values.ToDictionary(v => v.Identity);
         this.nameDict = this.typeDict.Values.ToDictionary(v => v.Name);
 
-
         this.rootIdentityConverter = new RootSecurityIdentityConverter(serviceProvider, this.SecurityContextInfoList.Select(sr => sr.Identity.IdentType).Distinct());
     }
 
