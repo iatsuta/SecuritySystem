@@ -19,7 +19,7 @@ public class SecurityIdentityFilterFactory<TDomainObject>(IServiceProvider servi
 		return (ISecurityIdentityFilterFactory<TDomainObject>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo);
 	});
 
-	public Expression<Func<TDomainObject, bool>> CreateFilter(TypedSecurityIdentity securityIdentity) =>
+	public Expression<Func<TDomainObject, bool>> CreateFilter(SecurityIdentity securityIdentity) =>
 		this.lazyInnerService.Value.CreateFilter(securityIdentity);
 }
 
@@ -29,7 +29,7 @@ public class SecurityIdentityFilterFactory<TDomainObject, TIdent>(
 	where TDomainObject : class
 	where TIdent : notnull
 {
-	public Expression<Func<TDomainObject, bool>> CreateFilter(TypedSecurityIdentity securityIdentity)
+	public Expression<Func<TDomainObject, bool>> CreateFilter(SecurityIdentity securityIdentity)
 	{
 		return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(securityIdentityConverter.Convert(securityIdentity).Id));
 	}

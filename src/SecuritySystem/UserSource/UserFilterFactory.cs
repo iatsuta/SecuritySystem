@@ -53,7 +53,7 @@ public class UserFilterFactory<TUser, TIdent>(
 			{
 				var convertedIdentity = identityConverter.TryConvert(identity);
 
-				if (convertedIdentity == null)
+				if (convertedIdentity is null)
 				{
 					return _ => false;
 				}

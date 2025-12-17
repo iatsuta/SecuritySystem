@@ -2,9 +2,14 @@
 
 public abstract record SecurityIdentity
 {
+    //private object? compareKey;
+
 	public abstract bool IsDefault { get; }
 
     public abstract object GetId();
+
+    //public object GetCompareKey() => this.compareKey ??= this.IsDefault ? new object() : this.GetId();
+
 
     public static implicit operator SecurityIdentity(Guid id)
     {
