@@ -1,11 +1,14 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain.Auth.General;
 using ExampleApp.IntegrationTests.Services;
+
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.GeneralPermission;
+using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
 namespace ExampleApp.IntegrationTests;
@@ -46,11 +49,17 @@ public class GeneralPermissionTests : TestBase
 
         var principalDomainService = serviceProvider.GetRequiredService<IPrincipalDomainService<Principal>>();
 
+        var principalRootValidator =
+            serviceProvider.GetRequiredService<ISecurityValidator<PrincipalData<Principal, Permission, PermissionRestriction>>>();
+
         var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
 
         var permission = new Permission { Principal = principal, SecurityRole = dbSecurityRole };
 
         await permissionRepository.SaveAsync(permission, cancellationToken);
+
+        await principalRootValidator.ValidateAsync(new PrincipalData<Principal, Permission, PermissionRestriction>(principal,
+            [new PermissionData<Permission, PermissionRestriction>(permission, [])]), cancellationToken);
 
         return principal.Id;
     }

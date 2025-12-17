@@ -218,7 +218,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         TypedPermission typedPermission, CancellationToken cancellationToken)
     {
         var dbSecurityRoleId = bindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
-        var dbSecurityRole = securityRoleSource.GetSecurityRole(new TypedSecurityIdentity<TSecurityRoleIdent>(dbSecurityRoleId));
+        var dbSecurityRole = securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(dbSecurityRoleId));
 
         if (dbSecurityRole != typedPermission.SecurityRole)
         {
@@ -257,7 +257,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
                 var newPermissionRestriction = new TPermissionRestriction();
 
                 var dbSecurityContextType =
-                    await securityContextTypeRepository.GetObjectAsync(new TypedSecurityIdentity<TSecurityContextTypeIdent>(restriction.Key), cancellationToken);
+                    await securityContextTypeRepository.GetObjectAsync(TypedSecurityIdentity.Create(restriction.Key), cancellationToken);
 
                 bindingInfo.SecurityContextObjectId.Setter(newPermissionRestriction, restriction.securityContextId);
                 bindingInfo.SecurityContextType.Setter(newPermissionRestriction, dbSecurityContextType);

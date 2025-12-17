@@ -41,6 +41,6 @@ public class GeneralAvailableSecurityRoleSource<TPrincipal, TPermission, TSecuri
             .Distinct()
             .GenericToListAsync(cancellationToken);
 
-        return dbRolesIdents.Select(ident => securityRoleSource.GetSecurityRole(new TypedSecurityIdentity<TSecurityRoleIdent>(ident)));
+        return dbRolesIdents.Select(ident => securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(ident)));
     }
 }

@@ -40,9 +40,9 @@ public class DefaultUserConverter<TUser, TIdent>(
 	where TIdent : notnull
 {
 	private readonly Tuple<Expression<Func<TUser, User>>, Func<TUser, User>> convertData = FuncHelper.Create(() =>
-	{
-		var convertExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TUser, User>>(ee =>
-			user => new User(ee.Evaluate(visualIdentityInfo.Name.Path, user), new TypedSecurityIdentity<TIdent>(ee.Evaluate(identityInfo.Id.Path, user))));
+    {
+        var convertExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TUser, User>>(ee =>
+            user => new User(ee.Evaluate(visualIdentityInfo.Name.Path, user), TypedSecurityIdentity.Create(ee.Evaluate(identityInfo.Id.Path, user))));
 
 		return new Tuple<Expression<Func<TUser, User>>, Func<TUser, User>>(convertExpr, convertExpr.Compile());
 	}).Invoke();

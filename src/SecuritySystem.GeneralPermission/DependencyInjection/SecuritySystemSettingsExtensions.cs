@@ -72,7 +72,7 @@ public static class SecuritySystemSettingsExtensions
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
-                    .AddKeyedScoped<ISecurityValidator<PrincipalData>, PrincipalRootValidator>(PrincipalRootValidator.Key)
+                    .AddScoped<ISecurityValidator<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>>, PrincipalRootValidator<TPrincipal, TPermission, TPermissionRestriction>>()
 
                     .AddSingleton<InitializerSettings>()
                 );

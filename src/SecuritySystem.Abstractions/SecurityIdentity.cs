@@ -35,12 +35,12 @@ public abstract record TypedSecurityIdentity : SecurityIdentity
 
 	public static implicit operator TypedSecurityIdentity(Guid id)
 	{
-		return new TypedSecurityIdentity<Guid>(id);
+		return Create(id);
 	}
 
 	public static implicit operator TypedSecurityIdentity(int id)
 	{
-		return new TypedSecurityIdentity<int>(id);
+		return Create(id);
 	}
 
     public static TypedSecurityIdentity<TIdent> Create<TIdent>(TIdent ident)

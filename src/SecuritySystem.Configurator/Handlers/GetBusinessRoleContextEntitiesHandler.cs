@@ -18,8 +18,8 @@ public class GetBusinessRoleContextEntitiesHandler(
 	{
 		if (!securitySystem.IsSecurityAdministrator()) return new List<EntityDto>();
 
-		var securityContextTypeName = (string)context.Request.RouteValues["name"]!;
-		var securityContextType = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeName).Type;
+        var securityContextTypeId = (string)context.Request.RouteValues["id"]!;
+        var securityContextType = securityContextInfoSource.GetSecurityContextInfo(new UntypedSecurityIdentity(securityContextTypeId)).Type;
 
 		var searchToken = context.Request.Query["searchToken"];
 
