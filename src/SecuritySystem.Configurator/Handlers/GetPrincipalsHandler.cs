@@ -20,7 +20,7 @@ public class GetPrincipalsHandler([WithoutRunAs] ISecuritySystem securitySystem,
 		var principals = await principalSourceService.GetPrincipalsAsync(nameFilter, 70, cancellationToken);
 
 		return await principals
-			.Select(x => new PrincipalHeaderDto { Id = x.Id, Name = x.Name, IsVirtual = x.IsVirtual })
+			.Select(x => new PrincipalHeaderDto { Id = x.Identity.GetId().ToString()!, Name = x.Name, IsVirtual = x.IsVirtual })
 			.OrderBy(x => x.Name)
 			.ToAsyncEnumerable()
 			.ToListAsync(cancellationToken);

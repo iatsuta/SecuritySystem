@@ -2,7 +2,6 @@
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
-using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
@@ -26,7 +25,7 @@ public class UpdatePermissionsHandler(
 
         var typedPermissions = permissions.Select(this.ToTypedPermission).ToList();
 
-        var mergeResult = await principalManagementService.UpdatePermissionsAsync(new UserCredential.UntypedIdentUserCredential(principalId), typedPermissions, cancellationToken);
+        var mergeResult = await principalManagementService.UpdatePermissionsAsync(new UntypedSecurityIdentity(principalId), typedPermissions, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
         {
@@ -53,7 +52,7 @@ public class UpdatePermissionsHandler(
 
             from restriction in permission.Contexts
 
-            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(restriction.Name).Type
+            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(new UntypedSecurityIdentity(restriction.Id)).Type
 
             let idents = domainObjectIdentsParser.Parse(securityContextType, restriction.Entities)
 
@@ -61,9 +60,9 @@ public class UpdatePermissionsHandler(
 
 
         return new TypedPermission(
-	        permission.PermissionId,
+            new UntypedSecurityIdentity(permission.PermissionId),
 	        permission.IsVirtual,
-	        securityRoleSource.GetSecurityRole(permission.RoleName),
+	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
 	        (permission.StartDate, permission.EndDate),
 	        permission.Comment,
 	        restrictionsRequest.ToDictionary());
@@ -75,7 +74,7 @@ public class UpdatePermissionsHandler(
 
         public bool IsVirtual { get; set; }
 
-        public string RoleName { get; set; } = default!;
+        public string RoleId { get; set; } = default!;
 
         public DateTime StartDate { get; set; }
 
@@ -87,7 +86,7 @@ public class UpdatePermissionsHandler(
 
         public class ContextDto
         {
-            public string Name { get; set; } = default!;
+            public string Id { get; set; } = default!;
 
             public List<string> Entities { get; set; } = default!;
         }

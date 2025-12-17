@@ -12,11 +12,6 @@ public abstract record UserCredential
 		public override string? ToString() => this.Identity.ToString();
 	}
 
-	public record UntypedIdentUserCredential(string Id) : UserCredential
-	{
-		public override string ToString() => this.Id;
-	}
-
 
 	public static implicit operator UserCredential(string name)
 	{

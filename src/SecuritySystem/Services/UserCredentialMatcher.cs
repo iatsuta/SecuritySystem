@@ -31,34 +31,27 @@ public class UserCredentialMatcher<TUser>(
 	}
 }
 
-
 public class UserCredentialMatcher<TUser, TIdent>(
-	IdentityInfo<TUser, TIdent> identityInfo,
-	VisualIdentityInfo<TUser> visualIdentityInfo,
-	IFormatProviderSource formatProviderSource)
-	: IUserCredentialMatcher<TUser>
-	where TIdent : IEqualityOperators<TIdent, TIdent, bool>, IParsable<TIdent>
+    IdentityInfo<TUser, TIdent> identityInfo,
+    VisualIdentityInfo<TUser> visualIdentityInfo,
+    ISecurityIdentityConverter<TIdent> securityIdentityConverter)
+    : IUserCredentialMatcher<TUser>
+    where TIdent : notnull
 {
-	public bool IsMatch(UserCredential userCredential, TUser user)
-	{
-		switch (userCredential)
-		{
-			case UserCredential.IdentUserCredential { Identity : SecurityIdentity<TIdent> { Id: var id } }:
-				return this.IsMatch(id, user);
+    public bool IsMatch(UserCredential userCredential, TUser user)
+    {
+        switch (userCredential)
+        {
+            case UserCredential.IdentUserCredential { Identity : var identity } when securityIdentityConverter.TryConvert(identity) is { } typedIdentity:
+            {
+                return EqualityComparer<TIdent>.Default.Equals(identityInfo.Id.Getter(user), typedIdentity.Id);
+            }
 
-			case UserCredential.NamedUserCredential { Name: var name }:
-				return name.Equals(visualIdentityInfo.Name.Getter(user), StringComparison.CurrentCultureIgnoreCase);
+            case UserCredential.NamedUserCredential { Name: var name }:
+                return name.Equals(visualIdentityInfo.Name.Getter(user), StringComparison.CurrentCultureIgnoreCase);
 
-			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id):
-				return this.IsMatch(id, user);
-
-			default:
-				return false;
-		}
-	}
-
-	private bool IsMatch(TIdent id, TUser user)
-	{
-		return identityInfo.Id.Getter(user) == id;
-	}
+            default:
+                return false;
+        }
+    }
 }

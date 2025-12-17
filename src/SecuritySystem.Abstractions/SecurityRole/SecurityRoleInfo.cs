@@ -3,7 +3,7 @@
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
-public record SecurityRoleInfo(SecurityIdentity Identity)
+public record SecurityRoleInfo(TypedSecurityIdentity Identity)
 {
     public HierarchicalExpandType? CustomExpandType { get; init; } = null;
 

@@ -2,7 +2,6 @@
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
-using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
 
@@ -22,7 +21,7 @@ public class UpdatePrincipalHandler(
 
 		var principalName = await this.ParseRequestBodyAsync<string>(context);
 
-		var principal = await principalManagementService.UpdatePrincipalNameAsync(new UserCredential.UntypedIdentUserCredential(principalId), principalName,
+		var principal = await principalManagementService.UpdatePrincipalNameAsync(new UntypedSecurityIdentity(principalId), principalName,
 			cancellationToken);
 
 		if (configuratorIntegrationEvents != null)

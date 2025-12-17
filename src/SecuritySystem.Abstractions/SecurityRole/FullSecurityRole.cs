@@ -5,5 +5,5 @@ public class FullSecurityRole(string name, SecurityRoleInfo information) : Secur
 {
     public SecurityRoleInfo Information { get; } = information;
 
-    public SecurityIdentity Identity => this.Information.Identity;
+    public TypedSecurityIdentity Identity => this.Information.Identity;
 }

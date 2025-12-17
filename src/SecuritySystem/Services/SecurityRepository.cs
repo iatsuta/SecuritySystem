@@ -8,7 +8,7 @@ public class SecurityRepository<TDomainObject>(IQueryableSource queryableSource,
 	: ISecurityRepository<TDomainObject>
 	where TDomainObject : class
 {
-	public async Task<TDomainObject> GetObjectAsync(SecurityIdentity securityIdentity, CancellationToken cancellationToken)
+	public async Task<TDomainObject> GetObjectAsync(TypedSecurityIdentity securityIdentity, CancellationToken cancellationToken)
 	{
 		var result = await queryableSource.GetQueryable<TDomainObject>().Where(filterFactory.CreateFilter(securityIdentity))
 			.GenericSingleOrDefaultAsync(cancellationToken);

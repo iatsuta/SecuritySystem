@@ -38,10 +38,9 @@ public class UserFilterFactory<TUser>(
 public class UserFilterFactory<TUser, TIdent>(
 	IdentityInfo<TUser, TIdent> identityInfo,
 	VisualIdentityInfo<TUser> visualIdentityInfo,
-	IFormatProviderSource formatProviderSource,
 	ISecurityIdentityConverter<TIdent> identityConverter) : IUserFilterFactory<TUser>
 	where TUser : class
-	where TIdent : IParsable<TIdent>
+	where TIdent : notnull
 {
 	public Expression<Func<TUser, bool>> CreateFilter(UserCredential userCredential)
 	{
@@ -63,9 +62,6 @@ public class UserFilterFactory<TUser, TIdent>(
 					return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(convertedIdentity.Id));
 				}
 			}
-
-			case UserCredential.UntypedIdentUserCredential { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id):
-				return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id));
 
 			default:
 				throw new ArgumentOutOfRangeException(nameof(userCredential));

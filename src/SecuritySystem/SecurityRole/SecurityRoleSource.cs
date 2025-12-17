@@ -1,66 +1,57 @@
-﻿using CommonFramework;
+﻿using SecuritySystem.Services;
+
+using System.Collections.Concurrent;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
 public class SecurityRoleSource : ISecurityRoleSource
 {
-	private readonly IReadOnlyDictionary<SecurityIdentity, FullSecurityRole> identityDict;
+    private readonly IReadOnlyDictionary<TypedSecurityIdentity, FullSecurityRole> identityDict;
 
-	private readonly IReadOnlyDictionary<string, FullSecurityRole> nameDict;
+    private readonly IReadOnlyDictionary<string, FullSecurityRole> nameDict;
 
-	public SecurityRoleSource(IEnumerable<FullSecurityRole> securityRoles)
-	{
-		this.SecurityRoles = securityRoles.ToList();
+    private readonly ConcurrentDictionary<SecurityIdentity, FullSecurityRole> baseIdentityCache = new();
 
-		this.Validate();
+    private readonly ISecurityIdentityConverter rootIdentityConverter;
 
-		this.identityDict = this.SecurityRoles.ToDictionary(v => v.Identity);
+    public SecurityRoleSource(IServiceProvider serviceProvider, IEnumerable<FullSecurityRole> securityRoles)
+    {
+        this.SecurityRoles = securityRoles.ToList();
 
-		this.nameDict = this.SecurityRoles.ToDictionary(v => v.Name);
-	}
+        this.identityDict = this.SecurityRoles.ToDictionary(v => v.Identity);
 
-	public IReadOnlyList<FullSecurityRole> SecurityRoles { get; }
+        this.nameDict = this.SecurityRoles.ToDictionary(v => v.Name);
 
-	public FullSecurityRole GetSecurityRole(SecurityRole securityRole) => this.GetSecurityRole(securityRole.Name);
+        this.rootIdentityConverter = new RootSecurityIdentityConverter(serviceProvider, this.SecurityRoles.Select(sr => sr.Identity.IdentType).Distinct());
+    }
 
-	public FullSecurityRole GetSecurityRole(string name)
-	{
-		return this.nameDict.GetValueOrDefault(name) ?? throw new Exception($"SecurityRole with name '{name}' not found");
-	}
+    public IReadOnlyList<FullSecurityRole> SecurityRoles { get; }
 
-	public FullSecurityRole GetSecurityRole(SecurityIdentity identity)
-	{
-		return this.identityDict.GetValueOrDefault(identity) ?? throw new Exception($"SecurityRole with {nameof(identity)} '{identity}' not found");
-	}
+    public FullSecurityRole GetSecurityRole(SecurityRole securityRole) => this.GetSecurityRole(securityRole.Name);
 
-	public IEnumerable<FullSecurityRole> GetRealRoles()
-	{
-		return this.SecurityRoles.Where(sr => !sr.Information.IsVirtual);
-	}
+    public FullSecurityRole GetSecurityRole(string name) =>
+        this.nameDict.GetValueOrDefault(name) ?? throw new Exception($"SecurityRole with name '{name}' not found");
 
-	private void Validate()
-	{
-		var identityDuplicates = this.SecurityRoles
-			.GetDuplicates(
-				new EqualityComparerImpl<FullSecurityRole>(
-					(sr1, sr2) => sr1.Identity == sr2.Identity,
-					sr => sr.Identity.GetHashCode())).ToList();
+    public FullSecurityRole GetSecurityRole(SecurityIdentity identity)
+    {
+        return this.baseIdentityCache.GetOrAdd(identity, _ =>
+        {
+            var convertedIdentity = rootIdentityConverter.TryConvert(identity);
 
-		if (identityDuplicates.Any())
-		{
-			throw new Exception($"SecurityRole '{nameof(FullSecurityRole.Identity)}' duplicates: {identityDuplicates.Join(", ", sr => sr.Identity)}");
-		}
+            if (convertedIdentity != null && this.identityDict.TryGetValue(convertedIdentity, out var securityRole))
+            {
+                return securityRole;
+            }
+            else
+            {
+                throw new Exception($"SecurityRole with {nameof(identity)} '{identity}' not found");
+            }
+        });
+    }
 
-		var nameDuplicates = this.SecurityRoles
-			.GetDuplicates(
-				new EqualityComparerImpl<FullSecurityRole>(
-					(sr1, sr2) => sr1.Name == sr2.Name,
-					sr => sr.Name.GetHashCode())).ToList();
-
-		if (nameDuplicates.Any())
-		{
-			throw new Exception($"SecurityRole '{nameof(FullSecurityRole.Name)}' duplicates: {nameDuplicates.Join(", ", sr => sr.Name)}");
-		}
-	}
+    public IEnumerable<FullSecurityRole> GetRealRoles()
+    {
+        return this.SecurityRoles.Where(sr => !sr.Information.IsVirtual);
+    }
 }

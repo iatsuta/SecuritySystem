@@ -50,7 +50,7 @@ public class PermissionSecurityRoleFilterFactory<TPrincipal, TPermission, TSecur
     private Expression<Func<TPermission, bool>> CreateFilter<TIdent>(TIdent[] idents)
         where TIdent : notnull
     {
-        var convertedIdents = idents.Select(ident => securityIdentityConverter.Convert(new SecurityIdentity<TIdent>(ident)).Id).ToList();
+        var convertedIdents = idents.Select(ident => securityIdentityConverter.Convert(new TypedSecurityIdentity<TIdent>(ident)).Id).ToList();
 
         return permissionToSecurityRoleInfo.SecurityRole.Path.Select(identityInfo.Id.Path).Select(srId => convertedIdents.Contains(srId));
     }

@@ -1,31 +1,57 @@
-﻿// ReSharper disable once CheckNamespace
+﻿using SecuritySystem.Services;
+
+using System.Collections.Concurrent;
+
+// ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
 public class SecurityContextInfoSource : ISecurityContextInfoSource
 {
     private readonly IReadOnlyDictionary<Type, SecurityContextInfo> typeDict;
 
-    private readonly IReadOnlyDictionary<SecurityIdentity, SecurityContextInfo> identityDict;
-
+    private readonly IReadOnlyDictionary<TypedSecurityIdentity, SecurityContextInfo> identityDict;
 
     private readonly IReadOnlyDictionary<string, SecurityContextInfo> nameDict;
 
-	public SecurityContextInfoSource(IEnumerable<SecurityContextInfo> securityContextInfoList)
+
+    private readonly ConcurrentDictionary<SecurityIdentity, SecurityContextInfo> baseIdentityCache = new();
+
+    private readonly ISecurityIdentityConverter rootIdentityConverter;
+
+    public SecurityContextInfoSource(IServiceProvider serviceProvider, IEnumerable<SecurityContextInfo> securityContextInfoList)
     {
         this.SecurityContextInfoList = securityContextInfoList.ToList();
+
         this.typeDict = this.SecurityContextInfoList.ToDictionary(v => v.Type);
         this.identityDict = this.typeDict.Values.ToDictionary(v => v.Identity);
         this.nameDict = this.typeDict.Values.ToDictionary(v => v.Name);
-	}
+
+
+        this.rootIdentityConverter = new RootSecurityIdentityConverter(serviceProvider, this.SecurityContextInfoList.Select(sr => sr.Identity.IdentType).Distinct());
+    }
 
     public IReadOnlyList<SecurityContextInfo> SecurityContextInfoList { get; }
 
-    public virtual SecurityContextInfo GetSecurityContextInfo(Type securityContextType) =>
-        this.typeDict[securityContextType];
+    public virtual SecurityContextInfo GetSecurityContextInfo(Type type) =>
+        this.typeDict[type];
 
-    public SecurityContextInfo GetSecurityContextInfo(string securityContextTypeName) =>
-	    this.nameDict[securityContextTypeName];
+    public SecurityContextInfo GetSecurityContextInfo(string name) =>
+	    this.nameDict[name];
 
-	public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity securityContextIdentity) =>
-        this.identityDict[securityContextIdentity];
+	public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity identity)
+    {
+        return this.baseIdentityCache.GetOrAdd(identity, _ =>
+        {
+            var convertedIdentity = rootIdentityConverter.TryConvert(identity);
+
+            if (convertedIdentity != null && this.identityDict.TryGetValue(convertedIdentity, out var securityContextInfo))
+            {
+                return securityContextInfo;
+            }
+            else
+            {
+                throw new Exception($"SecurityContextType with {nameof(identity)} '{identity}' not found");
+            }
+        });
+    }
 }

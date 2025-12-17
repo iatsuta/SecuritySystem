@@ -1,3 +1,3 @@
 ﻿namespace SecuritySystem.UserSource;
 
-public record User(string Name, SecurityIdentity Identity);
+public record User(string Name, TypedSecurityIdentity Identity);

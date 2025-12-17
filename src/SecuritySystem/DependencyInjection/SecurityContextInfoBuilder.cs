@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
 
-public class SecurityContextInfoBuilder<TSecurityContext>(SecurityIdentity identity) : ISecurityContextInfoBuilder<TSecurityContext>
+public class SecurityContextInfoBuilder<TSecurityContext>(TypedSecurityIdentity identity) : ISecurityContextInfoBuilder<TSecurityContext>
 	where TSecurityContext : class, ISecurityContext
 {
 	private readonly List<Action<IServiceCollection>> extensions = new();

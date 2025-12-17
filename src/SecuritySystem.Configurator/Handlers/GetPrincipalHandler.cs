@@ -25,7 +25,7 @@ public class GetPrincipalHandler(
 
 		var principalId = (string)httpContext.Request.RouteValues["id"]!;
 
-		var permissions = await this.GetPermissionsAsync(new UserCredential.UntypedIdentUserCredential(principalId), cancellationToken);
+		var permissions = await this.GetPermissionsAsync(new UntypedSecurityIdentity(principalId), cancellationToken);
 
 		return new PrincipalDetailsDto { Permissions = permissions };
 	}
@@ -42,7 +42,7 @@ public class GetPrincipalHandler(
 			.Select(typedPermission =>
 				new PermissionDto
 				{
-					Id = typedPermission.Id,
+					Id = typedPermission.Identity.GetId().ToString()!,
 					IsVirtual = typedPermission.IsVirtual,
 					Role = typedPermission.SecurityRole.Name,
 					RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.ToString()!,

@@ -7,18 +7,20 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
 {
     private readonly Expression<Func<TIdent, TIdent>> identityExpr = v => v;
 
-    public SecurityIdentity<TIdent>? TryConvert(SecurityIdentity securityIdentity)
+    public TypedSecurityIdentity<TIdent>? TryConvert(SecurityIdentity securityIdentity)
     {
-	    return securityIdentity switch
-	    {
-		    SecurityIdentity<TIdent> typedSecurityIdentity => typedSecurityIdentity,
-		    SecurityIdentity<string> { Id: var stringId } when TIdent.TryParse(stringId, formatProviderSource.FormatProvider, out var id) =>
-			    new SecurityIdentity<TIdent>(id),
-		    _ => null
-	    };
+        return securityIdentity switch
+        {
+            TypedSecurityIdentity<TIdent> typedSecurityIdentity => typedSecurityIdentity,
+            UntypedSecurityIdentity { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id) =>
+                new TypedSecurityIdentity<TIdent>(id),
+            TypedSecurityIdentity<string> { Id: var stringId } when TIdent.TryParse(stringId, formatProviderSource.FormatProvider, out var id) =>
+                new TypedSecurityIdentity<TIdent>(id),
+            _ => null
+        };
     }
 
-    public SecurityIdentity<TIdent> Convert(SecurityIdentity securityIdentity)
+    public TypedSecurityIdentity<TIdent> Convert(SecurityIdentity securityIdentity)
     {
         return this.TryConvert(securityIdentity) ?? throw new ArgumentOutOfRangeException(nameof(securityIdentity));
     }
@@ -34,4 +36,6 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
             throw new NotImplementedException();
         }
     }
+
+    TypedSecurityIdentity? ISecurityIdentityConverter.TryConvert(SecurityIdentity securityIdentity) => this.TryConvert(securityIdentity);
 }
