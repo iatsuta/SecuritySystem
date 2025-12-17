@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-using CommonFramework;
+﻿using CommonFramework;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;

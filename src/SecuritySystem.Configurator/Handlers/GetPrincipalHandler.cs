@@ -20,8 +20,8 @@ public class GetPrincipalHandler(
 	[WithoutRunAs] ISecuritySystem securitySystem) : BaseReadHandler, IGetPrincipalHandler
 {
 	protected override async Task<object> GetDataAsync(HttpContext httpContext, CancellationToken cancellationToken)
-	{
-		if (!securitySystem.IsSecurityAdministrator()) return new PrincipalDetailsDto();
+    {
+        if (!securitySystem.IsSecurityAdministrator()) return new PrincipalDetailsDto { Permissions = [] };
 
 		var principalId = (string)httpContext.Request.RouteValues["id"]!;
 

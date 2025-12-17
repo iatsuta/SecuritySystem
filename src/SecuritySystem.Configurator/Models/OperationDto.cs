@@ -2,7 +2,7 @@
 
 public class OperationDto
 {
-    public string Name { get; set; } = default!;
+    public required string Name { get; set; }
 
-    public string? Description { get; set; } = null;
+    public string? Description { get; set; }
 }
