@@ -6,7 +6,6 @@ using SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-
 public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,

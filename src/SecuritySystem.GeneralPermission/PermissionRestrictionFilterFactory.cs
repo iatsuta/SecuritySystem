@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-using System.Security;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -25,7 +24,8 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
 
         return (IPermissionRestrictionFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
             serviceProvider,
-            innerServiceType);
+            innerServiceType,
+            restrictionBindingInfo);
     });
 
     public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>(
@@ -37,11 +37,11 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
 }
 
 public class PermissionRestrictionFilterFactory<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
     IIdentityInfoSource identityInfoSource,
     ISecurityContextSource securityContextSource,
     ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentConverter,
-    IPermissionRestrictionTypeFilterFactory<TPermissionRestriction> permissionRestrictionTypeFilterFactory,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo)
+    IPermissionRestrictionTypeFilterFactory<TPermissionRestriction> permissionRestrictionTypeFilterFactory)
     : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 
     where TSecurityContextObjectIdent : notnull
@@ -77,6 +77,6 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction, TSecurit
 
         var securityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path).Select(convertExpr);
 
-        return bindingInfo.SecurityContextObjectId.Path.Select(i => securityContextQueryable.Contains(i));
+        return restrictionBindingInfo.SecurityContextObjectId.Path.Select(i => securityContextQueryable.Contains(i));
     }
 }

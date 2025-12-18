@@ -17,7 +17,7 @@ public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvid
         var innerServiceType =
             typeof(PermissionFilterFactory<,,,>).MakeGenericType(restrictionBindingInfo.PermissionType, restrictionBindingInfo.PermissionRestrictionType);
 
-        return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType);
+        return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, restrictionBindingInfo);
     });
 
 
@@ -31,8 +31,8 @@ public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvid
 }
 
 public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     IQueryableSource queryableSource,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> bindingInfo,
     IPermissionRestrictionFilterFactory<TPermissionRestriction> permissionRestrictionFilterFactory) : IPermissionFilterFactory<TPermission>
     where TPermissionRestriction : class
 {
@@ -54,7 +54,7 @@ public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecur
             var permissionQueryable = queryableSource
                 .GetQueryable<TPermissionRestriction>()
                 .Where(typeFilter)
-                .Select(bindingInfo.Permission.Path);
+                .Select(restrictionBindingInfo.Permission.Path);
 
             return permission => permissionQueryable.Contains(permission);
         }

@@ -32,7 +32,12 @@ public class SecurityRoleInitializer<TSecurityRole>(
             bindingInfo.SecurityRoleType,
             identityInfo.IdentityType);
 
-        return (ISecurityRoleInitializer<TSecurityRole>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
+        return (ISecurityRoleInitializer<TSecurityRole>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            bindingInfo,
+            identityInfo,
+            visualIdentityInfo);
     });
 
     public Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken) =>
@@ -46,11 +51,11 @@ public class SecurityRoleInitializer<TSecurityRole>(
 }
 
 public class SecurityRoleInitializer<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
+    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IQueryableSource queryableSource,
     IGenericRepository genericRepository,
     ISecurityRoleSource securityRoleSource,
     ILogger<SecurityRoleInitializer<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>> logger,
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo,
     VisualIdentityInfo<TSecurityRole> visualIdentityInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,

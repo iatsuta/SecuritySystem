@@ -8,7 +8,12 @@ using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class PermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent> : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
+public class PermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(
+    Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?> restrictionFilterInfoWrapper)
+    : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
+
+    where TSecurityContext : class, ISecurityContext
+    where TSecurityContextIdent : notnull
 {
     public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr()
     {
@@ -21,7 +26,7 @@ public class GeneralPermissionRestrictionSource<TPermission, TPermissionRestrict
     IQueryableSource queryableSource,
     IPermissionRestrictionFilterFactory<TPermissionRestriction> permissionRestrictionFilterFactory,
     ISecurityIdentityConverter<TSecurityContextIdent> securityContextIdentConverter,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?> restrictionFilterInfoWrapper)
     : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
 
@@ -44,9 +49,9 @@ public class GeneralPermissionRestrictionSource<TPermission, TPermissionRestrict
         return ExpressionEvaluateHelper.InlineEvaluate<Func<TPermission, IEnumerable<TSecurityContextIdent>>>(ee =>
         {
             return permission => restrictionQueryable
-                .Where(restriction => ee.Evaluate(bindingInfo.Permission.Path, restriction) == permission)
+                .Where(restriction => ee.Evaluate(restrictionBindingInfo.Permission.Path, restriction) == permission)
                 .Where(restrictionFilter)
-                .Select(restriction => ee.Evaluate(convertExpr, ee.Evaluate(bindingInfo.SecurityContextObjectId.Path, restriction)));
+                .Select(restriction => ee.Evaluate(convertExpr, ee.Evaluate(restrictionBindingInfo.SecurityContextObjectId.Path, restriction)));
         });
     }
 }

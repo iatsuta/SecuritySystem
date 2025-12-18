@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-using CommonFramework.IdentitySource;
+﻿using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;

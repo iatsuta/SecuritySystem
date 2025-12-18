@@ -29,6 +29,7 @@ public class RawPermissionConverter<TPermissionRestriction>(
         return (IRawPermissionConverter<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
+            restrictionBindingInfo,
             securityContextTypeIdentityInfo);
     });
 
@@ -39,7 +40,7 @@ public class RawPermissionConverter<TPermissionRestriction>(
 }
 
 public class RawPermissionConverter<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>(
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
     ISecurityContextSource securityContextSource,
     IIdentityInfoSource identityInfoSource,
     ISecurityContextInfoSource securityContextInfoSource,
@@ -56,8 +57,8 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextType
         IEnumerable<Type> securityContextTypes)
     {
         var purePermission = restrictions.GroupBy(
-                bindingInfo.SecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter),
-                bindingInfo.SecurityContextObjectId.Getter)
+                restrictionBindingInfo.SecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter),
+                restrictionBindingInfo.SecurityContextObjectId.Getter)
 
             .ToDictionary(g => g.Key, g => g.ToList());
 

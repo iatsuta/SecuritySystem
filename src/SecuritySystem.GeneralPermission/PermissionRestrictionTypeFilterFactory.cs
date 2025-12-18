@@ -29,6 +29,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
         return (IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
+            restrictionBindingInfo,
             securityContextTypeIdentityInfo);
     });
 
@@ -40,9 +41,9 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
 }
 
 public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSecurityContextType, TSecurityContextTypeIdent>(
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType> restrictionBindingInfo,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentConverter,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType> bindingInfo,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo)
     : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
 
@@ -60,7 +61,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSec
 
             var isSecurityContextTypeExpr = ExpressionHelper.GetEqualityWithExpr(securityContextTypeId);
 
-            return bindingInfo.SecurityContextType.Path.Select(securityContextTypeIdentityInfo.Id.Path)
+            return restrictionBindingInfo.SecurityContextType.Path.Select(securityContextTypeIdentityInfo.Id.Path)
                 .Select(isSecurityContextTypeExpr);
         });
     }

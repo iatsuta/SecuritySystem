@@ -26,6 +26,7 @@ public class AvailablePermissionFilterFactory<TPermission>(
         return (IAvailablePermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
+            bindingInfo,
             principalVisualIdentityInfo);
     });
 

@@ -30,6 +30,7 @@ public class GeneralPermissionSystem<TPermission>(
         return (IPermissionSystem<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
+            bindingInfo,
             securityRoleIdentityInfo,
             securityRuleCredential);
     });
@@ -56,9 +57,9 @@ public class GeneralPermissionSystem<TPermission>(
 
 public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
     IServiceProvider serviceProvider,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     ISecurityRoleSource securityRoleSource,
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     SecurityRuleCredential securityRuleCredential,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo)
     : IPermissionSystem<TPermission>

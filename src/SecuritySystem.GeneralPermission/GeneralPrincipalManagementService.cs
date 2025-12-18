@@ -14,19 +14,45 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPrincipalManagementService<TPrincipal>(IServiceProvider serviceProvider, IGeneralPermissionBindingInfoSource bindingInfoSource)
+public class GeneralPrincipalManagementService<TPrincipal>(
+    IServiceProvider serviceProvider,
+    IIdentityInfoSource identityInfoSource,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
+    IGeneralPermissionBindingInfoSource bindingInfoSource,
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IPrincipalManagementService
 {
     private readonly Lazy<IPrincipalManagementService> lazyInnerService = new(() =>
     {
         var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
+
+        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
+
+        var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
+
+        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
+
+        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
+
         var innerServiceType = typeof(GeneralPrincipalManagementService<,,,,,,,,>)
-            .MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType, bindingInfo.SecurityRoleType);
+            .MakeGenericType(
+                bindingInfo.PrincipalType,
+                bindingInfo.PermissionType,
+                bindingInfo.SecurityRoleType,
+                restrictionBindingInfo.PermissionRestrictionType, restrictionBindingInfo.SecurityContextTypeType,
+                restrictionBindingInfo.SecurityContextObjectIdentType);
 
         return (IPrincipalManagementService)ActivatorUtilities.CreateInstance(
             serviceProvider,
-            innerServiceType);
+            innerServiceType,
+            bindingInfo,
+            restrictionBindingInfo,
+            principalVisualIdentityInfo,
+            permissionIdentityInfo,
+            securityContextTypeIdentityInfo,
+            securityRoleIdentityInfo);
     });
 
     private IPrincipalManagementService InnerService => this.lazyInnerService.Value;
@@ -47,25 +73,19 @@ public class GeneralPrincipalManagementService<TPrincipal>(IServiceProvider serv
 
 public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
     TSecurityContextObjectIdent, TSecurityRoleIdent, TPermissionIdent, TSecurityContextTypeIdent>(
+    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     ISecurityRepository<TSecurityRole> securityRoleRepository,
     IQueryableSource queryableSource,
     ISecurityValidator<PrincipalData> principalValidator,
-
     ISecurityRoleSource securityRoleSource,
-
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
-
     IGenericRepository genericRepository,
     ISecurityRepository<TSecurityContextType> securityContextTypeRepository,
-
     ISecurityContextInfoSource securityContextInfoSource,
-
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource,
     ISecurityIdentityConverter<TPermissionIdent> permissionIdentConverter,
     ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentityConverter,
-
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
     IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo,

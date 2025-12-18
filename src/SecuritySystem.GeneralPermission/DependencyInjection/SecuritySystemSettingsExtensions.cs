@@ -17,23 +17,13 @@ public static class SecuritySystemSettingsExtensions
 {
     extension(ISecuritySystemSettings securitySystemSettings)
     {
-        public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-            TSecurityContextObjectIdent>(
-            GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
-            GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo)
+        public ISecuritySystemSettings AddGeneralPermission(GeneralPermissionBindingInfo bindingInfo, GeneralPermissionRestrictionBindingInfo restrictionBindingInfo)
         {
             return securitySystemSettings
                 .AddPermissionSystem(sp => new GeneralPermissionSystemFactory(sp, bindingInfo))
                 .AddExtensions(services => services
 
-                    .AddSingleton<GeneralPermissionBindingInfo>(bindingInfo)
-                    .AddSingleton<GeneralPermissionBindingInfo<TPermission>>(bindingInfo)
-                    .AddSingleton<GeneralPermissionBindingInfo<TPermission, TPrincipal>>(bindingInfo)
                     .AddSingleton(bindingInfo)
-
-                    .AddSingleton<GeneralPermissionRestrictionBindingInfo>(restrictionBindingInfo)
-                    .AddSingleton<GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType>>(restrictionBindingInfo)
-                    .AddSingleton<GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>(restrictionBindingInfo)
                     .AddSingleton(restrictionBindingInfo)
 
                     .AddSingleton(typeof(IPermissionRestrictionTypeFilterFactory<>), typeof(PermissionRestrictionTypeFilterFactory<>))

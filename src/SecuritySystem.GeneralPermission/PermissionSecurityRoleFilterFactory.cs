@@ -29,6 +29,7 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
         return (IPermissionSecurityRoleFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
+            bindingInfo,
             securityRoleIdentityInfo);
     });
 
@@ -37,8 +38,8 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
 }
 
 public class PermissionSecurityRoleFilterFactory<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
-    ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
     GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo) : IPermissionSecurityRoleFilterFactory<TPermission>
     where TSecurityRoleIdent : notnull
 {

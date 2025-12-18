@@ -26,9 +26,17 @@ public class PrincipalDomainService<TPrincipal>(
 
         var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
-        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType, identityInfo.IdentityType);
+        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(
+            bindingInfo.PrincipalType,
+            bindingInfo.PermissionType,
+            identityInfo.IdentityType);
 
-        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
+        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            bindingInfo,
+            identityInfo,
+            visualIdentityInfo);
     });
 
     private IPrincipalDomainService<TPrincipal> InnerService => this.lazyInnerService.Value;
@@ -41,10 +49,10 @@ public class PrincipalDomainService<TPrincipal>(
 }
 
 public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
-	IQueryableSource queryableSource,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    IQueryableSource queryableSource,
 	IGenericRepository genericRepository,
 	IEnumerable<IUserSource> userSources,
-    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
 	ISecurityIdentityConverter<TPrincipalIdent> identityConverter,
 	IdentityInfo<TPrincipal, TPrincipalIdent> identityInfo,
 	VisualIdentityInfo<TPrincipal> visualIdentityInfo) : IPrincipalDomainService<TPrincipal>

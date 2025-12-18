@@ -35,6 +35,8 @@ public class GeneralPermissionSource<TPermission>(
         return (IPermissionSource<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
+            bindingInfo,
+            restrictionBindingInfo,
             principalVisualIdentityInfo,
             securityRule);
     });
