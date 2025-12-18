@@ -35,7 +35,6 @@ public class GeneralPermissionTests : TestBase
         principalId.Should().Be(currentUserSource.CurrentUser.Id);
     }
 
-
     private async Task<Guid> CreateTestPrincipal(string principalName, SecuritySystem.SecurityRole securityRole, CancellationToken cancellationToken)
     {
         await using var scope = this.RootServiceProvider.CreateAsyncScope();

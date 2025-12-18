@@ -1,8 +1,11 @@
 ﻿using CommonFramework;
 using CommonFramework.VisualIdentitySource;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
+
 using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission.AvailableSecurity;

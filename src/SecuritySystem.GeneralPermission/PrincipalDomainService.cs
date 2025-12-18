@@ -36,9 +36,6 @@ public class PrincipalDomainService<TPrincipal>(
     public Task<TPrincipal> GetOrCreateAsync(string name, CancellationToken cancellationToken) =>
         this.InnerService.GetOrCreateAsync(name, cancellationToken);
 
-    //public Task SaveAsync(PrincipalData<TPrincipal> principal, CancellationToken cancellationToken) =>
-    //    this.InnerService.SaveAsync(principal, cancellationToken);
-
     public Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken) =>
         this.InnerService.RemoveAsync(principal, force, cancellationToken);
 }

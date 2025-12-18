@@ -7,13 +7,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource) : IPermissionFilterFactory<TPermission>
+public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
+    : IPermissionFilterFactory<TPermission>
 {
     private readonly Lazy<IPermissionFilterFactory<TPermission>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(typeof(TPermission));
 
-        var innerServiceType = typeof(PermissionFilterFactory<,,,>).MakeGenericType(bindingInfo.PermissionType, bindingInfo.PermissionRestrictionType);
+        var innerServiceType =
+            typeof(PermissionFilterFactory<,,,>).MakeGenericType(restrictionBindingInfo.PermissionType, restrictionBindingInfo.PermissionRestrictionType);
 
         return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType);
     });

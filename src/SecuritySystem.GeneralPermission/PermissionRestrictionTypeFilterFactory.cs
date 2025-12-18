@@ -13,17 +13,17 @@ namespace SecuritySystem.GeneralPermission;
 public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource) : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
 {
     private readonly Lazy<IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
 
-        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
+        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
 
         var innerServiceType = typeof(PermissionRestrictionTypeFilterFactory<,,>).MakeGenericType(
-            bindingInfo.PermissionRestrictionType,
-            bindingInfo.SecurityContextTypeType,
+            restrictionBindingInfo.PermissionRestrictionType,
+            restrictionBindingInfo.SecurityContextTypeType,
             securityContextTypeIdentityInfo.IdentityType);
 
         return (IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(

@@ -14,23 +14,23 @@ public class GeneralPermissionSource<TPermission>(
     IServiceProvider serviceProvider,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IGeneralPermissionBindingInfoSource bindingInfoSource,
-    IGeneralPermissionRestrictionBindingInfoSource bindingRestrictionInfoSource,
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
 {
     private readonly Lazy<IPermissionSource<TPermission>> lazyInnerService = new(() =>
     {
         var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
 
-        var bindingRestrictionInfo = bindingRestrictionInfoSource.GetForPermission(typeof(TPermission));
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
         var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
         var innerServiceType = typeof(GeneralPermissionSource<,,,,>).MakeGenericType(
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType,
-            bindingRestrictionInfo.PermissionRestrictionType,
-            bindingRestrictionInfo.SecurityContextTypeType,
-            bindingRestrictionInfo.SecurityContextObjectIdentType);
+            restrictionBindingInfo.PermissionRestrictionType,
+            restrictionBindingInfo.SecurityContextTypeType,
+            restrictionBindingInfo.SecurityContextObjectIdentType);
 
         return (IPermissionSource<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,

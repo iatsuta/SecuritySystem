@@ -10,20 +10,20 @@ namespace SecuritySystem.GeneralPermission;
 public class RawPermissionConverter<TPermissionRestriction>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource)
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IRawPermissionConverter<TPermissionRestriction>
     where TPermissionRestriction : class
 {
     private readonly Lazy<IRawPermissionConverter<TPermissionRestriction>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
 
-        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
+        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
 
         var innerServiceType = typeof(RawPermissionConverter<,,,>).MakeGenericType(
-            bindingInfo.PermissionRestrictionType,
-            bindingInfo.SecurityContextTypeType,
-            bindingInfo.SecurityContextObjectIdentType,
+            restrictionBindingInfo.PermissionRestrictionType,
+            restrictionBindingInfo.SecurityContextTypeType,
+            restrictionBindingInfo.SecurityContextObjectIdentType,
             securityContextTypeIdentityInfo.IdentityType);
 
         return (IRawPermissionConverter<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
