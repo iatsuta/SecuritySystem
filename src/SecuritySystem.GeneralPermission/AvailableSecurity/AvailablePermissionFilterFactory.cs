@@ -1,25 +1,29 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using CommonFramework;
 using CommonFramework.VisualIdentitySource;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission.AvailableSecurity;
 
-public class AvailablePermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, GeneralPermissionBindingInfo bindingInfo) : IAvailablePermissionFilterFactory<TPermission>
+public class AvailablePermissionFilterFactory<TPermission>(
+    IServiceProvider serviceProvider,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
+    IGeneralPermissionBindingInfoSource bindingInfoSource) : IAvailablePermissionFilterFactory<TPermission>
 {
     private readonly Lazy<IAvailablePermissionFilterFactory<TPermission>> lazyInnerService = new(() =>
     {
-        var innerServiceType = typeof(AvailablePermissionFilterFactory<,>).MakeGenericType(bindingInfo.PrincipalType, typeof(TPermission));
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
+
+        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
+
+        var innerServiceType = typeof(AvailablePermissionFilterFactory<,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType);
 
         return (IAvailablePermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo);
+            principalVisualIdentityInfo);
     });
 
     public Expression<Func<TPermission, bool>> CreateFilter(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
@@ -27,17 +31,15 @@ public class AvailablePermissionFilterFactory<TPermission>(IServiceProvider serv
 }
 
 public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
-    GeneralPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     TimeProvider timeProvider,
     IUserNameResolver<TPrincipal> userNameResolver,
-    IVisualIdentityInfoSource visualIdentityInfoSource,
     ISecurityRolesIdentsResolver securityRolesIdentsResolver,
     IPermissionSecurityRoleFilterFactory<TPermission> permissionSecurityRoleFilterFactory,
     IPermissionFilterFactory<TPermission> permissionFilterFactory,
-    SecurityRuleCredential defaultSecurityRuleCredential) : IAvailablePermissionFilterFactory<TPermission>
+    SecurityRuleCredential defaultSecurityRuleCredential,
+    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo) : IAvailablePermissionFilterFactory<TPermission>
 {
-    private readonly VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
-
     public Expression<Func<TPermission, bool>> CreateFilter(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
         this.GetFilterElements(securityRule).BuildAnd();
 

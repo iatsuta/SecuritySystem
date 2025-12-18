@@ -18,7 +18,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 	IUserQueryableSource<TPrincipal> userQueryableSource) : IPrincipalSourceService
 	where TPrincipal : class
 {
-	protected readonly PropertyAccessors<TPrincipal, string> NameAccessors = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name;
+	private readonly PropertyAccessors<TPrincipal, string> nameAccessors = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name;
 
 	private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
 
@@ -27,7 +27,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 		return await principalQueryable
 			.Pipe(
 				!string.IsNullOrWhiteSpace(nameFilter),
-				q => q.Where(this.NameAccessors.Path.Select(principalName => principalName.Contains(nameFilter))))
+				q => q.Where(this.nameAccessors.Path.Select(principalName => principalName.Contains(nameFilter))))
 			.Select(typedPrincipalConverter.GetToHeaderExpression())
 			.GenericToListAsync(cancellationToken);
 	}
@@ -53,7 +53,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 				{
 					CustomCredential = new SecurityRuleCredential.AnyUserCredential()
 				})
-			.Select(this.NameAccessors.Path)
+			.Select(this.nameAccessors.Path)
 			.GenericToListAsync(cancellationToken);
 	}
 }

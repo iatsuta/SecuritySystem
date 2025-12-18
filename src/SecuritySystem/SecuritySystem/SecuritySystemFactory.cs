@@ -12,6 +12,9 @@ public class SecuritySystemFactory(
 {
     public ISecuritySystem Create(SecurityRuleCredential securityRuleCredential)
     {
-        return new SecuritySystem(accessDeniedExceptionService, permissionSystems.Select(f => f.Create(securityRuleCredential)).ToList(), domainSecurityRoleExtractor);
+        return new SecuritySystem(
+            accessDeniedExceptionService,
+            permissionSystems.Select(f => f.Create(securityRuleCredential)).ToList(),
+            domainSecurityRoleExtractor);
     }
 }

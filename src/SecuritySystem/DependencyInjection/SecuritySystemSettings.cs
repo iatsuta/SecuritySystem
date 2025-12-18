@@ -11,6 +11,7 @@ using SecuritySystem.AccessDenied;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
@@ -41,6 +42,8 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     private Type clientDomainModeSecurityRuleSource = typeof(ClientDomainModeSecurityRuleSource);
 
     private Type securityAccessorInfinityStorageType = typeof(FakeSecurityAccessorInfinityStorage);
+
+    private Type principalManagementServiceType = typeof(FakePrincipalManagementService);
 
 
 
@@ -203,6 +206,14 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
+    public ISecuritySystemSettings SetPrincipalManagementService<TPrincipalManagementService>()
+        where TPrincipalManagementService : class, IPrincipalManagementService
+    {
+        this.principalManagementServiceType = typeof(TPrincipalManagementService);
+
+        return this;
+    }
+
     public ISecuritySystemSettings SetDefaultSecurityRuleCredential(SecurityRuleCredential securityRuleCredential)
     {
         this.defaultSecurityRuleCredential = securityRuleCredential;
@@ -292,6 +303,8 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         services.AddSingleton(typeof(IAccessDeniedExceptionService), this.accessDeniedExceptionServiceType);
 
         services.AddScoped(typeof(ISecurityAccessorInfinityStorage), this.securityAccessorInfinityStorageType);
+
+        services.AddScoped(typeof(IPrincipalManagementService), this.principalManagementServiceType);
 
         services.AddSingleton(this.defaultSecurityRuleCredential);
 

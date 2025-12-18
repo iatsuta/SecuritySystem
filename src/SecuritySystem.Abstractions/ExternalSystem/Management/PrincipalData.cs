@@ -9,11 +9,6 @@ public abstract record PrincipalData
     public abstract Type PermissionRestrictionType { get; }
 }
 
-public abstract record PrincipalData<TPrincipal>(TPrincipal Principal) : PrincipalData
-{
-    public override Type PrincipalType { get; } = typeof(TPrincipal);
-}
-
 public record PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(
     TPrincipal Principal,
     IReadOnlyList<PermissionData<TPermission, TPermissionRestriction>> PermissionDataList) : PrincipalData<TPrincipal>(Principal)
@@ -21,4 +16,9 @@ public record PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(
     public override Type PermissionType { get; } = typeof(TPrincipal);
 
     public override Type PermissionRestrictionType { get; } = typeof(TPrincipal);
+}
+
+public abstract record PrincipalData<TPrincipal>(TPrincipal Principal) : PrincipalData
+{
+    public override Type PrincipalType { get; } = typeof(TPrincipal);
 }

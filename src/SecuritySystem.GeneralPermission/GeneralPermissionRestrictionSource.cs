@@ -8,22 +8,26 @@ using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPermissionRestrictionSource<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+public class PermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent> : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
+{
+    public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class GeneralPermissionRestrictionSource<TPermission, TPermissionRestriction, TSecurityContextType,
     TSecurityContextObjectIdent, TSecurityContext, TSecurityContextIdent>(
     IQueryableSource queryableSource,
     IPermissionRestrictionFilterFactory<TPermissionRestriction> permissionRestrictionFilterFactory,
     ISecurityIdentityConverter<TSecurityContextIdent> securityContextIdentConverter,
-    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> bindingInfo,
     Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?> restrictionFilterInfoWrapper)
-
     : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
-    where TPrincipal : class
+
     where TPermission : class
-    where TSecurityRole : class
     where TPermissionRestriction : class
     where TSecurityContextType : class
-    where TSecurityContextObjectIdent : notnull
-
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {

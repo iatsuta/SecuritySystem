@@ -13,21 +13,22 @@ namespace SecuritySystem.GeneralPermission;
 public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    GeneralPermissionBindingInfo bindingInfo) : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
+    IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource) : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
 {
     private readonly Lazy<IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>> lazyInnerService = new(() =>
     {
+        var bindingInfo = bindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
+
         var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
 
         var innerServiceType = typeof(PermissionRestrictionTypeFilterFactory<,,>).MakeGenericType(
-            typeof(TPermissionRestriction),
+            bindingInfo.PermissionRestrictionType,
             bindingInfo.SecurityContextTypeType,
             securityContextTypeIdentityInfo.IdentityType);
 
         return (IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
             securityContextTypeIdentityInfo);
     });
 
@@ -41,7 +42,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
 public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSecurityContextType, TSecurityContextTypeIdent>(
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentConverter,
-    IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType> bindingInfo,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo)
     : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
 

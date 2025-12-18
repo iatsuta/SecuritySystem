@@ -1,6 +1,7 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
+using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
 
@@ -9,23 +10,27 @@ using Microsoft.Extensions.Logging;
 
 using SecuritySystem.Services;
 
-using CommonFramework.VisualIdentitySource;
-
 namespace SecuritySystem.GeneralPermission.Initialize;
 
 public class SecurityRoleInitializer<TSecurityRole>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
-    GeneralPermissionBindingInfo bindingInfo) : ISecurityRoleInitializer<TSecurityRole>
+    IGeneralPermissionBindingInfoSource bindingInfoSource) : ISecurityRoleInitializer<TSecurityRole>
 {
     private readonly Lazy<ISecurityRoleInitializer<TSecurityRole>> lazyInnerService = new(() =>
     {
+        var bindingInfo = bindingInfoSource.GetForSecurityRole(typeof(TSecurityRole));
+
         var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityRole>();
 
         var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TSecurityRole>();
 
-        var innerServiceType = typeof(SecurityRoleInitializer<,,,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType, typeof(TSecurityRole), identityInfo.IdentityType);
+        var innerServiceType = typeof(SecurityRoleInitializer<,,,>).MakeGenericType(
+            bindingInfo.PrincipalType,
+            bindingInfo.PermissionType,
+            bindingInfo.SecurityRoleType,
+            identityInfo.IdentityType);
 
         return (ISecurityRoleInitializer<TSecurityRole>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
     });
@@ -41,11 +46,11 @@ public class SecurityRoleInitializer<TSecurityRole>(
 }
 
 public class SecurityRoleInitializer<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
-    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole> bindingInfo,
     IQueryableSource queryableSource,
     IGenericRepository genericRepository,
     ISecurityRoleSource securityRoleSource,
     ILogger<SecurityRoleInitializer<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>> logger,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo,
     VisualIdentityInfo<TSecurityRole> visualIdentityInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,

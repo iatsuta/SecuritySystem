@@ -16,7 +16,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
 
 
     public TGeneralPermissionBindingInfo ApplyOptionalPaths<TGeneralPermissionBindingInfo>(TGeneralPermissionBindingInfo bindingInfo)
-        where TGeneralPermissionBindingInfo : GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole>
+        where TGeneralPermissionBindingInfo : GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole>
     {
         return bindingInfo
             .PipeMaybe(this.PeriodPath, (b, v) => b with { PermissionPeriod = v.ToPropertyAccessors() })

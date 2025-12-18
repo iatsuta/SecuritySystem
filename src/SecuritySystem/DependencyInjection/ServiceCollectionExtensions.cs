@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using CommonFramework;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.AvailableSecurity;
@@ -21,6 +21,7 @@ using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
+using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource.DependencyInjection;
 using CommonFramework.VisualIdentitySource.DependencyInjection;
@@ -93,7 +94,6 @@ public static class ServiceCollectionExtensions
                 .AddScoped(typeof(LocalStorage<,>))
 
                 .AddScoped<IRootPrincipalSourceService, RootPrincipalSourceService>()
-                .AddScoped<IPrincipalManagementService, FakePrincipalManagementService>()
 
                 .AddSingleton<IClientSecurityRuleNameExtractor, ClientSecurityRuleNameExtractor>()
                 .AddSingleton<IClientSecurityRuleInfoSource, RootClientSecurityRuleInfoSource>()

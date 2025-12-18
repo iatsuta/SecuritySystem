@@ -12,10 +12,12 @@ namespace SecuritySystem.GeneralPermission;
 public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    GeneralPermissionBindingInfo bindingInfo) : IPermissionRestrictionFilterFactory<TPermissionRestriction>
+    IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource) : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 {
     private readonly Lazy<IPermissionRestrictionFilterFactory<TPermissionRestriction>> lazyInnerService = new(() =>
     {
+        var bindingInfo = bindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
+
         var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
 
         var innerServiceType = typeof(PermissionRestrictionFilterFactory<,,,>).MakeGenericType(
@@ -27,14 +29,8 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
         return (IPermissionRestrictionFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
             securityContextTypeIdentityInfo);
     });
-
-    //public Expression<Func<TPermissionRestriction, bool>> CreateFilter(SecurityContextRestrictionFilterInfo restrictionFilterInfo)
-    //{
-    //    return this.lazyInnerService.Value.CreateFilter(restrictionFilterInfo);
-    //}
 
     public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
@@ -45,24 +41,16 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
 }
 
 public class PermissionRestrictionFilterFactory<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>(
-    ISecurityContextInfoSource securityContextInfoSource,
     IIdentityInfoSource identityInfoSource,
     ISecurityContextSource securityContextSource,
     ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentConverter,
     IPermissionRestrictionTypeFilterFactory<TPermissionRestriction> permissionRestrictionTypeFilterFactory,
-    IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
-    IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo) : IPermissionRestrictionFilterFactory<TPermissionRestriction>
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo)
+    : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 
     where TSecurityContextTypeIdent : notnull
     where TSecurityContextObjectIdent : notnull
 {
-    //public Expression<Func<TPermissionRestriction, bool>> CreateFilter(SecurityContextRestrictionFilterInfo restrictionFilterInfo)
-    //{
-    //    return new Func<SecurityContextRestrictionFilterInfo<ISecurityContext>?, Expression<Func<TPermissionRestriction, bool>>>(this.CreateFilter)
-    //        .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
-    //        .Invoke<Expression<Func<TPermissionRestriction, bool>>>(this);
-    //}
-
     public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext

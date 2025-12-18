@@ -3,27 +3,24 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-//public class PrincipalRootValidator(IServiceProvider serviceProvider) : ISecurityValidator<PrincipalData>
-//{
-//    public const string Key = "Root";
+public class PrincipalRootValidator(IServiceProvider serviceProvider) : ISecurityValidator<PrincipalData>
+{
+    //public PermissionGeneralValidator(
+    //    ISecurityValidator<PermissionRestriction> permissionRestrictionValidator,
+    //    [FromKeyedServices(PermissionRequiredContextValidator.Key)] ISecurityValidator<TPermission> permissionRequiredContextValidator,
+    //    [FromKeyedServices(PermissionDelegateValidator.Key)] ISecurityValidator<TPermission> permissionDelegateValidator)
+    //{
+    //    this.RuleForEach(permission => permission.Restrictions).SetValidator(permissionRestrictionValidator);
 
-
-//    //public PermissionGeneralValidator(
-//    //    ISecurityValidator<PermissionRestriction> permissionRestrictionValidator,
-//    //    [FromKeyedServices(PermissionRequiredContextValidator.Key)] ISecurityValidator<TPermission> permissionRequiredContextValidator,
-//    //    [FromKeyedServices(PermissionDelegateValidator.Key)] ISecurityValidator<TPermission> permissionDelegateValidator)
-//    //{
-//    //    this.RuleForEach(permission => permission.Restrictions).SetValidator(permissionRestrictionValidator);
-
-//    //    this.Include(permissionRequiredContextValidator);
-//    //    this.Include(permissionDelegateValidator);
-//    //}
-//    public async Task ValidateAsync(PrincipalData principalData, CancellationToken cancellationToken)
-//    {
-//        principalData.PrincipalType
-//        //throw new NotImplementedException();
-//    }
-//}
+    //    this.Include(permissionRequiredContextValidator);
+    //    this.Include(permissionDelegateValidator);
+    //}
+    public async Task ValidateAsync(PrincipalData principalData, CancellationToken cancellationToken)
+    {
+        //principalData.PrincipalType
+        //throw new NotImplementedException();
+    }
+}
 
 
 public class PrincipalRootValidator<TPrincipal, TPermission, TPermissionRestriction> : ISecurityValidator<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>>
@@ -41,16 +38,5 @@ public class PrincipalRootValidator<TPrincipal, TPermission, TPermissionRestrict
     public async Task ValidateAsync(PrincipalData<TPrincipal, TPermission, TPermissionRestriction> principalData, CancellationToken cancellationToken)
     {
         //throw new NotImplementedException();
-    }
-}
-
-public class PermissionRootValidator<TPermission, TPermissionRestriction> : ISecurityValidator<
-    PermissionData<TPermission, TPermissionRestriction>>
-{
-    public const string Key = "Root";
-
-    public Task ValidateAsync(PermissionData<TPermission, TPermissionRestriction> permissionData, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }

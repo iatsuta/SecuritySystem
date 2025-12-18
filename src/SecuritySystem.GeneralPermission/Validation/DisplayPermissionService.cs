@@ -6,13 +6,15 @@ using SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
+
 public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
     IDomainObjectDisplayService domainObjectDisplayService,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextStorage securityContextStorage,
     VisualIdentityInfo<TSecurityContextType> securityContextTypeVisualIdentityInfo)
-    : IDisplayPermissionService<TPermission, TPermissionRestriction>
+    : IDisplayPermissionService<PermissionData<TPermission, TPermissionRestriction>>
     where TSecurityRole : class
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
@@ -34,8 +36,8 @@ public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TP
         }
 
         foreach (var securityContextTypeGroup in permissionData.Restrictions.GroupBy(
-                     bindingInfo.SecurityContextType.Getter,
-                     bindingInfo.SecurityContextObjectId.Getter))
+                     restrictionBindingInfo.SecurityContextType.Getter,
+                     restrictionBindingInfo.SecurityContextObjectId.Getter))
         {
             var securityContextTypeName = securityContextTypeVisualIdentityInfo.Name.Getter(securityContextTypeGroup.Key);
 

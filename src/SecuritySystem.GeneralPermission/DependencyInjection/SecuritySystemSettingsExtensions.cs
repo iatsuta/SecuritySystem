@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
-using CommonFramework.DependencyInjection;
+﻿using CommonFramework;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +9,8 @@ using SecuritySystem.GeneralPermission.Initialize;
 using SecuritySystem.GeneralPermission.Validation;
 using SecuritySystem.Services;
 
+using System.Linq.Expressions;
+
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
 public static class SecuritySystemSettingsExtensions
@@ -20,44 +19,22 @@ public static class SecuritySystemSettingsExtensions
     {
         public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
             TSecurityContextObjectIdent>(
-            GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
-                bindingInfo,
-            Action<IGeneralPermissionSettings<TPermission, TSecurityRole>>? setupAction = null)
-            where TPrincipal : class
-            where TPermission : class
-            where TSecurityRole : class
-            where TPermissionRestriction : class
-            where TSecurityContextType : class
-            where TSecurityContextObjectIdent : notnull
+            GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+            GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo)
         {
-            var settings = new GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole>();
-
-            setupAction?.Invoke(settings);
-
-            var finalBindingInfo = settings.ApplyOptionalPaths(bindingInfo);
-
             return securitySystemSettings
-                .AddPermissionSystem(sp => ActivatorUtilities
-                    .CreateInstance<
-                        GeneralPermissionSystemFactory<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-                            TSecurityContextObjectIdent>>(sp, finalBindingInfo))
-                .AddExtensions(sc => sc
-                    .AddSingleton(finalBindingInfo)
-                    .AddSingleton<GeneralPermissionBindingInfo>(finalBindingInfo)
-                    .AddSingletonFrom<GeneralPermissionBindingInfo<TPrincipal, TPermission>, GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole
-                        , TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>()
-                    .AddSingletonFrom<GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole>, GeneralPermissionBindingInfo<TPrincipal, TPermission
-                        , TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>()
-                    .AddSingletonFrom<IPermissionRestrictionToPermissionInfo<TPermissionRestriction, TPermission>, GeneralPermissionBindingInfo<TPrincipal,
-                        TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>()
-                    .AddSingletonFrom<IPermissionToPrincipalInfo<TPermission, TPrincipal>, GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole,
-                        TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>()
-                    .AddSingletonFrom<IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>
-                        , GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-                            TSecurityContextObjectIdent>>()
-                    .AddSingletonFrom<IPermissionRestrictionToSecurityContextTypeInfo<TPermissionRestriction, TSecurityContextType>,
-                        GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-                            TSecurityContextObjectIdent>>()
+                .AddPermissionSystem(sp => new GeneralPermissionSystemFactory(sp, bindingInfo))
+                .AddExtensions(services => services
+
+                    .AddSingleton<GeneralPermissionBindingInfo>(bindingInfo)
+                    .AddSingleton<GeneralPermissionBindingInfo<TPermission>>(bindingInfo)
+                    .AddSingleton<GeneralPermissionBindingInfo<TPermission, TPrincipal>>(bindingInfo)
+                    .AddSingleton(bindingInfo)
+
+                    .AddSingleton<GeneralPermissionRestrictionBindingInfo>(restrictionBindingInfo)
+                    .AddSingleton<GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType>>(restrictionBindingInfo)
+                    .AddSingleton<GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>(restrictionBindingInfo)
+                    .AddSingleton(restrictionBindingInfo)
 
                     .AddSingleton(typeof(IPermissionRestrictionTypeFilterFactory<>), typeof(PermissionRestrictionTypeFilterFactory<>))
                     .AddScoped(typeof(IPermissionRestrictionFilterFactory<>), typeof(PermissionRestrictionFilterFactory<>))
@@ -67,14 +44,16 @@ public static class SecuritySystemSettingsExtensions
                     .AddScoped(typeof(IAvailablePermissionFilterFactory<>), typeof(AvailablePermissionFilterFactory<>))
                     .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
                     .AddScoped(typeof(IAvailablePermissionSource<>), typeof(AvailablePermissionSource<>))
-                    .AddScoped<IAvailableSecurityRoleSource, GeneralAvailableSecurityRoleSource>()
 
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
-                    .AddScoped<ISecurityValidator<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>>, PrincipalRootValidator<TPrincipal, TPermission, TPermissionRestriction>>()
+                    .AddScoped<ISecurityValidator<PrincipalData>, PrincipalRootValidator>()
 
                     .AddSingleton<InitializerSettings>()
+
+                    .AddSingleton<IGeneralPermissionBindingInfoSource, GeneralPermissionBindingInfoSource>()
+                    .AddSingleton<IGeneralPermissionRestrictionBindingInfoSource, GeneralPermissionRestrictionBindingInfoSource>()
                 );
         }
 
@@ -93,17 +72,25 @@ public static class SecuritySystemSettingsExtensions
             where TSecurityContextType : class
             where TSecurityContextObjectIdent : notnull
         {
-            return securitySystemSettings.AddGeneralPermission(
-                new GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-                    TSecurityContextObjectIdent>
+            var settings = new GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole>();
+
+            setupAction?.Invoke(settings);
+
+            var bindingInfo = new GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole>
+            {
+                Principal = principalPath.ToPropertyAccessors(),
+                SecurityRole = securityRolePath.ToPropertyAccessors(),
+            }.Pipe(settings.ApplyOptionalPaths);
+
+            var restrictionBindingInfo =
+                new GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission>
                 {
-                    Principal = principalPath.ToPropertyAccessors(),
-                    SecurityRole = securityRolePath.ToPropertyAccessors(),
                     Permission = permissionPath.ToPropertyAccessors(),
                     SecurityContextType = securityContextTypePath.ToPropertyAccessors(),
                     SecurityContextObjectId = securityContextObjectIdPath.ToPropertyAccessors()
-                },
-                setupAction);
+                };
+
+            return securitySystemSettings.AddGeneralPermission(bindingInfo, restrictionBindingInfo);
         }
     }
 }

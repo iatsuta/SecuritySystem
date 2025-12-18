@@ -7,11 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, GeneralPermissionBindingInfo bindingInfo) : IPermissionFilterFactory<TPermission>
+public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource) : IPermissionFilterFactory<TPermission>
 {
     private readonly Lazy<IPermissionFilterFactory<TPermission>> lazyInnerService = new(() =>
     {
-        var innerServiceType = typeof(PermissionFilterFactory<,>).MakeGenericType(typeof(TPermission), bindingInfo.PermissionRestrictionType);
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
+
+        var innerServiceType = typeof(PermissionFilterFactory<,,,>).MakeGenericType(bindingInfo.PermissionType, bindingInfo.PermissionRestrictionType);
 
         return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType);
     });
@@ -26,9 +28,9 @@ public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvid
         this.lazyInnerService.Value.CreateFilter(securityContextRestriction);
 }
 
-public class PermissionFilterFactory<TPermission, TPermissionRestriction>(
+public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     IQueryableSource queryableSource,
-    IPermissionRestrictionToPermissionInfo<TPermissionRestriction, TPermission> bindingInfo,
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> bindingInfo,
     IPermissionRestrictionFilterFactory<TPermissionRestriction> permissionRestrictionFilterFactory) : IPermissionFilterFactory<TPermission>
     where TPermissionRestriction : class
 {

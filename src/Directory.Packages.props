@@ -3,8 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="IvAt.CommonFramework.RelativePath" Version="1.6.3" />
-    <PackageVersion Include="IvAt.CommonFramework.VisualIdentitySource" Version="1.6.3" />
+    <PackageVersion Include="IvAt.CommonFramework.RelativePath" Version="1.6.4" />
+    <PackageVersion Include="IvAt.CommonFramework.VisualIdentitySource" Version="1.6.4" />
     <PackageVersion Include="IvAt.GenericQueryable.EntityFramework" Version="1.6.3" />
     <PackageVersion Include="IvAt.HierarchicalExpand" Version="1.6.3" />
     <PackageVersion Include="IvAt.HierarchicalExpand.Abstractions" Version="1.6.3" />

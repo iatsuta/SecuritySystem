@@ -16,15 +16,17 @@ public class PrincipalDomainService<TPrincipal>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
-    GeneralPermissionBindingInfo bindingInfo) : IPrincipalDomainService<TPrincipal>
+    IGeneralPermissionBindingInfoSource bindingInfoSource) : IPrincipalDomainService<TPrincipal>
 {
     private readonly Lazy<IPrincipalDomainService<TPrincipal>> lazyInnerService = new(() =>
     {
-        var identityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
+        var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
-        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
+        var identityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PrincipalType);
 
-        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(typeof(TPrincipal), bindingInfo.PermissionType, identityInfo.IdentityType);
+        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
+
+        var innerServiceType = typeof(PrincipalDomainService<,,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType, identityInfo.IdentityType);
 
         return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
     });
@@ -45,7 +47,7 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 	IQueryableSource queryableSource,
 	IGenericRepository genericRepository,
 	IEnumerable<IUserSource> userSources,
-	IPermissionToPrincipalInfo<TPermission, TPrincipal> permissionToPrincipalInfo,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
 	ISecurityIdentityConverter<TPrincipalIdent> identityConverter,
 	IdentityInfo<TPrincipal, TPrincipalIdent> identityInfo,
 	VisualIdentityInfo<TPrincipal> visualIdentityInfo) : IPrincipalDomainService<TPrincipal>
@@ -102,44 +104,10 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
 		return identRequest.SingleOrDefault();
 	}
 
-	//public async Task SaveAsync(PrincipalData<TPrincipal> basePrincipalData, CancellationToken cancellationToken)
- //   {
- //       var principal = basePrincipalData.Principal;
-
- //       if (identityInfo.Id.Getter(basePrincipalData.Principal) == default)
- //       {
- //           await this.TryInitIdent(principal, cancellationToken);
- //       }
-
- //       foreach (var permissionData in principalData.PermissionDataList)
- //       {
- //           foreach (var permissionRestriction in permissionData.Restrictions)
- //           {
- //               await genericRepository.SaveAsync(permissionRestriction, cancellationToken);
- //           }
- //       }
-
- //       var principalData = (PrincipalData<TPrincipal, TPermission, TPermissionRestriction>)basePrincipalData;
-
- //       await principalRootValidator.ValidateAsync(principalData, cancellationToken);
-
- //       await genericRepository.SaveAsync(principalData.Principal, cancellationToken);
-
- //       foreach (var permissionData in principalData.PermissionDataList)
- //       {
- //           await genericRepository.SaveAsync(permissionData.Permission, cancellationToken);
-
- //           foreach (var permissionRestriction in permissionData.Restrictions)
- //           {
- //               await genericRepository.SaveAsync(permissionRestriction, cancellationToken);
- //           }
- //       }
-	//}
-
 	public async Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken)
 	{
 		if (!force && await queryableSource.GetQueryable<TPermission>()
-			    .GenericAnyAsync(permissionToPrincipalInfo.Principal.Path.Select(p => p == principal), cancellationToken))
+			    .GenericAnyAsync(bindingInfo.Principal.Path.Select(p => p == principal), cancellationToken))
 		{
 			throw new InvalidOperationException($"Removing principal \"{visualIdentityInfo.Name.Getter(principal)}\" must be empty");
 		}

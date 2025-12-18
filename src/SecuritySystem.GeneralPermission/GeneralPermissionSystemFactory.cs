@@ -4,21 +4,12 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPermissionSystemFactory<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    IServiceProvider serviceProvider,
-    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo)
-    : IPermissionSystemFactory
-
-    where TPrincipal : class
-    where TPermission : class
-    where TSecurityRole : class
-    where TPermissionRestriction : class
-    where TSecurityContextType : class
-    where TSecurityContextObjectIdent : notnull
+public class GeneralPermissionSystemFactory(IServiceProvider serviceProvider, GeneralPermissionBindingInfo bindingInfo) : IPermissionSystemFactory
 {
-    public IPermissionSystem Create(SecurityRuleCredential securityRuleCredential) =>
-        ActivatorUtilities
-            .CreateInstance<
-                GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>>(
-                serviceProvider, bindingInfo, securityRuleCredential);
+    public IPermissionSystem Create(SecurityRuleCredential securityRuleCredential)
+    {
+        var permissionSystemType = typeof(GeneralPermissionSystem<>).MakeGenericType(bindingInfo.PermissionType);
+
+        return (IPermissionSystem)ActivatorUtilities.CreateInstance(serviceProvider, permissionSystemType, securityRuleCredential);
+    }
 }

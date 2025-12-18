@@ -11,16 +11,18 @@ namespace SecuritySystem.GeneralPermission;
 
 public class PermissionSecurityRoleFilterFactory<TPermission>(
     IServiceProvider serviceProvider,
-    GeneralPermissionBindingInfo bindingInfo,
+    IGeneralPermissionBindingInfoSource bindingInfoSource,
     IIdentityInfoSource identityInfoSource) : IPermissionSecurityRoleFilterFactory<TPermission>
 {
     private readonly Lazy<IPermissionSecurityRoleFilterFactory<TPermission>> lazyInnerService = new(() =>
     {
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
+
         var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
 
         var innerServiceType = typeof(PermissionSecurityRoleFilterFactory<,,,>).MakeGenericType(
             bindingInfo.PrincipalType,
-            typeof(TPermission),
+            bindingInfo.PermissionType,
             bindingInfo.SecurityRoleType,
             securityRoleIdentityInfo.IdentityType);
 
@@ -36,7 +38,7 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
 
 public class PermissionSecurityRoleFilterFactory<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
-    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole> permissionToSecurityRoleInfo,
+    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo) : IPermissionSecurityRoleFilterFactory<TPermission>
     where TSecurityRoleIdent : notnull
 {
@@ -52,6 +54,6 @@ public class PermissionSecurityRoleFilterFactory<TPrincipal, TPermission, TSecur
     {
         var convertedIdents = idents.Select(ident => securityIdentityConverter.Convert(TypedSecurityIdentity.Create(ident)).Id).ToList();
 
-        return permissionToSecurityRoleInfo.SecurityRole.Path.Select(identityInfo.Id.Path).Select(srId => convertedIdents.Contains(srId));
+        return bindingInfo.SecurityRole.Path.Select(identityInfo.Id.Path).Select(srId => convertedIdents.Contains(srId));
     }
 }

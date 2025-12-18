@@ -6,16 +6,9 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-//public class PrincipalUniquePermissionValidator : ISecurityValidator<PrincipalData>
-//{
-//    public Task ValidateAsync(PrincipalData value, CancellationToken cancellationToken)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
 public class PrincipalUniquePermissionValidator<TPrincipal, TPermission, TPermissionRestriction>(
 	IVisualIdentityInfoSource visualIdentityInfoSource,
-	IDisplayPermissionService<TPermission, TPermissionRestriction> displayPermissionService,
+	IDisplayPermissionService<PermissionData<TPermission, TPermissionRestriction>> displayPermissionService,
 	IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>> comparer)
 	: ISecurityValidator<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>>
 {

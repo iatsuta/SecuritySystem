@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.AccessDenied;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
@@ -46,6 +47,9 @@ public interface ISecuritySystemSettings
 
     ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
         where TStorage : class, ISecurityAccessorInfinityStorage;
+
+    ISecuritySystemSettings SetPrincipalManagementService<TPrincipalManagementService>()
+        where TPrincipalManagementService : class, IPrincipalManagementService;
 
     ISecuritySystemSettings SetDefaultSecurityRuleCredential(SecurityRuleCredential securityRuleCredential);
 

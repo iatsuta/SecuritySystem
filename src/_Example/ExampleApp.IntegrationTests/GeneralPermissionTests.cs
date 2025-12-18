@@ -49,8 +49,7 @@ public class GeneralPermissionTests : TestBase
 
         var principalDomainService = serviceProvider.GetRequiredService<IPrincipalDomainService<Principal>>();
 
-        var principalRootValidator =
-            serviceProvider.GetRequiredService<ISecurityValidator<PrincipalData<Principal, Permission, PermissionRestriction>>>();
+        var principalRootValidator = serviceProvider.GetRequiredService<ISecurityValidator<PrincipalData>>();
 
         var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
 

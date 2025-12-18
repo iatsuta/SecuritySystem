@@ -10,18 +10,17 @@ namespace SecuritySystem.GeneralPermission;
 public class RawPermissionConverter<TPermissionRestriction>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    GeneralPermissionBindingInfo bindingInfo)
+    IGeneralPermissionRestrictionBindingInfoSource bindingInfoSource)
     : IRawPermissionConverter<TPermissionRestriction>
     where TPermissionRestriction : class
 {
     private readonly Lazy<IRawPermissionConverter<TPermissionRestriction>> lazyInnerService = new(() =>
     {
+        var bindingInfo = bindingInfoSource.GetForPermissionRestriction(typeof(TPermissionRestriction));
+
         var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityContextTypeType);
 
-        var innerServiceType = typeof(RawPermissionConverter<,,,,,,>).MakeGenericType(
-            bindingInfo.PrincipalType,
-            bindingInfo.PermissionType,
-            bindingInfo.SecurityRoleType,
+        var innerServiceType = typeof(RawPermissionConverter<,,,>).MakeGenericType(
             bindingInfo.PermissionRestrictionType,
             bindingInfo.SecurityContextTypeType,
             bindingInfo.SecurityContextObjectIdentType,
@@ -30,7 +29,6 @@ public class RawPermissionConverter<TPermissionRestriction>(
         return (IRawPermissionConverter<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
             securityContextTypeIdentityInfo);
     });
 
@@ -40,19 +38,14 @@ public class RawPermissionConverter<TPermissionRestriction>(
         IEnumerable<Type> securityContextTypes) => lazyInnerService.Value.ConvertPermission(securityRule, restrictions, securityContextTypes);
 }
 
-public class RawPermissionConverter<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent,
-    TSecurityContextTypeIdent>(
-    GeneralPermissionBindingInfo<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
+public class RawPermissionConverter<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>(
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> bindingInfo,
     ISecurityContextSource securityContextSource,
     IIdentityInfoSource identityInfoSource,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityIdentityConverter<TSecurityContextTypeIdent> securityIdentityConverter,
     IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo) : IRawPermissionConverter<TPermissionRestriction>
 
-
-    where TPrincipal : class
-    where TPermission : class
-    where TSecurityRole : class
     where TPermissionRestriction : class
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull

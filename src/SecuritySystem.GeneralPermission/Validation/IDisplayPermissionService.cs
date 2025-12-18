@@ -2,7 +2,8 @@
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public interface IDisplayPermissionService<TPermission, TPermissionRestriction>
+public interface IDisplayPermissionService<in TPermissionData>
+    where TPermissionData : PermissionData
 {
-	string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData);
+    string ToString(TPermissionData permissionData);
 }
