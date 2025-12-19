@@ -2,13 +2,12 @@
 
 using ExampleApp.Api.Controllers;
 using ExampleApp.Infrastructure.DependencyInjection;
-using ExampleApp.IntegrationTests.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem.Services;
 using SecuritySystem.Testing;
+using SecuritySystem.Testing.DependencyInjection;
 
 namespace ExampleApp.IntegrationTests;
 
@@ -27,11 +26,7 @@ public abstract class TestBase : IAsyncLifetime
                 .AddScoped<TestController>()
                 .AddSingleton(TimeProvider.System)
 
-                .AddScoped<IUserCredentialNameResolver, UserCredentialNameResolver>()
-                .AddScoped<TestRawUserAuthenticationService>()
-                .ReplaceScopedFrom<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
-                .AddSingleton<RootAuthManager>()
-                .AddValidator<DuplicateServiceUsageValidator>()
+                .AddSecuritySystemTesting()
 
                 .Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });

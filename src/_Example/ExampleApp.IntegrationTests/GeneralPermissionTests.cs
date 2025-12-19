@@ -1,10 +1,9 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain.Auth.General;
-using ExampleApp.IntegrationTests.Services;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem;
+using SecuritySystem.Testing;
 using SecuritySystem.UserSource;
 
 namespace ExampleApp.IntegrationTests;
