@@ -6,6 +6,11 @@ namespace SecuritySystem.ExternalSystem.Management;
 
 public class RootPrincipalSourceService(IEnumerable<IPrincipalSourceService> principalSourceServices) : IRootPrincipalSourceService
 {
+    public IPrincipalSourceService ForPrincipal(Type principalType)
+    {
+        return principalSourceServices.Single(pss => pss.PrincipalType == principalType);
+    }
+
     public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,
         int limit,

@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>IvAt.SecuritySystem.Testing</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem\SecuritySystem.csproj" />
+  </ItemGroup>
+
+</Project>

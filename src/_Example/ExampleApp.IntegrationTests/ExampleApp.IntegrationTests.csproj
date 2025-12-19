@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SecuritySystem.Testing\SecuritySystem.Testing.csproj" />
     <ProjectReference Include="..\ExampleApp.Api\ExampleApp.Api.csproj" />
   </ItemGroup>
 

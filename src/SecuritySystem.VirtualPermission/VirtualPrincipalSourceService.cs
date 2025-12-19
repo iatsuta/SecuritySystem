@@ -17,38 +17,46 @@ using System.Reflection;
 
 namespace SecuritySystem.VirtualPermission;
 
-public class VirtualPrincipalSourceService<TPrincipal, TPermission>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
+public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
+    IServiceProvider serviceProvider,
+    VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+    IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
 
 	where TPrincipal : class
 	where TPermission : class
 {
-	private readonly Lazy<IPrincipalSourceService> lazyPrincipalSourceService = new(() =>
-		{
-			var principalIdentityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
+    private readonly Lazy<IPrincipalSourceService> lazyInnerService = new(() =>
+    {
+        var principalIdentityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
 
-			var permissionIdentityInfo = identityInfoSource.GetIdentityInfo<TPermission>();
+        var permissionIdentityInfo = identityInfoSource.GetIdentityInfo<TPermission>();
 
-			var innerServiceType = typeof(VirtualPrincipalSourceService<,,,>).MakeGenericType(typeof(TPrincipal), typeof(TPermission),
-				principalIdentityInfo.IdentityType, permissionIdentityInfo.IdentityType);
+        var innerServiceType = typeof(VirtualPrincipalSourceService<,,,>).MakeGenericType(
+            typeof(TPrincipal),
+            typeof(TPermission),
+            principalIdentityInfo.IdentityType,
+            permissionIdentityInfo.IdentityType);
 
-			return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, principalIdentityInfo, permissionIdentityInfo);
-		});
+        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo, principalIdentityInfo, permissionIdentityInfo);
+    });
 
-	private IPrincipalSourceService PrincipalSourceService => this.lazyPrincipalSourceService.Value;
+    private IPrincipalSourceService InnerService => this.lazyInnerService.Value;
 
-	public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+    public Type PrincipalType => this.InnerService.PrincipalType;
+
+    public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
 	{
-		return this.PrincipalSourceService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
+		return this.InnerService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
 	}
 
 	public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
 	{
-		return this.PrincipalSourceService.TryGetPrincipalAsync(userCredential, cancellationToken);
+		return this.InnerService.TryGetPrincipalAsync(userCredential, cancellationToken);
 	}
 
 	public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
 	{
-		return this.PrincipalSourceService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
+		return this.InnerService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
 	}
 }
 
@@ -72,6 +80,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 
     private readonly IExpressionEvaluator expressionEvaluator =
         expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalIdent, TPermissionIdent>));
+
+    public Type PrincipalType { get; } = typeof(TPrincipal);
 
     public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,

@@ -14,17 +14,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPrincipalManagementService<TPrincipal>(
+public class GeneralPrincipalManagementService(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
-    IGeneralPermissionBindingInfoSource bindingInfoSource,
+    IEnumerable<GeneralPermissionBindingInfo> bindingInfoList,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IPrincipalManagementService
 {
     private readonly Lazy<IPrincipalManagementService> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
+        var bindingInfo = bindingInfoList.Single(bi => !bi.IsReadonly);
 
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
@@ -41,8 +41,12 @@ public class GeneralPrincipalManagementService<TPrincipal>(
                 bindingInfo.PrincipalType,
                 bindingInfo.PermissionType,
                 bindingInfo.SecurityRoleType,
-                restrictionBindingInfo.PermissionRestrictionType, restrictionBindingInfo.SecurityContextTypeType,
-                restrictionBindingInfo.SecurityContextObjectIdentType);
+                restrictionBindingInfo.PermissionRestrictionType,
+                restrictionBindingInfo.SecurityContextTypeType,
+                restrictionBindingInfo.SecurityContextObjectIdentType,
+                securityRoleIdentityInfo.IdentityType,
+                permissionIdentityInfo.IdentityType,
+                securityContextTypeIdentityInfo.IdentityType);
 
         return (IPrincipalManagementService)ActivatorUtilities.CreateInstance(
             serviceProvider,
@@ -56,6 +60,8 @@ public class GeneralPrincipalManagementService<TPrincipal>(
     });
 
     private IPrincipalManagementService InnerService => this.lazyInnerService.Value;
+
+    public Type PrincipalType => this.InnerService.PrincipalType;
 
     public Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default) =>
         this.InnerService.CreatePrincipalAsync(principalName, cancellationToken);
@@ -102,6 +108,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     where TSecurityContextObjectIdent : notnull
     where TSecurityContextTypeIdent : notnull
 {
+    public Type PrincipalType { get; } = typeof(TPrincipal);
+
     public async Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
     {
         var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
@@ -205,7 +213,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         TypedPermission typedPermission,
         CancellationToken cancellationToken)
     {
-        if (typedPermission.Identity.IsDefault || typedPermission.IsVirtual)
+        if (!typedPermission.Identity.IsDefault || typedPermission.IsVirtual)
         {
             throw new Exception("wrong typed permission");
         }
@@ -259,6 +267,11 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     private async Task<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)> UpdatePermission(TPermission dbPermission,
         TypedPermission typedPermission, CancellationToken cancellationToken)
     {
+        if (typedPermission.Identity.IsDefault || typedPermission.IsVirtual)
+        {
+            throw new Exception("wrong typed permission");
+        }
+
         var dbSecurityRoleId = bindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
         var dbSecurityRole = securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(dbSecurityRoleId));
 

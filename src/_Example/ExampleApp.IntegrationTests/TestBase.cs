@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Services;
+using SecuritySystem.Testing;
 
 namespace ExampleApp.IntegrationTests;
 
@@ -25,12 +26,18 @@ public abstract class TestBase : IAsyncLifetime
                 .AddScoped<InitController>()
                 .AddScoped<TestController>()
                 .AddSingleton(TimeProvider.System)
+
+                .AddScoped<IUserCredentialNameResolver, UserCredentialNameResolver>()
                 .AddScoped<TestRawUserAuthenticationService>()
                 .ReplaceScopedFrom<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
+                .AddSingleton<RootAuthManager>()
                 .AddValidator<DuplicateServiceUsageValidator>()
+
                 .Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
+
+    protected RootAuthManager AuthManager => this.RootServiceProvider.GetRequiredService<RootAuthManager>();
 
     public async ValueTask InitializeAsync()
     {

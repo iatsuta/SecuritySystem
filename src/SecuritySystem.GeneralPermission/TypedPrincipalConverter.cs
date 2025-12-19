@@ -6,6 +6,19 @@ using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.GeneralPermission;
 
+public class TypedPrincipalConverter<TPrincipal> : ITypedPrincipalConverter<TPrincipal>
+{
+    public Expression<Func<TPrincipal, TypedPrincipalHeader>> GetToHeaderExpression()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<TypedPrincipal> ToTypedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class TypedPrincipalConverter<TPrincipal, TPrincipalIdent>(IdentityInfo<TPrincipal, TPrincipalIdent> identityInfo) : ITypedPrincipalConverter<TPrincipal>
 	where TPrincipalIdent : notnull
 {

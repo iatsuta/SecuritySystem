@@ -22,7 +22,9 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 
 	private readonly IQueryable<TPrincipal> principalQueryable = queryableSource.GetQueryable<TPrincipal>();
 
-	public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+    public Type PrincipalType { get; } = typeof(TPrincipal);
+
+    public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
 	{
 		return await principalQueryable
 			.Pipe(

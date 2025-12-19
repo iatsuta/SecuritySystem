@@ -72,12 +72,13 @@ public static class ServiceCollectionExtensions
                 .AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
                 .AddSingleton<IDomainObjectIdentsParser, DomainObjectIdentsParser>()
 
-                .AddSingleton(typeof(ISecurityRepository<>), typeof(SecurityRepository<>))
+                .AddScoped(typeof(ISecurityRepository<>), typeof(SecurityRepository<>))
                 .AddSingleton(typeof(ISecurityIdentityFilterFactory<>), typeof(SecurityIdentityFilterFactory<>))
 
                 .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
 
                 .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
+                .AddSingleton<ISecurityIdentityExtractor, SecurityIdentityExtractor>()
 
                 .AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
                 .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))

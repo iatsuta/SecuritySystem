@@ -22,6 +22,16 @@ public abstract record SecurityIdentity
     }
 }
 
+public record DefaultSecurityIdentity : SecurityIdentity
+{
+    public override bool IsDefault { get; } = true;
+
+    public override object GetId()
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public record UntypedSecurityIdentity(string Id) : SecurityIdentity
 {
     public override bool IsDefault => EqualityComparer<string>.Default.Equals(this.Id, null);

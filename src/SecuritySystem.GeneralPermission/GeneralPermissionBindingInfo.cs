@@ -29,6 +29,8 @@ public abstract record GeneralPermissionBindingInfo<TPermission> : GeneralPermis
 
 public abstract record GeneralPermissionBindingInfo
 {
+    public bool IsReadonly { get; init; }
+
     public abstract Type PrincipalType { get; }
 
     public abstract Type PermissionType { get; }

@@ -6,6 +6,8 @@ namespace SecuritySystem.ExternalSystem.Management;
 
 public class FakePrincipalManagementService : IPrincipalManagementService
 {
+    public Type PrincipalType => throw new NotImplementedException();
+
     public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();

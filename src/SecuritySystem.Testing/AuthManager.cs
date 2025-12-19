@@ -1,0 +1,76 @@
+﻿using SecuritySystem.Credential;
+using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.Services;
+using SecuritySystem.UserSource;
+
+namespace SecuritySystem.Testing;
+
+public class AuthManager(
+    Tuple<UserCredential?> baseUserCredential,
+    IRawUserAuthenticationService userAuthenticationService,
+    IPrincipalManagementService principalManagementService,
+    IRootPrincipalSourceService rootPrincipalSourceService,
+    IUserCredentialNameResolver credentialNameResolver,
+    ISecurityIdentityExtractor securityIdentityExtractor)
+{
+    private readonly IPrincipalSourceService principalSourceService = rootPrincipalSourceService.ForPrincipal(principalManagementService.PrincipalType);
+
+    private readonly UserCredential userCredential = baseUserCredential.Item1 ?? userAuthenticationService.GetUserName();
+
+    private string PrincipalName => credentialNameResolver.GetUserName(userCredential);
+
+    public async Task<SecurityIdentity> CreatePrincipalAsync(CancellationToken cancellationToken = default)
+    {
+        var principalData = await principalManagementService.CreatePrincipalAsync(this.PrincipalName, cancellationToken);
+
+        return securityIdentityExtractor.Extract(principalData);
+    }
+
+    public async Task<SecurityIdentity> AddUserRoleAsync(TestPermission[] testPermissions, CancellationToken cancellationToken = default)
+    {
+        var existsPrincipal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
+
+        var preUpdatePrincipal = existsPrincipal ?? await this.RawCreatePrincipalAsync(cancellationToken);
+
+        var newPermissions = testPermissions.Select(testPermission => new TypedPermission(
+            new DefaultSecurityIdentity(),
+            false,
+            testPermission.SecurityRole,
+            (testPermission.Period.StartDate, testPermission.Period.EndDate),
+            nameof(TestPermission),
+            testPermission.Restrictions));
+
+        var updatedPrincipal = preUpdatePrincipal with { Permissions = preUpdatePrincipal.Permissions.Concat(newPermissions).ToList() };
+
+        await principalManagementService.UpdatePermissionsAsync(
+            updatedPrincipal.Header.Identity,
+            updatedPrincipal.Permissions,
+            cancellationToken);
+
+        return updatedPrincipal.Header.Identity;
+    }
+
+    private async Task<TypedPrincipal> RawCreatePrincipalAsync(CancellationToken cancellationToken)
+    {
+        var newPrincipalData = await principalManagementService.CreatePrincipalAsync(this.PrincipalName, cancellationToken);
+
+        return new TypedPrincipal(new TypedPrincipalHeader(securityIdentityExtractor.Extract(newPrincipalData), this.PrincipalName, false), []);
+    }
+
+    public async Task RemovePermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        var principal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
+
+        if (principal is { Header.IsVirtual: false })
+        {
+            await principalManagementService.RemovePrincipalAsync(principal.Header.Identity, true, cancellationToken);
+        }
+    }
+
+    public async Task<TypedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
+    {
+        var principal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
+
+        return principal ?? throw new UserSourceException($"Principal \"{userCredential}\" not found");
+    }
+}

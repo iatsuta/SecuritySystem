@@ -17,7 +17,8 @@ public static class SecuritySystemSettingsExtensions
 {
     extension(ISecuritySystemSettings securitySystemSettings)
     {
-        public ISecuritySystemSettings AddGeneralPermission(GeneralPermissionBindingInfo bindingInfo, GeneralPermissionRestrictionBindingInfo restrictionBindingInfo)
+        public ISecuritySystemSettings AddGeneralPermission(GeneralPermissionBindingInfo bindingInfo,
+            GeneralPermissionRestrictionBindingInfo restrictionBindingInfo)
         {
             return securitySystemSettings
                 .AddPermissionSystem(sp => new GeneralPermissionSystemFactory(sp, bindingInfo))
@@ -38,13 +39,20 @@ public static class SecuritySystemSettingsExtensions
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
+                    .AddScoped(typeof(ITypedPrincipalConverter<>), typeof(TypedPrincipalConverter<>))
+
+                    .AddScoped(typeof(IAvailablePrincipalSource<>), typeof(AvailablePrincipalSource<>))
+
                     .AddScoped<ISecurityValidator<PrincipalData>, PrincipalRootValidator>()
 
                     .AddSingleton<InitializerSettings>()
 
                     .AddSingleton<IGeneralPermissionBindingInfoSource, GeneralPermissionBindingInfoSource>()
                     .AddSingleton<IGeneralPermissionRestrictionBindingInfoSource, GeneralPermissionRestrictionBindingInfoSource>()
-                );
+
+                    .AddScoped(typeof(IPrincipalSourceService), typeof(GeneralPrincipalSourceService<>).MakeGenericType(bindingInfo.PrincipalType))
+                )
+                .Pipe(!bindingInfo.IsReadonly, v => v.SetPrincipalManagementService<GeneralPrincipalManagementService>());
         }
 
         public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,

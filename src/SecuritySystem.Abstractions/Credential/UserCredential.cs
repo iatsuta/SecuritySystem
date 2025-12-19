@@ -13,9 +13,9 @@ public abstract record UserCredential
 	}
 
 
-	public static implicit operator UserCredential(string name)
+	public static implicit operator UserCredential(string? name)
 	{
-		return name == null ? null : new NamedUserCredential(name);
+		return name == null ? null! : new NamedUserCredential(name);
 	}
 
 	public static implicit operator UserCredential(SecurityIdentity identity)

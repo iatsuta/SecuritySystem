@@ -11,9 +11,13 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
     {
         return securityIdentity switch
         {
+            DefaultSecurityIdentity => TypedSecurityIdentity.Create(default(TIdent)!),
+
             TypedSecurityIdentity<TIdent> typedSecurityIdentity => typedSecurityIdentity,
+
             UntypedSecurityIdentity { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id) =>
                 TypedSecurityIdentity.Create(id),
+
             TypedSecurityIdentity<string> { Id: var stringId } when TIdent.TryParse(stringId, formatProviderSource.FormatProvider, out var id) =>
                 TypedSecurityIdentity.Create(id),
             _ => null
