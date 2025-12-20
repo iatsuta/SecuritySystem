@@ -43,7 +43,7 @@ public class GetPrincipalHandler(
 					Id = typedPermission.Identity.GetId().ToString()!,
 					IsVirtual = typedPermission.IsVirtual,
 					Role = typedPermission.SecurityRole.Name,
-					RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.ToString()!,
+					RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.GetId().ToString()!,
 					Comment = typedPermission.Comment,
 					StartDate = typedPermission.Period.StartDate,
 					EndDate = typedPermission.Period.EndDate,

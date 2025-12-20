@@ -9,7 +9,7 @@ public abstract record UserCredential
 
 	public record IdentUserCredential(SecurityIdentity Identity) : UserCredential
 	{
-		public override string? ToString() => this.Identity.ToString();
+		public override string? ToString() => this.Identity.GetId().ToString();
 	}
 
 
