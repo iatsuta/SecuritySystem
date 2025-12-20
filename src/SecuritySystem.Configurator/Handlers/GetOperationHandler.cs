@@ -18,7 +18,7 @@ public class GetOperationHandler(
     {
         if (!securitySystem.IsSecurityAdministrator()) return new OperationDetailsDto { BusinessRoles = [], Principals = [] };
 
-        var operationName = (string)context.Request.RouteValues["name"]!;
+        var operationName = context.ExtractName();
 
         var securityRoles = roleSource.SecurityRoles
                                       .Where(x => x.Information.Operations.Any(o => o.Name == operationName))

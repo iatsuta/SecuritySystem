@@ -1,17 +1,10 @@
-﻿using System.Security;
-
-namespace SecuritySystem;
+﻿namespace SecuritySystem;
 
 public abstract record SecurityIdentity
 {
-    //private object? compareKey;
-
     public abstract bool IsDefault { get; }
 
     public abstract object GetId();
-
-    //public object GetCompareKey() => this.compareKey ??= this.IsDefault ? new object() : this.GetId();
-
 
     public static implicit operator SecurityIdentity(Guid id)
     {
@@ -23,25 +16,12 @@ public abstract record SecurityIdentity
         return (TypedSecurityIdentity)id;
     }
 
-    public static SecurityIdentity CreateRaw(string? str)
-    {
-        return string.IsNullOrWhiteSpace(str) ? new DefaultSecurityIdentity() : new UntypedSecurityIdentity(str);
-    }
-}
-
-public record DefaultSecurityIdentity : SecurityIdentity
-{
-    public override bool IsDefault { get; } = true;
-
-    public override object GetId()
-    {
-        throw new NotImplementedException();
-    }
+    public static SecurityIdentity Default { get; } = new UntypedSecurityIdentity("");
 }
 
 public record UntypedSecurityIdentity(string Id) : SecurityIdentity
 {
-    public override bool IsDefault => EqualityComparer<string>.Default.Equals(this.Id, null);
+    public override bool IsDefault => string.IsNullOrEmpty(this.Id);
 
     public override object GetId() => this.Id;
 }
@@ -50,7 +30,8 @@ public abstract record TypedSecurityIdentity : SecurityIdentity
 {
 	public abstract Type IdentType { get; }
 
-	public static implicit operator TypedSecurityIdentity(Guid id)
+
+    public static implicit operator TypedSecurityIdentity(Guid id)
 	{
 		return Create(id);
 	}

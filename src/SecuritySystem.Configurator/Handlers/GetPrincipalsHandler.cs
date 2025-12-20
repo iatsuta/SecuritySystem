@@ -15,7 +15,7 @@ public class GetPrincipalsHandler([WithoutRunAs] ISecuritySystem securitySystem,
 	{
 		if (!securitySystem.IsSecurityAdministrator()) return new List<EntityDto>();
 
-		var nameFilter = (string)context.Request.Query["searchToken"]!;
+        var nameFilter = context.ExtractSearchToken();
 
 		var principals = await principalSourceService.GetPrincipalsAsync(nameFilter, 70, cancellationToken);
 

@@ -278,6 +278,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         }
 
         var dbSecurityRoleId = bindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
+
         var dbSecurityRole = securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(dbSecurityRoleId));
 
         if (dbSecurityRole != typedPermission.SecurityRole)

@@ -3,7 +3,7 @@
 namespace SecuritySystem.Services;
 
 public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProviderSource) : ISecurityIdentityConverter<TIdent>
-    where TIdent : IParsable<TIdent>
+    where TIdent : IParsable<TIdent>, new()
 {
     private readonly Expression<Func<TIdent, TIdent>> identityExpr = v => v;
 
@@ -11,9 +11,9 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
     {
         return securityIdentity switch
         {
-            DefaultSecurityIdentity => TypedSecurityIdentity.Create(default(TIdent)!),
-
             TypedSecurityIdentity<TIdent> typedSecurityIdentity => typedSecurityIdentity,
+
+            UntypedSecurityIdentity i when i == SecurityIdentity.Default => TypedSecurityIdentity.Create(new TIdent()),
 
             UntypedSecurityIdentity { Id: var rawId } when TIdent.TryParse(rawId, formatProviderSource.FormatProvider, out var id) =>
                 TypedSecurityIdentity.Create(id),

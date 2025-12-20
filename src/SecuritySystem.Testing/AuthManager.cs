@@ -33,7 +33,7 @@ public class AuthManager(
         var preUpdatePrincipal = existsPrincipal ?? await this.RawCreatePrincipalAsync(cancellationToken);
 
         var newPermissions = testPermissions.Select(testPermission => new ManagedPermission(
-            new DefaultSecurityIdentity(),
+            SecurityIdentity.Default,
             false,
             testPermission.SecurityRole,
             (testPermission.Period.StartDate, testPermission.Period.EndDate),

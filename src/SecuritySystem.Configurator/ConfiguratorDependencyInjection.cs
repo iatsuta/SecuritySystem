@@ -41,28 +41,31 @@ public static class ConfiguratorDependencyInjection
             .UseRouting() // needed for IIS
             .UseEndpoints(x => x.MapApi(route));
 
-    private static void MapApi(this IEndpointRouteBuilder endpointsBuilder, string route) =>
-        endpointsBuilder.ServiceProvider.GetRequiredService<IEnumerable<IConfiguratorModule>>()
-                        .Foreach(module => module.MapApi(endpointsBuilder, route));
-
-    public static IEndpointRouteBuilder Get<THandler>(this IEndpointRouteBuilder builder, string pattern)
-        where THandler : IHandler
+    extension(IEndpointRouteBuilder endpointsBuilder)
     {
-        builder.MapGet(pattern, async x => await x.RequestServices.GetRequiredService<THandler>().Execute(x, x.RequestAborted));
-        return builder;
-    }
+        private void MapApi(string route) =>
+            endpointsBuilder.ServiceProvider.GetRequiredService<IEnumerable<IConfiguratorModule>>()
+                .Foreach(module => module.MapApi(endpointsBuilder, route));
 
-    public static IEndpointRouteBuilder Post<THandler>(this IEndpointRouteBuilder builder, string pattern)
-        where THandler : IHandler
-    {
-        builder.MapPost(pattern, async x => await x.RequestServices.GetRequiredService<THandler>().Execute(x, x.RequestAborted));
-        return builder;
-    }
+        public IEndpointRouteBuilder Get<THandler>(string pattern)
+            where THandler : IHandler
+        {
+            endpointsBuilder.MapGet(pattern, async x => await x.RequestServices.GetRequiredService<THandler>().Execute(x, x.RequestAborted));
+            return endpointsBuilder;
+        }
 
-    public static IEndpointRouteBuilder Delete<THandler>(this IEndpointRouteBuilder builder, string pattern)
-        where THandler : IHandler
-    {
-        builder.MapDelete(pattern, async x => await x.RequestServices.GetRequiredService<THandler>().Execute(x, x.RequestAborted));
-        return builder;
+        public IEndpointRouteBuilder Post<THandler>(string pattern)
+            where THandler : IHandler
+        {
+            endpointsBuilder.MapPost(pattern, async x => await x.RequestServices.GetRequiredService<THandler>().Execute(x, x.RequestAborted));
+            return endpointsBuilder;
+        }
+
+        public IEndpointRouteBuilder Delete<THandler>(string pattern)
+            where THandler : IHandler
+        {
+            endpointsBuilder.MapDelete(pattern, async x => await x.RequestServices.GetRequiredService<THandler>().Execute(x, x.RequestAborted));
+            return endpointsBuilder;
+        }
     }
 }

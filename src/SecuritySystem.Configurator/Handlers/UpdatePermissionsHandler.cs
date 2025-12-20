@@ -20,12 +20,11 @@ public class UpdatePermissionsHandler(
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = (string)context.Request.RouteValues["id"]!;
         var permissions = await this.ParseRequestBodyAsync<List<RequestBodyDto>>(context);
 
         var typedPermissions = permissions.Select(this.ToManagedPermission).ToList();
 
-        var mergeResult = await principalManagementService.UpdatePermissionsAsync(new UntypedSecurityIdentity(principalId), typedPermissions, cancellationToken);
+        var mergeResult = await principalManagementService.UpdatePermissionsAsync(context.ExtractSecurityIdentity(), typedPermissions, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
         {
@@ -58,9 +57,8 @@ public class UpdatePermissionsHandler(
 
             select (securityContextType, idents);
 
-
         return new ManagedPermission(
-            SecurityIdentity.CreateRaw(permission.PermissionId),
+            new UntypedSecurityIdentity(permission.PermissionId),
 	        permission.IsVirtual,
 	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
 	        (permission.StartDate, permission.EndDate),
