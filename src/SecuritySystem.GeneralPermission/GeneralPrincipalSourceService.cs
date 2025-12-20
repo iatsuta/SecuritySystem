@@ -14,8 +14,9 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 	IQueryableSource queryableSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
 	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
-	IManagedPrincipalConverter<TPrincipal> typedPrincipalConverter,
-	IUserQueryableSource<TPrincipal> userQueryableSource) : IPrincipalSourceService
+	IManagedPrincipalHeaderConverter<TPrincipal> principalHeaderConverter,
+    IManagedPrincipalConverter<TPrincipal> principalConverter,
+    IUserQueryableSource<TPrincipal> userQueryableSource) : IPrincipalSourceService
 	where TPrincipal : class
 {
 	private readonly PropertyAccessors<TPrincipal, string> nameAccessors = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name;
@@ -30,7 +31,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 			.Pipe(
 				!string.IsNullOrWhiteSpace(nameFilter),
 				q => q.Where(this.nameAccessors.Path.Select(principalName => principalName.Contains(nameFilter))))
-			.Select(typedPrincipalConverter.GetToHeaderExpression())
+			.Select(principalHeaderConverter.ConvertExpression)
 			.GenericToListAsync(cancellationToken);
 	}
 
@@ -44,7 +45,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 		}
 		else
 		{
-			return await typedPrincipalConverter.ToManagedPrincipalAsync(principal, cancellationToken);
+			return await principalConverter.ToManagedPrincipalAsync(principal, cancellationToken);
 		}
 	}
 

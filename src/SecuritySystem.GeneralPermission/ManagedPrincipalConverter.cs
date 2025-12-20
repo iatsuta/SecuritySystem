@@ -1,8 +1,5 @@
 ﻿using CommonFramework;
-using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
-using CommonFramework.IdentitySource;
-using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
 
@@ -10,76 +7,48 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem.Management;
 
-using System.Linq.Expressions;
-
 namespace SecuritySystem.GeneralPermission;
 
 public class ManagedPrincipalConverter<TPrincipal>(
     IServiceProvider serviceProvider,
-    IIdentityInfoSource identityInfoSource,
-    IVisualIdentityInfoSource visualIdentityInfoSource,
     IGeneralPermissionBindingInfoSource bindingInfoSource) : IManagedPrincipalConverter<TPrincipal>
 {
     private readonly Lazy<IManagedPrincipalConverter<TPrincipal>> lazyInnerService = new(() =>
     {
         var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
-        var principalIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PrincipalType);
-
         //var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
 
-        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
-
-        var innerServiceType = typeof(ManagedPrincipalConverter<,,,>).MakeGenericType(
+        var innerServiceType = typeof(ManagedPrincipalConverter<,,>).MakeGenericType(
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType,
-            bindingInfo.SecurityRoleType,
-            principalIdentityInfo.IdentityType);
+            bindingInfo.SecurityRoleType);
 
         return (IManagedPrincipalConverter<TPrincipal>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
-            principalIdentityInfo,
-            visualIdentityInfo);
+            bindingInfo);
     });
-
-    public Expression<Func<TPrincipal, ManagedPrincipalHeader>> GetToHeaderExpression() => this.lazyInnerService.Value.GetToHeaderExpression();
 
     public Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken) =>
         this.lazyInnerService.Value.ToManagedPrincipalAsync(principal, cancellationToken);
 }
 
-public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, TPrincipalIdent>(
+public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole>(
     GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IQueryableSource queryableSource,
-    IdentityInfo<TPrincipal, TPrincipalIdent> principalIdentityInfo,
-    VisualIdentityInfo<TPrincipal> visualIdentityInfo) : IManagedPrincipalConverter<TPrincipal>
-	where TPrincipalIdent : notnull
-    where TPrincipal: class
+    IManagedPrincipalHeaderConverter<TPrincipal> headerConverter) : IManagedPrincipalConverter<TPrincipal>
+    where TPrincipal : class
     where TPermission : class
 {
-    private readonly Expression<Func<TPrincipal, ManagedPrincipalHeader>> convertToHeaderExpression =
-        ExpressionEvaluateHelper.InlineEvaluate<Func<TPrincipal, ManagedPrincipalHeader>>(ee =>
-            principal => new ManagedPrincipalHeader(
-                new TypedSecurityIdentity<TPrincipalIdent>(ee.Evaluate(principalIdentityInfo.Id.Path, principal)),
-                ee.Evaluate(visualIdentityInfo.Name.Path, principal),
-                bindingInfo.IsReadonly));
-
-    private Func<TPrincipal, ManagedPrincipalHeader>? convertToHeaderFunc;
-
-    public Expression<Func<TPrincipal, ManagedPrincipalHeader>> GetToHeaderExpression() => this.convertToHeaderExpression;
-
     public async Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken)
     {
-        var convertFunc = convertToHeaderFunc ??= convertToHeaderExpression.Compile();
-
         var permissions = await queryableSource.GetQueryable<TPermission>()
             .Where(bindingInfo.Principal.Path.Select(p => p == principal))
             .GenericToListAsync(cancellationToken);
 
         return new ManagedPrincipal(
-            convertFunc(principal),
+            headerConverter.Convert(principal),
             await permissions.SyncWhenAll(permission => this.ToManagedPermissionAsync(permission, cancellationToken)));
     }
 

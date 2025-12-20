@@ -41,6 +41,8 @@ public static class SecuritySystemSettingsExtensions
 
                     .AddScoped(typeof(IManagedPrincipalConverter<>), typeof(ManagedPrincipalConverter<>))
 
+                    .AddSingleton(typeof(IManagedPrincipalHeaderConverter<>), typeof(ManagedPrincipalHeaderConverter<>))
+
                     .AddScoped(typeof(IAvailablePrincipalSource<>), typeof(AvailablePrincipalSource<>))
 
                     .AddScoped<ISecurityValidator<PrincipalData>, PrincipalRootValidator>()

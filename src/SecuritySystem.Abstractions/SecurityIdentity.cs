@@ -16,6 +16,8 @@ public abstract record SecurityIdentity
         return (TypedSecurityIdentity)id;
     }
 
+    public override string? ToString() => this.GetId().ToString();
+
     public static SecurityIdentity Default { get; } = new UntypedSecurityIdentity("");
 }
 
@@ -59,6 +61,4 @@ public record TypedSecurityIdentity<TIdent>(TIdent Id) : TypedSecurityIdentity
 	{
 		return this.Id;
 	}
-
-	public override string? ToString() => this.Id.ToString();
 }
