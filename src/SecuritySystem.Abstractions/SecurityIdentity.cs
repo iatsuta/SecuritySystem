@@ -1,10 +1,12 @@
-﻿namespace SecuritySystem;
+﻿using System.Security;
+
+namespace SecuritySystem;
 
 public abstract record SecurityIdentity
 {
     //private object? compareKey;
 
-	public abstract bool IsDefault { get; }
+    public abstract bool IsDefault { get; }
 
     public abstract object GetId();
 
@@ -13,12 +15,17 @@ public abstract record SecurityIdentity
 
     public static implicit operator SecurityIdentity(Guid id)
     {
-        return (TypedSecurityIdentity) id;
+        return (TypedSecurityIdentity)id;
     }
 
     public static implicit operator SecurityIdentity(int id)
     {
         return (TypedSecurityIdentity)id;
+    }
+
+    public static SecurityIdentity CreateRaw(string? str)
+    {
+        return string.IsNullOrWhiteSpace(str) ? new DefaultSecurityIdentity() : new UntypedSecurityIdentity(str);
     }
 }
 

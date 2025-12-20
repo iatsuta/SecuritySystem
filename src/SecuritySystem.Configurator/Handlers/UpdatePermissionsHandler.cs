@@ -60,7 +60,7 @@ public class UpdatePermissionsHandler(
 
 
         return new ManagedPermission(
-            new UntypedSecurityIdentity(permission.PermissionId),
+            SecurityIdentity.CreateRaw(permission.PermissionId),
 	        permission.IsVirtual,
 	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
 	        (permission.StartDate, permission.EndDate),
