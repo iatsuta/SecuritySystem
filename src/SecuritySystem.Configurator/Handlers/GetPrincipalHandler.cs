@@ -57,7 +57,7 @@ public class GetPrincipalHandler(
 
 							return new ContextDto
 							{
-								Id = securityContextInfo.Identity.ToString()!,
+								Id = securityContextInfo.Identity.GetId().ToString()!,
 								Name = securityContextInfo.Name,
 								Entities = restriction.Value.Cast<object>().Select(securityContextId =>
 										new RestrictionDto { Id = securityContextId.ToString()!, Name = typedCache[securityContextId] })

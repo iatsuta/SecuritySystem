@@ -35,6 +35,7 @@ public class ManagedPrincipalHeaderConverter<TPrincipal>(
     });
 
     public Expression<Func<TPrincipal, ManagedPrincipalHeader>> ConvertExpression => this.lazyInnerService.Value.ConvertExpression;
+
     public ManagedPrincipalHeader Convert(TPrincipal principal) => this.lazyInnerService.Value.Convert(principal);
 }
 
@@ -52,7 +53,6 @@ public class ManagedPrincipalHeaderConverter<TPrincipal, TPrincipalIdent>(
                 new TypedSecurityIdentity<TPrincipalIdent>(ee.Evaluate(principalIdentityInfo.Id.Path, principal)),
                 ee.Evaluate(visualIdentityInfo.Name.Path, principal),
                 bindingInfo.IsReadonly));
-
 
     public ManagedPrincipalHeader Convert(TPrincipal principal) => (this.convertFunc ??= this.ConvertExpression.Compile()).Invoke(principal);
 }

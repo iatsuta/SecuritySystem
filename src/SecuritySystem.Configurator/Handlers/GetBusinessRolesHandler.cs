@@ -26,7 +26,7 @@ public class GetBusinessRolesHandler(
                .Select(
                    x => new FullRoleDto
                         {
-                            Id = x.Identity.ToString()!,
+                            Id = x.Identity.GetId().ToString()!,
                             Name = x.Name,
                             IsVirtual = x.Information.IsVirtual,
                             Contexts =
