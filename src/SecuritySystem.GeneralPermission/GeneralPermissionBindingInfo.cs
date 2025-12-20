@@ -25,6 +25,12 @@ public abstract record GeneralPermissionBindingInfo<TPermission> : GeneralPermis
     public PropertyAccessors<TPermission, string>? PermissionComment { get; init; }
 
     public PropertyAccessors<TPermission, (DateTime StartDate, DateTime? EndDate)>? PermissionPeriod { get; init; }
+
+    public (DateTime StartDate, DateTime? EndDate) GetSafePeriod(TPermission permission) =>
+        this.PermissionPeriod == null ? (DateTime.MinValue, null) : this.PermissionPeriod.Getter(permission);
+
+    public string GetSafeComment(TPermission permission) =>
+        this.PermissionComment == null ? "" : this.PermissionComment.Getter(permission);
 }
 
 public abstract record GeneralPermissionBindingInfo
