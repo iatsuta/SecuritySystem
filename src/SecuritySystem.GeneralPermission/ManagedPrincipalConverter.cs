@@ -3,12 +3,14 @@ using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+
 using GenericQueryable;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.ExternalSystem.Management;
+
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Security.Principal;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -20,19 +22,25 @@ public class ManagedPrincipalConverter<TPrincipal>(
 {
     private readonly Lazy<IManagedPrincipalConverter<TPrincipal>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPrincipal));
+        var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
-        var identityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PrincipalType);
+        var principalIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PrincipalType);
+
+        //var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
 
         var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
-        var innerServiceType = typeof(ManagedPrincipalConverter<,>).MakeGenericType(bindingInfo.PrincipalType, identityInfo.IdentityType);
+        var innerServiceType = typeof(ManagedPrincipalConverter<,,,>).MakeGenericType(
+            bindingInfo.PrincipalType,
+            bindingInfo.PermissionType,
+            bindingInfo.SecurityRoleType,
+            principalIdentityInfo.IdentityType);
 
         return (IManagedPrincipalConverter<TPrincipal>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
             bindingInfo,
-            identityInfo,
+            principalIdentityInfo,
             visualIdentityInfo);
     });
 
@@ -45,14 +53,16 @@ public class ManagedPrincipalConverter<TPrincipal>(
 public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, TPrincipalIdent>(
     GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
     IQueryableSource queryableSource,
-    IdentityInfo<TPrincipal, TPrincipalIdent> identityInfo,
+    IdentityInfo<TPrincipal, TPrincipalIdent> principalIdentityInfo,
     VisualIdentityInfo<TPrincipal> visualIdentityInfo) : IManagedPrincipalConverter<TPrincipal>
-	where TPrincipalIdent : notnull where TPermission : class
+	where TPrincipalIdent : notnull
+    where TPrincipal: class
+    where TPermission : class
 {
     private readonly Expression<Func<TPrincipal, ManagedPrincipalHeader>> convertToHeaderExpression =
         ExpressionEvaluateHelper.InlineEvaluate<Func<TPrincipal, ManagedPrincipalHeader>>(ee =>
             principal => new ManagedPrincipalHeader(
-                new TypedSecurityIdentity<TPrincipalIdent>(ee.Evaluate(identityInfo.Id.Path, principal)),
+                new TypedSecurityIdentity<TPrincipalIdent>(ee.Evaluate(principalIdentityInfo.Id.Path, principal)),
                 ee.Evaluate(visualIdentityInfo.Name.Path, principal),
                 bindingInfo.IsReadonly));
 
@@ -65,7 +75,7 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, T
         var convertFunc = convertToHeaderFunc ??= convertToHeaderExpression.Compile();
 
         var permissions = await queryableSource.GetQueryable<TPermission>()
-            .Where(bindingInfo.Principal.Path.Select(ExpressionHelper.GetEqualityWithExpr(principal)))
+            .Where(bindingInfo.Principal.Path.Select(p => p == principal))
             .GenericToListAsync(cancellationToken);
 
         return new ManagedPrincipal(
@@ -76,38 +86,40 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, T
 
     private async Task<ManagedPermission> ToManagedPermissionAsync(TPermission permission, CancellationToken cancellationToken)
     {
-        var restrictions =
+        throw new NotImplementedException();
 
-        new ManagedPermission(
-            permission.Id,
-            false,
-            securityRoleSource.GetSecurityRole(permission.Role.Id),
-            permission.Period.StartDate,
-            permission.Period.EndDate,
-            permission.Comment,
-            permission.Restrictions
-                .GroupBy(r => r.SecurityContextType.Id, r => r.SecurityContextId)
-                .ToDictionary(
-                    g => securityContextInfoSource.GetSecurityContextInfo(g.Key).Type,
-                    Array (g) => g.ToArray()))
+        //var restrictions =
 
-        var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        //new ManagedPermission(
+        //    permission.Id,
+        //    false,
+        //    securityRoleSource.GetSecurityRole(permission.Role.Id),
+        //    permission.Period.StartDate,
+        //    permission.Period.EndDate,
+        //    permission.Comment,
+        //    permission.Restrictions
+        //        .GroupBy(r => r.SecurityContextType.Id, r => r.SecurityContextId)
+        //        .ToDictionary(
+        //            g => securityContextInfoSource.GetSecurityContextInfo(g.Key).Type,
+        //            Array (g) => g.ToArray()))
 
-        var restrictions = bindingInfo
-            .GetSecurityContextTypes()
-            .Select(identityInfoSource.GetIdentityInfo)
-            .Select(identityInfo =>
-                (identityInfo.DomainObjectType, getRestrictionsMethod
-                    .MakeGenericMethod(identityInfo.DomainObjectType, identityInfo.IdentityType)
-                    .Invoke<Array>(this, permission, identityInfo)))
-            .ToDictionary();
+        //var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-        return new ManagedPermission(
-            TypedSecurityIdentity.Create(permissionIdentityInfo.Id.Getter(permission)),
-            true,
-            bindingInfo.SecurityRole,
-            bindingInfo.PeriodFilter == null ? (DateTime.MinValue, null) : this.expressionEvaluator.Evaluate(bindingInfo.PeriodFilter, permission),
-            bindingInfo.CommentPath == null ? "Virtual Permission" : this.expressionEvaluator.Evaluate(bindingInfo.CommentPath, permission),
-            restrictions);
+        //var restrictions = bindingInfo
+        //    .GetSecurityContextTypes()
+        //    .Select(identityInfoSource.GetIdentityInfo)
+        //    .Select(identityInfo =>
+        //        (identityInfo.DomainObjectType, getRestrictionsMethod
+        //            .MakeGenericMethod(identityInfo.DomainObjectType, identityInfo.IdentityType)
+        //            .Invoke<Array>(this, permission, identityInfo)))
+        //    .ToDictionary();
+
+        //return new ManagedPermission(
+        //    TypedSecurityIdentity.Create(permissionIdentityInfo.Id.Getter(permission)),
+        //    true,
+        //    bindingInfo.SecurityRole,
+        //    bindingInfo.PeriodFilter == null ? (DateTime.MinValue, null) : this.expressionEvaluator.Evaluate(bindingInfo.PeriodFilter, permission),
+        //    bindingInfo.CommentPath == null ? "Virtual Permission" : this.expressionEvaluator.Evaluate(bindingInfo.CommentPath, permission),
+        //    restrictions);
     }
 }

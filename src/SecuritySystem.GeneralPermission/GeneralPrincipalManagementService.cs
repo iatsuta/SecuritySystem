@@ -184,6 +184,11 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         {
             var result = await this.ToPermissionData(oldDbPermission, cancellationToken);
 
+            foreach (var dbRestriction in result.Restrictions)
+            {
+                await genericRepository.RemoveAsync(dbRestriction, cancellationToken);
+            }
+
             await genericRepository.RemoveAsync(oldDbPermission, cancellationToken);
 
             return result;

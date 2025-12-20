@@ -6,16 +6,21 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
 {
     private readonly HashSet<object> validated = new (ReferenceEqualityComparer.Instance);
 
+    private readonly Lock locker = new ();
+
     public void Validate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
     {
-        if (this.validated.Contains(bindingInfo))
+        lock (this.locker)
         {
-            return;
+            if (this.validated.Contains(bindingInfo))
+            {
+                return;
+            }
+
+            this.InternalValidate(bindingInfo);
+
+            this.validated.Add(bindingInfo);
         }
-
-        this.InternalValidate(bindingInfo);
-
-        this.validated.Add(bindingInfo);
     }
 
     private void InternalValidate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)

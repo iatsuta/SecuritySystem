@@ -17,7 +17,7 @@ public class PrincipalRootValidator(IServiceProvider serviceProvider) : ISecurit
     //}
     public async Task ValidateAsync(PrincipalData principalData, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
 
         //principalData.PrincipalType
         //throw new NotImplementedException();
