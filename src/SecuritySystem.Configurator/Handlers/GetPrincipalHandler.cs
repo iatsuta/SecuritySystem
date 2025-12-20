@@ -71,7 +71,7 @@ public class GetPrincipalHandler(
 			.ToList();
 	}
 
-	private IReadOnlyDictionary<Type, IReadOnlyDictionary<object, string>> GetSecurityContextDict(TypedPrincipal principal)
+	private IReadOnlyDictionary<Type, IReadOnlyDictionary<object, string>> GetSecurityContextDict(ManagedPrincipal principal)
 	{
 		var request =
 

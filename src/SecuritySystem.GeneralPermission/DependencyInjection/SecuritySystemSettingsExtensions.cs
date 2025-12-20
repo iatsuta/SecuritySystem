@@ -39,7 +39,7 @@ public static class SecuritySystemSettingsExtensions
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
-                    .AddScoped(typeof(ITypedPrincipalConverter<>), typeof(TypedPrincipalConverter<>))
+                    .AddScoped(typeof(IManagedPrincipalConverter<>), typeof(ManagedPrincipalConverter<>))
 
                     .AddScoped(typeof(IAvailablePrincipalSource<>), typeof(AvailablePrincipalSource<>))
 

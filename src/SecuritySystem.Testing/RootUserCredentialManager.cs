@@ -76,12 +76,12 @@ public class RootUserCredentialManager(IServiceProvider rootServiceProvider, Use
         await this.ManagerEvaluator.EvaluateAsync(async manager => await manager.RemovePermissionsAsync(cancellationToken));
     }
 
-    public TypedPrincipal GetPrincipal()
+    public ManagedPrincipal GetPrincipal()
     {
         return this.GetPrincipalAsync().GetAwaiter().GetResult();
     }
 
-    public async Task<TypedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
+    public async Task<ManagedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
     {
         return await this.ManagerEvaluator.EvaluateAsync(async manager => await manager.GetPrincipalAsync(cancellationToken));
     }

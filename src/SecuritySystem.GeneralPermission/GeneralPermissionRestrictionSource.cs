@@ -6,19 +6,40 @@ using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(
+    IServiceProvider serviceProvider,
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
     Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?> restrictionFilterInfoWrapper)
     : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
 
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {
-    public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr()
+    private readonly Lazy<IPermissionRestrictionSource<TPermission, TSecurityContextIdent>> lazyInnerService = new(() =>
     {
-        throw new NotImplementedException();
-    }
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(typeof(TPermission));
+
+        var innerServiceType = typeof(GeneralPermissionRestrictionSource<,,,,,>).MakeGenericType(
+
+            restrictionBindingInfo.PermissionType,
+            restrictionBindingInfo.PermissionRestrictionType,
+            restrictionBindingInfo.SecurityContextTypeType,
+            restrictionBindingInfo.SecurityContextObjectIdentType,
+            typeof(TSecurityContext),
+            typeof(TSecurityContextIdent));
+
+        return (IPermissionRestrictionSource<TPermission, TSecurityContextIdent>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            restrictionBindingInfo,
+            restrictionFilterInfoWrapper);
+    });
+
+    public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr() => this.lazyInnerService.Value.GetIdentsExpr();
 }
 
 public class GeneralPermissionRestrictionSource<TPermission, TPermissionRestriction, TSecurityContextType,

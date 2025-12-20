@@ -17,6 +17,8 @@ public class PrincipalRootValidator(IServiceProvider serviceProvider) : ISecurit
     //}
     public async Task ValidateAsync(PrincipalData principalData, CancellationToken cancellationToken)
     {
+        throw new NotImplementedException();
+
         //principalData.PrincipalType
         //throw new NotImplementedException();
     }
@@ -37,6 +39,6 @@ public class PrincipalRootValidator<TPrincipal, TPermission, TPermissionRestrict
     //}
     public async Task ValidateAsync(PrincipalData<TPrincipal, TPermission, TPermissionRestriction> principalData, CancellationToken cancellationToken)
     {
-        //throw new NotImplementedException();
+        throw new NotImplementedException();
     }
 }

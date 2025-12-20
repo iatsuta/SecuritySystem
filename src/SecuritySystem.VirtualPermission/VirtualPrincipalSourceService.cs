@@ -44,12 +44,12 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
 
     public Type PrincipalType => this.InnerService.PrincipalType;
 
-    public Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+    public Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
 	{
 		return this.InnerService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
 	}
 
-	public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
 	{
 		return this.InnerService.TryGetPrincipalAsync(userCredential, cancellationToken);
 	}
@@ -83,7 +83,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
-    public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
+    public async Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,
         int limit,
         CancellationToken cancellationToken)
@@ -107,10 +107,10 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
             .Distinct()
             .GenericToListAsync(cancellationToken);
 
-        return anonHeaders.Select(anonHeader => new TypedPrincipalHeader(TypedSecurityIdentity.Create(anonHeader.Id), anonHeader.Name, true));
+        return anonHeaders.Select(anonHeader => new ManagedPrincipalHeader(TypedSecurityIdentity.Create(anonHeader.Id), anonHeader.Name, true));
     }
 
-    public async Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+    public async Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
     {
         var principal = await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
 
@@ -120,7 +120,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
         }
         else
         {
-            var header = new TypedPrincipalHeader(TypedSecurityIdentity.Create(principalIdentityInfo.Id.Getter(principal)),
+            var header = new ManagedPrincipalHeader(TypedSecurityIdentity.Create(principalIdentityInfo.Id.Getter(principal)),
                 this.expressionEvaluator.Evaluate(principalNamePath, principal),
                 true);
 
@@ -129,11 +129,11 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
                 .Where(bindingInfo.PrincipalPath.Select(p => p == principal))
                 .GenericToListAsync(cancellationToken);
 
-            return new TypedPrincipal(header, permissions.Select(this.ToTypedPermission).ToList());
+            return new ManagedPrincipal(header, permissions.Select(this.ToManagedPermission).ToList());
         }
     }
 
-    private TypedPermission ToTypedPermission(TPermission permission)
+    private ManagedPermission ToManagedPermission(TPermission permission)
     {
         var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
@@ -146,7 +146,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
                     .Invoke<Array>(this, permission, identityInfo)))
             .ToDictionary();
 
-        return new TypedPermission(
+        return new ManagedPermission(
             TypedSecurityIdentity.Create(permissionIdentityInfo.Id.Getter(permission)),
             true,
             bindingInfo.SecurityRole,

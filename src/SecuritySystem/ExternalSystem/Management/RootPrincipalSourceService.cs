@@ -11,7 +11,7 @@ public class RootPrincipalSourceService(IEnumerable<IPrincipalSourceService> pri
         return principalSourceServices.Single(pss => pss.PrincipalType == principalType);
     }
 
-    public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(
+    public async Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(
         string nameFilter,
         int limit,
         CancellationToken cancellationToken = default)
@@ -26,15 +26,15 @@ public class RootPrincipalSourceService(IEnumerable<IPrincipalSourceService> pri
                         .Take(limit);
     }
 
-    public Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default)
+    public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default)
     {
         return this.TryGetPrincipalAsync(
                 ps => ps.TryGetPrincipalAsync(userCredential, cancellationToken),
                 () => throw new Exception($"More one principal {userCredential}"));
     }
 
-    private async Task<TypedPrincipal?> TryGetPrincipalAsync(
-        Func<IPrincipalSourceService, Task<TypedPrincipal?>> getMethod,
+    private async Task<ManagedPrincipal?> TryGetPrincipalAsync(
+        Func<IPrincipalSourceService, Task<ManagedPrincipal?>> getMethod,
         Func<Exception> getOverflowException)
     {
         var preResult = await principalSourceServices.SyncWhenAll(getMethod);
@@ -47,7 +47,7 @@ public class RootPrincipalSourceService(IEnumerable<IPrincipalSourceService> pri
 
                       into g
 
-                      select new TypedPrincipal(
+                      select new ManagedPrincipal(
                           g.Key with { IsVirtual = g.All(p => p.Header.IsVirtual) },
                           g.SelectMany(p => p.Permissions).ToList());
 

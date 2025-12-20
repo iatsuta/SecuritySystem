@@ -14,7 +14,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 	IQueryableSource queryableSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
 	IAvailablePrincipalSource<TPrincipal> availablePrincipalSource,
-	ITypedPrincipalConverter<TPrincipal> typedPrincipalConverter,
+	IManagedPrincipalConverter<TPrincipal> typedPrincipalConverter,
 	IUserQueryableSource<TPrincipal> userQueryableSource) : IPrincipalSourceService
 	where TPrincipal : class
 {
@@ -24,7 +24,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
-    public async Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+    public async Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
 	{
 		return await principalQueryable
 			.Pipe(
@@ -34,7 +34,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 			.GenericToListAsync(cancellationToken);
 	}
 
-	public async Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	public async Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
 	{
 		var principal = await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
 
@@ -44,7 +44,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 		}
 		else
 		{
-			return await typedPrincipalConverter.ToTypedPrincipalAsync(principal, cancellationToken);
+			return await typedPrincipalConverter.ToManagedPrincipalAsync(principal, cancellationToken);
 		}
 	}
 

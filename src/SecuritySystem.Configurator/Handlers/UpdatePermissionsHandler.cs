@@ -23,7 +23,7 @@ public class UpdatePermissionsHandler(
         var principalId = (string)context.Request.RouteValues["id"]!;
         var permissions = await this.ParseRequestBodyAsync<List<RequestBodyDto>>(context);
 
-        var typedPermissions = permissions.Select(this.ToTypedPermission).ToList();
+        var typedPermissions = permissions.Select(this.ToManagedPermission).ToList();
 
         var mergeResult = await principalManagementService.UpdatePermissionsAsync(new UntypedSecurityIdentity(principalId), typedPermissions, cancellationToken);
 
@@ -46,7 +46,7 @@ public class UpdatePermissionsHandler(
         }
     }
 
-    private TypedPermission ToTypedPermission(RequestBodyDto permission)
+    private ManagedPermission ToManagedPermission(RequestBodyDto permission)
     {
         var restrictionsRequest =
 
@@ -59,7 +59,7 @@ public class UpdatePermissionsHandler(
             select (securityContextType, idents);
 
 
-        return new TypedPermission(
+        return new ManagedPermission(
             new UntypedSecurityIdentity(permission.PermissionId),
 	        permission.IsVirtual,
 	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),

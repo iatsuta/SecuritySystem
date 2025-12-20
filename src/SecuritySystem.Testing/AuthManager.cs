@@ -32,7 +32,7 @@ public class AuthManager(
 
         var preUpdatePrincipal = existsPrincipal ?? await this.RawCreatePrincipalAsync(cancellationToken);
 
-        var newPermissions = testPermissions.Select(testPermission => new TypedPermission(
+        var newPermissions = testPermissions.Select(testPermission => new ManagedPermission(
             new DefaultSecurityIdentity(),
             false,
             testPermission.SecurityRole,
@@ -50,11 +50,11 @@ public class AuthManager(
         return updatedPrincipal.Header.Identity;
     }
 
-    private async Task<TypedPrincipal> RawCreatePrincipalAsync(CancellationToken cancellationToken)
+    private async Task<ManagedPrincipal> RawCreatePrincipalAsync(CancellationToken cancellationToken)
     {
         var newPrincipalData = await principalManagementService.CreatePrincipalAsync(this.PrincipalName, cancellationToken);
 
-        return new TypedPrincipal(new TypedPrincipalHeader(securityIdentityExtractor.Extract(newPrincipalData), this.PrincipalName, false), []);
+        return new ManagedPrincipal(new ManagedPrincipalHeader(securityIdentityExtractor.Extract(newPrincipalData), this.PrincipalName, false), []);
     }
 
     public async Task RemovePermissionsAsync(CancellationToken cancellationToken = default)
@@ -67,7 +67,7 @@ public class AuthManager(
         }
     }
 
-    public async Task<TypedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
+    public async Task<ManagedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
     {
         var principal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
 

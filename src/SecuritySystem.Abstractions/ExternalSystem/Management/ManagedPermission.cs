@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.ExternalSystem.Management;
 
-public record TypedPermission(
+public record ManagedPermission(
     SecurityIdentity Identity,
     bool IsVirtual,
     SecurityRole SecurityRole,

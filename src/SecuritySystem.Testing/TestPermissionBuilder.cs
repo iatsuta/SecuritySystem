@@ -59,7 +59,7 @@ public class TestPermissionBuilder
 
     public static implicit operator TestPermission(TestPermissionBuilder testPermissionBuilder)
     {
-        if (testPermissionBuilder.SecurityRole == null)
+        if (testPermissionBuilder.SecurityRole is null)
         {
             throw new InvalidOperationException($"{nameof(testPermissionBuilder.SecurityRole)} not initialized");
         }

@@ -14,6 +14,6 @@ public interface IPrincipalManagementService
 
     Task<PrincipalData> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken = default);
 
-    Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<TypedPermission> typedPermissions,
+    Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<ManagedPermission> typedPermissions,
         CancellationToken cancellationToken = default);
 }
