@@ -51,7 +51,6 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextType
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
     where TSecurityContextTypeIdent : notnull
-
 {
     public Dictionary<Type, Array> ConvertPermission(DomainSecurityRule.RoleBaseSecurityRule securityRule, IReadOnlyList<TPermissionRestriction> restrictions,
         IEnumerable<Type> securityContextTypes)

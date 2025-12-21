@@ -5,7 +5,7 @@ using GenericQueryable;
 using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem;
 using SecuritySystem.AvailableSecurity;
-
+using SecuritySystem.DomainServices;
 using SecuritySystem.Testing;
 
 namespace ExampleApp.IntegrationTests;
@@ -53,7 +53,7 @@ public class GeneralPermissionTests : TestBase
     }
 
     [Fact]
-    public async Task AssignGeneralPermission_WithRootBu_AllEmployeesResolved()
+    public async Task AssignGeneralPermission_WithRootBu_AllTestObjectsResolved()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -69,20 +69,28 @@ public class GeneralPermissionTests : TestBase
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
+        var testObjectDomainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<TestObject>>();
+        var securityProvider = testObjectDomainSecurityService.GetSecurityProvider(testRole);
+
         var authenticationService = scope.ServiceProvider.GetRequiredService<TestRawUserAuthenticationService>();
         authenticationService.CurrentUserName = principalName;
 
         var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
 
-        var employeeRepositoryFactory = scope.ServiceProvider.GetRequiredService<IRepositoryFactory<Employee>>();
-        var employeeRepository = employeeRepositoryFactory.Create(testRole);
+        var testObjectRepositoryFactory = scope.ServiceProvider.GetRequiredService<IRepositoryFactory<TestObject>>();
+        var testObjectRepository = testObjectRepositoryFactory.Create(testRole);
 
-        var expectedResult = await queryableSource.GetQueryable<Employee>().GenericToListAsync(cancellationToken);
+        var expectedResult = await queryableSource.GetQueryable<TestObject>().GenericToListAsync(cancellationToken);
 
         // Act
-        var result = await employeeRepository.GetQueryable().GenericToListAsync(cancellationToken);
+        var result = await testObjectRepository.GetQueryable().GenericToListAsync(cancellationToken);
 
         // Assert
         result.OrderBy(v => v.Id).Should().BeEquivalentTo(expectedResult.OrderBy(v => v.Id));
+
+        foreach (var testObject in result)
+        {
+            securityProvider.HasAccess(testObject).Should().Be(true);
+        }
     }
 }
