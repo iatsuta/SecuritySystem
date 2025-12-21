@@ -66,6 +66,7 @@ public static class ServiceCollectionExtensions
         {
             return services
 
+                .AddSingleton(typeof(IManagedPrincipalHeaderConverterFactory<>), typeof(ManagedPrincipalHeaderConverterFactory<>))
                 .AddSingleton(typeof(IManagedPrincipalHeaderConverter<>), typeof(ManagedPrincipalHeaderConverter<>))
                 .AddScoped(typeof(IPrincipalDomainService<>), typeof(PrincipalDomainService<>))
                 .AddScoped(typeof(IAvailablePermissionFilterFactory<>), typeof(AvailablePermissionFilterFactory<>))
@@ -74,7 +75,7 @@ public static class ServiceCollectionExtensions
                 .AddSingleton<IPermissionBindingInfoSource, PermissionBindingInfoSource>()
 
                 .AddSingleton(typeof(ISecurityIdentityExtractor<>), typeof(SecurityIdentityExtractor<>))
-                .AddSingleton<ISecurityIdentityExtractor, SecurityIdentityExtractor>()
+                .AddSingleton<ISecurityIdentityExtractorFactory, SecurityIdentityExtractorFactory>()
                 .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
                 .AddSingleton<IPrincipalDataSecurityIdentityExtractor, PrincipalDataSecurityIdentityExtractor>()
 

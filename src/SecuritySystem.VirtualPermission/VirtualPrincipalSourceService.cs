@@ -60,13 +60,16 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
     IIdentityInfoSource identityInfoSource,
-    IManagedPrincipalHeaderConverter<TPrincipal> managedPrincipalHeaderConverter,
+    IManagedPrincipalHeaderConverterFactory<TPrincipal> managedPrincipalHeaderConverterFactory,
     ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo) : IPrincipalSourceService
 
     where TPrincipal : class
     where TPermission : class
 {
+    private readonly IManagedPrincipalHeaderConverter<TPrincipal> managedPrincipalHeaderConverter =
+        managedPrincipalHeaderConverterFactory.Create(bindingInfo);
+
     private readonly IExpressionEvaluator expressionEvaluator =
         expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission>));
 

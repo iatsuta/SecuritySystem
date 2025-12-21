@@ -68,8 +68,7 @@ public static class ServiceCollectionExtensions
                                     new AncestorLinkInfo<BusinessUnit, BusinessUnitUndirectAncestorLink>(view => view.Source, view => view.Target)))
                         .AddSecurityContext<Location>(
                             new Guid("{9756440C-6643-4AAD-AB57-A901F3917BA4}"),
-                            scb => scb
-                                .SetIdentityPath(loc => loc.MyId))
+                            scb => scb.SetIdentityPath(loc => loc.MyId))
 
                         .AddDomainSecurityServices(rb =>
                             rb.Add<TestObject>(b => b

@@ -1,5 +1,6 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
+
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -51,7 +52,7 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, T
     IManagedPrincipalHeaderConverter<TPrincipal> headerConverter,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    ISecurityIdentityExtractor securityIdentityExtractor) : IManagedPrincipalConverter<TPrincipal>
+    ISecurityIdentityExtractorFactory securityIdentityExtractorFactory) : IManagedPrincipalConverter<TPrincipal>
     where TPrincipal : class
     where TPermission : class
     where TPermissionRestriction : class
@@ -76,7 +77,7 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, T
 
         var dbSecurityRole = generalBindingInfo.SecurityRole.Getter(permission);
 
-        var securityRole = securityRoleSource.GetSecurityRole(securityIdentityExtractor.Extract(dbSecurityRole));
+        var securityRole = securityRoleSource.GetSecurityRole(securityIdentityExtractorFactory.Create<TSecurityRole>().Extract(dbSecurityRole));
 
         var purePermission = dbRestrictions.GroupBy(
                 restrictionBindingInfo.SecurityContextType.Getter,
@@ -85,11 +86,12 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, T
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var convertedPermission = purePermission
-            .ChangeKey(securityContextType => securityContextInfoSource.GetSecurityContextInfo(securityIdentityExtractor.Extract(securityContextType)).Type)
+            .ChangeKey(securityContextType => securityContextInfoSource
+                .GetSecurityContextInfo(securityIdentityExtractorFactory.Create<TSecurityContextType>().Extract(securityContextType)).Type)
             .ChangeValue(Array (idents) => idents.ToArray());
 
         return new ManagedPermission(
-            securityIdentityExtractor.Extract(permission),
+            securityIdentityExtractorFactory.Create<TPermission>().Extract(permission),
             bindingInfo.IsReadonly,
             securityRole,
             bindingInfo.GetSafePeriod(permission),

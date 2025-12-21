@@ -81,7 +81,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     ISecurityContextInfoSource securityContextInfoSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource,
-    ISecurityIdentityExtractor securityIdentityExtractor,
+    ISecurityIdentityExtractorFactory securityIdentityExtractorFactory,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo)
     : IPrincipalManagementService
 
@@ -92,6 +92,13 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
 {
+    private readonly ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor = securityIdentityExtractorFactory.Create<TPermission>();
+
+    private readonly ISecurityIdentityExtractor<TSecurityRole> securityRoleIdentityExtractor = securityIdentityExtractorFactory.Create<TSecurityRole>();
+
+    private readonly ISecurityIdentityExtractor<TSecurityContextType> securityContextTypeIdentityExtractor =
+        securityIdentityExtractorFactory.Create<TSecurityContextType>();
+
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
     public async Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
@@ -157,8 +164,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(bindingInfo.Principal.Path.Select(p => p == dbPrincipal))
             .GenericToListAsync(cancellationToken);
 
-        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, securityIdentityExtractor.Extract,
-            p => securityIdentityExtractor.TryConvert<TPermission>(p.Identity) ?? new object());
+        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityExtractor.Extract,
+            p => permissionIdentityExtractor.Converter.TryConvert(p.Identity) ?? new object());
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
@@ -264,7 +271,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         var securityRole = generalBindingInfo
             .SecurityRole
             .Getter(dbPermission)
-            .Pipe(securityIdentityExtractor.Extract)
+            .Pipe(securityRoleIdentityExtractor.Extract)
             .Pipe(securityRoleSource.GetSecurityRole);
 
         if (securityRole != managedPermission.SecurityRole)
@@ -281,7 +288,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
                 .ChangeKey(t => securityContextInfoSource.GetSecurityContextInfo(t).Identity)
                 .SelectMany(pair => pair.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => (pair.Key, securityContextId))),
             pr => (
-                securityIdentityExtractor.Extract(restrictionBindingInfo.SecurityContextType.Getter(pr)),
+                securityContextTypeIdentityExtractor.Extract(restrictionBindingInfo.SecurityContextType.Getter(pr)),
                 restrictionBindingInfo.SecurityContextObjectId.Getter(pr)),
             pair => pair);
 

@@ -14,23 +14,22 @@ public class ManagedPrincipalHeaderConverter<TPrincipal>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
-    IPermissionBindingInfoSource bindingInfoSource) : IManagedPrincipalHeaderConverter<TPrincipal>
+    IPermissionBindingInfoSource bindingInfoSource,
+    Tuple<PermissionBindingInfo>? customBindingInfo = null) : IManagedPrincipalHeaderConverter<TPrincipal>
 {
     private readonly Lazy<IManagedPrincipalHeaderConverter<TPrincipal>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
+        var identityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
 
-        var principalIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PrincipalType);
+        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
 
-        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
-
-        var innerServiceType = typeof(ManagedPrincipalHeaderConverter<,>).MakeGenericType(bindingInfo.PrincipalType, principalIdentityInfo.IdentityType);
+        var innerServiceType = typeof(ManagedPrincipalHeaderConverter<,>).MakeGenericType(identityInfo.DomainObjectType, identityInfo.IdentityType);
 
         return (IManagedPrincipalHeaderConverter<TPrincipal>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
-            principalIdentityInfo,
+            customBindingInfo?.Item1 ?? bindingInfoSource.GetForPrincipal(typeof(TPrincipal)),
+            identityInfo,
             visualIdentityInfo);
     });
 
@@ -41,7 +40,7 @@ public class ManagedPrincipalHeaderConverter<TPrincipal>(
 
 public class ManagedPrincipalHeaderConverter<TPrincipal, TPrincipalIdent>(
     PermissionBindingInfo bindingInfo,
-    IdentityInfo<TPrincipal, TPrincipalIdent> principalIdentityInfo,
+    IdentityInfo<TPrincipal, TPrincipalIdent> identityInfo,
     VisualIdentityInfo<TPrincipal> visualIdentityInfo) : IManagedPrincipalHeaderConverter<TPrincipal>
     where TPrincipalIdent : notnull
 {
@@ -50,7 +49,7 @@ public class ManagedPrincipalHeaderConverter<TPrincipal, TPrincipalIdent>(
     public Expression<Func<TPrincipal, ManagedPrincipalHeader>> ConvertExpression { get; } =
         ExpressionEvaluateHelper.InlineEvaluate<Func<TPrincipal, ManagedPrincipalHeader>>(ee =>
             principal => new ManagedPrincipalHeader(
-                new TypedSecurityIdentity<TPrincipalIdent>(ee.Evaluate(principalIdentityInfo.Id.Path, principal)),
+                new TypedSecurityIdentity<TPrincipalIdent>(ee.Evaluate(identityInfo.Id.Path, principal)),
                 ee.Evaluate(visualIdentityInfo.Name.Path, principal),
                 bindingInfo.IsReadonly));
 

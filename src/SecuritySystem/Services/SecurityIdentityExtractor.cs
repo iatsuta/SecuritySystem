@@ -2,8 +2,6 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-using System.Collections.Concurrent;
-
 namespace SecuritySystem.Services;
 
 public class SecurityIdentityExtractor<TDomainObject>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource)
@@ -33,22 +31,4 @@ public class SecurityIdentityExtractor<TDomainObject, TDomainObjectIdent>(ISecur
     public ISecurityIdentityConverter Converter { get; } = converter;
 
     public TypedSecurityIdentity Extract(TDomainObject domainObject) => TypedSecurityIdentity.Create(identityInfo.Id.Getter(domainObject));
-}
-
-public class SecurityIdentityExtractor(IServiceProvider serviceProvider) : ISecurityIdentityExtractor
-{
-    private readonly ConcurrentDictionary<Type, object> cache = new();
-
-    public TypedSecurityIdentity Extract<TDomainObject>(TDomainObject domainObject) =>
-        this.GetExtractor<TDomainObject>().Extract(domainObject);
-
-    public TypedSecurityIdentity? TryConvert<TDomainObject>(SecurityIdentity securityIdentity) =>
-        this.GetExtractor<TDomainObject>().Converter.TryConvert(securityIdentity);
-
-    private ISecurityIdentityExtractor<TDomainObject> GetExtractor<TDomainObject>()
-    {
-        return (ISecurityIdentityExtractor<TDomainObject>)this.cache.GetOrAdd(
-            typeof(TDomainObject),
-            _ => serviceProvider.GetRequiredService<ISecurityIdentityExtractor<TDomainObject>>());
-    }
 }

@@ -6,10 +6,3 @@ public interface ISecurityIdentityExtractor<in TDomainObject>
 
     TypedSecurityIdentity Extract(TDomainObject domainObject);
 }
-
-public interface ISecurityIdentityExtractor
-{
-    TypedSecurityIdentity Extract<TDomainObject>(TDomainObject domainObject);
-
-    TypedSecurityIdentity? TryConvert<TDomainObject>(SecurityIdentity securityIdentity);
-}
