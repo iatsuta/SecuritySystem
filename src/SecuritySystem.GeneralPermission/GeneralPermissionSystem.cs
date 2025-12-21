@@ -76,7 +76,7 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
         where TSecurityContextIdent : notnull
     {
         return ActivatorUtilities
-            .CreateInstance<PermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(
+            .CreateInstance<GeneralPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(
                 serviceProvider,
                 new Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?>(restrictionFilterInfo));
     }

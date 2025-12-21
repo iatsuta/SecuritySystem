@@ -4,6 +4,7 @@ using CommonFramework.GenericRepository;
 using System.Linq.Expressions;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
@@ -20,7 +21,6 @@ public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvid
 
         return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, restrictionBindingInfo);
     });
-
 
     public Expression<Func<TPermission, bool>> CreateFilter(SecurityContextRestriction securityContextRestriction) =>
         this.lazyInnerService.Value.CreateFilter(securityContextRestriction);

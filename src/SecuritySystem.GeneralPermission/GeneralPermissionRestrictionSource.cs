@@ -1,16 +1,16 @@
-﻿using CommonFramework.ExpressionEvaluate;
-using CommonFramework.GenericRepository;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 
-using Microsoft.Extensions.DependencyInjection;
+using CommonFramework.ExpressionEvaluate;
+using CommonFramework.GenericRepository;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class PermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(
+public class GeneralPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(
     IServiceProvider serviceProvider,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
     Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?> restrictionFilterInfoWrapper)
