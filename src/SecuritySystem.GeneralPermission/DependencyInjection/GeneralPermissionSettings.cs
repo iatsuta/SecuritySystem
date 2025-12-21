@@ -8,7 +8,9 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     where TPermission : class
     where TSecurityRole : notnull
 {
-    private PropertyAccessors<TPermission, PermissionPeriod>? periodAccessors;
+    private PropertyAccessors<TPermission, DateTime?>? startDateAccessors;
+
+    private PropertyAccessors<TPermission, DateTime?>? endDatedAccessors;
 
     private Expression<Func<TPermission, string>>? commentPath;
 
@@ -21,7 +23,8 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
         where TPermissionBindingInfo : PermissionBindingInfo<TPermission, TPrincipal>
     {
         return bindingInfo
-            .PipeMaybe(this.periodAccessors, (b, v) => b with { PermissionPeriod = v })
+            .PipeMaybe(this.startDateAccessors, (b, v) => b with { PermissionStartDate = v })
+            .PipeMaybe(this.endDatedAccessors, (b, v) => b with { PermissionEndDate = v })
             .PipeMaybe(this.commentPath, (b, v) => b with { PermissionComment = v.ToPropertyAccessors() })
             .PipeMaybe(this.isReadonly, (b, v) => b with { IsReadonly = v });
     }
@@ -34,14 +37,22 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     }
 
     public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
-        Expression<Func<TPermission, PermissionPeriod>> newPeriodPath,
-        Action<TPermission, PermissionPeriod>? setter = null)
+        PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
+        PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor)
     {
-        this.periodAccessors = setter == null
-            ? newPeriodPath.ToPropertyAccessors()
-            : new PropertyAccessors<TPermission, PermissionPeriod>(newPeriodPath, newPeriodPath.Compile(), setter);
+        this.startDateAccessors = startDatePropertyAccessor;
+        this.endDatedAccessors = endDatePropertyAccessor;
 
         return this;
+    }
+
+    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
+        Expression<Func<TPermission, DateTime?>>? startDatePath,
+        Expression<Func<TPermission, DateTime?>>? endDatePath)
+    {
+        return this.SetPermissionPeriod(
+            startDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(startDatePath),
+            endDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(endDatePath));
     }
 
     public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionComment(Expression<Func<TPermission, string>> newCommentPath)

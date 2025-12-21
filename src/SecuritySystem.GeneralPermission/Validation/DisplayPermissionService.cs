@@ -30,9 +30,14 @@ public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TP
 
         yield return $"Role: {domainObjectDisplayService.ToString(generalBindingInfo.SecurityRole.Getter(permissionData.Permission))}";
 
-        if (bindingInfo.PermissionPeriod != null)
+        if (bindingInfo.PermissionStartDate != null)
         {
-            yield return $"Period: {bindingInfo.PermissionPeriod.Getter(permission)}";
+            yield return $"StartDate: { bindingInfo.PermissionStartDate.Getter(permission)}";
+        }
+
+        if (bindingInfo.PermissionEndDate != null)
+        {
+            yield return $"EndDate: {bindingInfo.PermissionEndDate.Getter(permission)}";
         }
 
         foreach (var securityContextTypeGroup in permissionData.Restrictions.GroupBy(

@@ -223,7 +223,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         bindingInfo.Principal.Setter(newDbPermission, dbPrincipal);
         generalBindingInfo.SecurityRole.Setter(newDbPermission, dbRole);
 
-        bindingInfo.PermissionPeriod?.Setter(newDbPermission, managedPermission.Period);
+        bindingInfo.PermissionStartDate?.Setter(newDbPermission, managedPermission.Period.StartDate);
+        bindingInfo.PermissionEndDate?.Setter(newDbPermission, managedPermission.Period.EndDate);
         bindingInfo.PermissionComment?.Setter(newDbPermission, managedPermission.Comment);
 
         await genericRepository.SaveAsync(newDbPermission, cancellationToken);
@@ -294,7 +295,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
         if (restrictionMergeResult.IsEmpty
             && (bindingInfo.PermissionComment == null || bindingInfo.PermissionComment.Getter(dbPermission) == managedPermission.Comment)
-            && (bindingInfo.PermissionPeriod == null || bindingInfo.PermissionPeriod.Getter(dbPermission) == managedPermission.Period))
+            && (bindingInfo.PermissionStartDate == null || bindingInfo.PermissionStartDate.Getter(dbPermission) == managedPermission.Period.StartDate)
+            && (bindingInfo.PermissionEndDate == null || bindingInfo.PermissionEndDate.Getter(dbPermission) == managedPermission.Period.EndDate))
         {
             var permissionData = new PermissionData<TPermission, TPermissionRestriction>(dbPermission,
                 restrictionMergeResult.CombineItems.Select(v => v.Item1).ToList());
@@ -304,7 +306,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         else
         {
             bindingInfo.PermissionComment?.Setter.Invoke(dbPermission, managedPermission.Comment);
-            bindingInfo.PermissionPeriod?.Setter.Invoke(dbPermission, managedPermission.Period);
+            bindingInfo.PermissionStartDate?.Setter.Invoke(dbPermission, managedPermission.Period.StartDate);
+            bindingInfo.PermissionEndDate?.Setter.Invoke(dbPermission, managedPermission.Period.EndDate);
 
             var newPermissionRestrictions = await restrictionMergeResult.AddingItems.SyncWhenAll(async restriction =>
             {

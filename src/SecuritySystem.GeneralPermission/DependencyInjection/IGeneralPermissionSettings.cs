@@ -1,12 +1,18 @@
-﻿using System.Linq.Expressions;
+﻿using CommonFramework;
+
+using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
 public interface IGeneralPermissionSettings<TPermission, TSecurityRole>
 {
-    IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
-        Expression<Func<TPermission, PermissionPeriod>> periodPath,
-        Action<TPermission, PermissionPeriod>? setter = null);
+    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
+        PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
+        PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor);
+
+    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
+        Expression<Func<TPermission, DateTime?>>? startDatePath,
+        Expression<Func<TPermission, DateTime?>>? endDatePath);
 
     IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionComment(Expression<Func<TPermission, string>> commentPath);
 

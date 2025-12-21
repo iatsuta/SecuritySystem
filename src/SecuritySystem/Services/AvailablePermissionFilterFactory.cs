@@ -48,11 +48,9 @@ public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
 
     private IEnumerable<Expression<Func<TPermission, bool>>> GetFilterElements(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        if (bindingInfo.PermissionPeriod != null)
+        if (bindingInfo.PermissionStartDate != null)
         {
-            var today = timeProvider.GetUtcNow().Date;
-
-            yield return bindingInfo.PermissionPeriod.Path.Select(PermissionPeriod.GetContainsExpression(today));
+            yield return bindingInfo.GetPeriodFilter(timeProvider.GetUtcNow().Date);
         }
 
         var principalName = userNameResolver.Resolve(securityRule.CustomCredential ?? defaultSecurityRuleCredential);

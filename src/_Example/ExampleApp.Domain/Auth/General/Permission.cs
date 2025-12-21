@@ -13,10 +13,4 @@ public class Permission
     public DateTime StartDate { get; set; }
 
     public DateTime? EndDate { get; set; }
-
-    public virtual void SetPeriod(PermissionPeriod period)
-    {
-        this.StartDate = period.StartDate ?? DateTime.MinValue;
-        this.EndDate = period.EndDate;
-    }
 }

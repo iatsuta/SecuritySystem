@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
+
 using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission;
@@ -88,14 +89,11 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 
     private IQueryable<TPermission> GetPermissionQuery(SecurityRuleCredential? customSecurityRuleCredential)
     {
-        var today = timeProvider.GetLocalNow().Date;
-
         //TODO: inject SecurityContextRestrictionFilterInfo
         return queryableSource
             .GetQueryable<TPermission>()
             .Where(virtualBindingInfo.GetFilter(serviceProvider))
-            .PipeMaybe(bindingInfo.PermissionPeriod,
-                (q, period) => q.Where(period.Path.Select(PermissionPeriod.GetContainsExpression(today))))
+            .Where(bindingInfo.GetPeriodFilter(timeProvider.GetLocalNow().Date))
             .PipeMaybe(
                 userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),
                 (q, principalName) => q.Where(this.fullNamePath.Select(name => name == principalName)));

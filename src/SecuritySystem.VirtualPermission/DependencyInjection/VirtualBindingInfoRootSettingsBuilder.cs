@@ -11,20 +11,22 @@ public class VirtualBindingInfoRootSettingsBuilder<TPermission> : IVirtualBindin
 
     public readonly List<Func<PermissionBindingInfo<TPermission>, PermissionBindingInfo<TPermission>>> PermissionBindingInit = new();
 
-    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(Expression<Func<TPermission, PermissionPeriod>> periodPath,
-        Action<TPermission, PermissionPeriod>? setter = null)
+    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(
+        PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
+        PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor)
     {
-        this.PermissionBindingInit.Add(permissionBinding =>
-        {
-            var propertyAccessors = setter == null
-                ? periodPath.ToPropertyAccessors()
-                : new PropertyAccessors<TPermission, PermissionPeriod>(periodPath, periodPath.Compile(), setter);
-
-            return permissionBinding with { PermissionPeriod = propertyAccessors };
-        });
+        this.PermissionBindingInit.Add(permissionBinding => permissionBinding with { PermissionStartDate = startDatePropertyAccessor });
+        this.PermissionBindingInit.Add(permissionBinding => permissionBinding with { PermissionEndDate = endDatePropertyAccessor });
 
         return this;
     }
+
+    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(
+        Expression<Func<TPermission, DateTime?>>? startDatePath,
+        Expression<Func<TPermission, DateTime?>>? endDatePath) =>
+        this.SetPeriod(
+            startDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(startDatePath),
+            endDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(endDatePath));
 
     public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetComment(Expression<Func<TPermission, string>> commentPath)
     {

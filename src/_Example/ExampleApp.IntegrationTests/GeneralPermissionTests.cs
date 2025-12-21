@@ -1,10 +1,9 @@
 ﻿using ExampleApp.Application;
-using ExampleApp.Domain.Auth.General;
+
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem;
+using SecuritySystem.AvailableSecurity;
 using SecuritySystem.Testing;
-using SecuritySystem.UserSource;
 
 namespace ExampleApp.IntegrationTests;
 
@@ -17,16 +16,20 @@ public class GeneralPermissionTests : TestBase
         var cancellationToken = TestContext.Current.CancellationToken;
         var principalName = "TestPrincipal";
 
-        var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(ExampleRoles.TestManager, cancellationToken);
+        var testRole = ExampleRoles.TestManager;
+
+        await this.AuthManager.For(principalName).SetRoleAsync(ExampleRoles.TestManager, cancellationToken);
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
+        var availableSecurityRoleSource = scope.ServiceProvider.GetRequiredService<IAvailableSecurityRoleSource>();
+
         var authenticationService = scope.ServiceProvider.GetRequiredService<TestRawUserAuthenticationService>();
         authenticationService.CurrentUserName = principalName;
 
         // Act
-        var currentUserSource = scope.ServiceProvider.GetRequiredService<ICurrentUserSource<Principal>>();
+        var availableSecurityRoles = await availableSecurityRoleSource.GetAvailableSecurityRoles(true, cancellationToken);
 
         // Assert
-        principalIdentity.Should().Be(TypedSecurityIdentity.Create(currentUserSource.CurrentUser.Id));
+        availableSecurityRoles.Should().BeEquivalentTo([testRole]);
     }
 }

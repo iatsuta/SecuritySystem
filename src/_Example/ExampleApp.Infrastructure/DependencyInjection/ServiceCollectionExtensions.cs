@@ -1,4 +1,5 @@
-﻿using ExampleApp.Application;
+﻿using CommonFramework;
+using ExampleApp.Application;
 using ExampleApp.Domain;
 using ExampleApp.Domain.Auth.Virtual;
 using ExampleApp.Infrastructure.Services;
@@ -101,7 +102,12 @@ public static class ServiceCollectionExtensions
                             pr => pr.SecurityContextId,
                             b => b
                                 .SetSecurityRoleDescription(sr => sr.Description)
-                                .SetPermissionPeriod(v => new PermissionPeriod(v.StartDate, v.EndDate), (permission, period) => permission.SetPeriod(period))));
+                                .SetPermissionPeriod(
+                                    new PropertyAccessors<AuthGeneral.Permission, DateTime?>(
+                                        v => v.StartDate,
+                                        v => v.StartDate,
+                                        (permission, startDate) => permission.StartDate = startDate ?? DateTime.MinValue),
+                                    new PropertyAccessors<AuthGeneral.Permission, DateTime?>(v => v.EndDate))));
         }
     }
 }
