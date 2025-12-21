@@ -1,84 +1,127 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem;
+using SecuritySystem.Services;
+using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission;
 
-public class VirtualPermissionSource<TPrincipal, TPermission>(
-	IServiceProvider serviceProvider,
-	IExpressionEvaluatorStorage expressionEvaluatorStorage,
-	IIdentityInfoSource identityInfoSource,
-	IVisualIdentityInfoSource visualIdentityInfoSource,
-	IUserNameResolver<TPrincipal> userNameResolver,
-	IQueryableSource queryableSource,
-	TimeProvider timeProvider,
-	SecurityRuleCredential defaultSecurityRuleCredential,
-	VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
-	DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
-	where TPermission : class
+
+public class VirtualPermissionSource<TPermission>(
+    IServiceProvider serviceProvider,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
+    IPermissionBindingInfoSource bindingInfoSource,
+    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
+    DomainSecurityRule.RoleBaseSecurityRule securityRule,
+    SecurityRuleCredential defaultSecurityRuleCredential) : IPermissionSource<TPermission>
+    where TPermission : class
 {
-	private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(VirtualPermissionSource<TPrincipal, TPermission>));
+    private readonly Lazy<IPermissionSource<TPermission>> lazyInnerService = new(() =>
+    {
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
 
-	private readonly Expression<Func<TPermission, string>> fullNamePath =
+        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
-		bindingInfo.Principal.Path.Select(visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path);
+        var innerServiceType = typeof(VirtualPermissionSource<,>).MakeGenericType(
+            bindingInfo.PrincipalType,
+            bindingInfo.PermissionType);
 
-	public bool HasAccess() => this.GetPermissionQuery().Any();
+        return (IPermissionSource<TPermission>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            bindingInfo,
+            virtualBindingInfo,
+            principalVisualIdentityInfo,
+            securityRule,
+            defaultSecurityRuleCredential);
+    });
 
-	public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
-	{
-		var permissions = this.GetPermissionQuery(null).ToList();
+    private IPermissionSource<TPermission> InnerService => this.lazyInnerService.Value;
 
-		var restrictionFilterInfoList = securityRule.GetSafeSecurityContextRestrictionFilters().ToList();
+    public bool HasAccess() => this.InnerService.HasAccess();
 
-		return permissions.Select(permission => this.ConvertPermission(permission, securityContextTypes, restrictionFilterInfoList)).ToList();
-	}
+    public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes) =>
+        this.InnerService.GetPermissions(securityContextTypes);
 
-	public IQueryable<TPermission> GetPermissionQuery() => this.GetPermissionQuery(null);
+    public IQueryable<TPermission> GetPermissionQuery() => this.InnerService.GetPermissionQuery();
 
-	private IQueryable<TPermission> GetPermissionQuery(SecurityRuleCredential? customSecurityRuleCredential)
-	{
-		var today = timeProvider.GetLocalNow().Date;
+    public IEnumerable<string> GetAccessors(Expression<Func<TPermission, bool>> permissionFilter) => this.InnerService.GetAccessors(permissionFilter);
+}
 
-		//TODO: inject SecurityContextRestrictionFilterInfo
-		return queryableSource
-			.GetQueryable<TPermission>()
-			.Where(bindingInfo.GetFilter(serviceProvider))
-			.PipeMaybe(bindingInfo.PermissionPeriod,
-				(q, period) => q.Where(period.Path.Select(PermissionPeriod.GetContainsExpression(today))))
-			.PipeMaybe(
-				userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),
-				(q, principalName) => q.Where(this.fullNamePath.Select(name => name == principalName)));
-	}
+public class VirtualPermissionSource<TPrincipal, TPermission>(
+    IServiceProvider serviceProvider,
+    IExpressionEvaluatorStorage expressionEvaluatorStorage,
+    IIdentityInfoSource identityInfoSource,
+    IUserNameResolver<TPrincipal> userNameResolver,
+    IQueryableSource queryableSource,
+    TimeProvider timeProvider,
+    SecurityRuleCredential defaultSecurityRuleCredential,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
+    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
+    DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
+    where TPermission : class
+{
+    private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(VirtualPermissionSource<TPrincipal, TPermission>));
 
-	public IEnumerable<string> GetAccessors(Expression<Func<TPermission, bool>> permissionFilter) =>
-		this.GetPermissionQuery(new SecurityRuleCredential.AnyUserCredential()).Where(permissionFilter).Select(this.fullNamePath);
+    private readonly Expression<Func<TPermission, string>> fullNamePath = bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path);
 
-	private Dictionary<Type, Array> ConvertPermission(
-		TPermission permission,
-		IEnumerable<Type> securityContextTypes,
-		IReadOnlyCollection<SecurityContextRestrictionFilterInfo> filterInfoList)
-	{
-		return securityContextTypes.ToDictionary(
-			securityContextType => securityContextType,
-			securityContextType =>
-			{
-				var filter = filterInfoList.SingleOrDefault(f => f.SecurityContextType == securityContextType);
+    public bool HasAccess() => this.GetPermissionQuery().Any();
 
-				var pureFilter = filter?.GetBasePureFilter(serviceProvider);
+    public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
+    {
+        var permissions = this.GetPermissionQuery(null).ToList();
 
-				var identityInfo = identityInfoSource.GetIdentityInfo(securityContextType);
+        var restrictionFilterInfoList = securityRule.GetSafeSecurityContextRestrictionFilters().ToList();
 
-				var getIdentsArrayExpr = bindingInfo.GetRestrictionsArrayExpr(identityInfo, pureFilter);
+        return permissions.Select(permission => this.ConvertPermission(permission, securityContextTypes, restrictionFilterInfoList)).ToList();
+    }
 
-				return expressionEvaluator.Evaluate(getIdentsArrayExpr, permission);
-			});
-	}
+    public IQueryable<TPermission> GetPermissionQuery() => this.GetPermissionQuery(null);
+
+    private IQueryable<TPermission> GetPermissionQuery(SecurityRuleCredential? customSecurityRuleCredential)
+    {
+        var today = timeProvider.GetLocalNow().Date;
+
+        //TODO: inject SecurityContextRestrictionFilterInfo
+        return queryableSource
+            .GetQueryable<TPermission>()
+            .Where(virtualBindingInfo.GetFilter(serviceProvider))
+            .PipeMaybe(bindingInfo.PermissionPeriod,
+                (q, period) => q.Where(period.Path.Select(PermissionPeriod.GetContainsExpression(today))))
+            .PipeMaybe(
+                userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),
+                (q, principalName) => q.Where(this.fullNamePath.Select(name => name == principalName)));
+    }
+
+    public IEnumerable<string> GetAccessors(Expression<Func<TPermission, bool>> permissionFilter) =>
+        this.GetPermissionQuery(new SecurityRuleCredential.AnyUserCredential()).Where(permissionFilter).Select(this.fullNamePath).Distinct();
+
+    private Dictionary<Type, Array> ConvertPermission(
+        TPermission permission,
+        IEnumerable<Type> securityContextTypes,
+        IReadOnlyCollection<SecurityContextRestrictionFilterInfo> filterInfoList)
+    {
+        return securityContextTypes.ToDictionary(
+            securityContextType => securityContextType,
+            securityContextType =>
+            {
+                var filter = filterInfoList.SingleOrDefault(f => f.SecurityContextType == securityContextType);
+
+                var pureFilter = filter?.GetBasePureFilter(serviceProvider);
+
+                var identityInfo = identityInfoSource.GetIdentityInfo(securityContextType);
+
+                var getIdentsArrayExpr = virtualBindingInfo.GetRestrictionsArrayExpr(identityInfo, pureFilter);
+
+                return expressionEvaluator.Evaluate(getIdentsArrayExpr, permission);
+            });
+    }
 }

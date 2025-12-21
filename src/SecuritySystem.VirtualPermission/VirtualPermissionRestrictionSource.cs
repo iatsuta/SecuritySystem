@@ -8,10 +8,10 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.VirtualPermission;
 
-public class VirtualPermissionRestrictionSource<TPrincipal, TPermission, TSecurityContext, TSecurityContextIdent>(
+public class VirtualPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
     SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo) : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
 
     where TSecurityContext : class, ISecurityContext
@@ -22,7 +22,7 @@ public class VirtualPermissionRestrictionSource<TPrincipal, TPermission, TSecuri
         identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
 
     public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr() =>
-        bindingInfo.GetRestrictionsExpr(identityInfo, restrictionFilterInfo?.GetPureFilter(serviceProvider));
+        virtualBindingInfo.GetRestrictionsExpr(identityInfo, restrictionFilterInfo?.GetPureFilter(serviceProvider));
 
     public Expression<Func<TPermission, bool>> GetGrandAccessExpr() => this.GetManyGrandAccessExpr().BuildAnd();
 
@@ -31,7 +31,7 @@ public class VirtualPermissionRestrictionSource<TPrincipal, TPermission, TSecuri
 
     private IEnumerable<Expression<Func<TPermission, bool>>> GetManyGrandAccessExpr()
     {
-        foreach (var restrictionPath in bindingInfo.Restrictions)
+        foreach (var restrictionPath in virtualBindingInfo.Restrictions)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
             {
@@ -48,7 +48,7 @@ public class VirtualPermissionRestrictionSource<TPrincipal, TPermission, TSecuri
     {
         var filterExpr = identityInfo.CreateContainsFilter(idents.ToArray());
 
-        foreach (var restrictionPath in bindingInfo.Restrictions)
+        foreach (var restrictionPath in virtualBindingInfo.Restrictions)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext>> singlePath)
             {

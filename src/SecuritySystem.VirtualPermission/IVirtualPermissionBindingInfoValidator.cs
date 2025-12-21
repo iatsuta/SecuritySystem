@@ -2,6 +2,5 @@
 
 public interface IVirtualPermissionBindingInfoValidator
 {
-    void Validate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
-        where TPermission : notnull;
+    void Validate(VirtualPermissionBindingInfo virtualBindingInfo);
 }

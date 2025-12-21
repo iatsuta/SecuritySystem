@@ -4,6 +4,11 @@ using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
+//public class PermissionDataComparer<TPermission, TPermissionRestriction> : IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>>
+//{
+
+//}
+
 public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,

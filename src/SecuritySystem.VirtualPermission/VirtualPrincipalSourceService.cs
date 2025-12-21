@@ -18,9 +18,33 @@ using System.Reflection;
 
 namespace SecuritySystem.VirtualPermission;
 
+public class VirtualPrincipalSourceService(
+    IServiceProvider serviceProvider,
+    VirtualPermissionBindingInfo virtualBindingInfo,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
+    IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
+{
+    public Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Type PrincipalType { get; }
+}
+
 public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
-    VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
 
@@ -38,7 +62,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
             typeof(TPermission),
             permissionIdentityInfo.IdentityType);
 
-        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo, principalVisualIdentityInfo, permissionIdentityInfo);
+        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, virtualBindingInfo, principalVisualIdentityInfo, permissionIdentityInfo);
     });
 
     private IPrincipalSourceService InnerService => this.lazyInnerService.Value;
@@ -66,7 +90,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IQueryableSource queryableSource,
     IUserQueryableSource<TPrincipal> userQueryableSource,
-    VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
     IIdentityInfoSource identityInfoSource,
     IManagedPrincipalHeaderConverter<TPrincipal> managedPrincipalHeaderConverter,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
@@ -88,7 +113,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
     {
         return await queryableSource
             .GetQueryable<TPermission>()
-            .Where(bindingInfo.GetFilter(serviceProvider))
+            .Where(virtualBindingInfo.GetFilter(serviceProvider))
             .Select(bindingInfo.Principal.Path)
             .Where(
                 string.IsNullOrWhiteSpace(nameFilter)
@@ -114,7 +139,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
             var header = managedPrincipalHeaderConverter.Convert(principal);
 
             var permissions = await queryableSource.GetQueryable<TPermission>()
-                .Where(bindingInfo.GetFilter(serviceProvider))
+                .Where(virtualBindingInfo.GetFilter(serviceProvider))
                 .Where(bindingInfo.Principal.Path.Select(p => p == principal))
                 .GenericToListAsync(cancellationToken);
 
@@ -126,7 +151,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
     {
         var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-        var restrictions = bindingInfo
+        var restrictions = virtualBindingInfo
             .GetSecurityContextTypes()
             .Select(identityInfoSource.GetIdentityInfo)
             .Select(identityInfo =>
@@ -138,7 +163,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
         return new ManagedPermission(
             TypedSecurityIdentity.Create(permissionIdentityInfo.Id.Getter(permission)),
             true,
-            bindingInfo.SecurityRole,
+            virtualBindingInfo.SecurityRole,
             bindingInfo.GetSafePeriod(permission),
             bindingInfo.GetSafeComment(permission),
             restrictions);
@@ -148,10 +173,10 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
         IEnumerable<SecurityRole> securityRoles,
         CancellationToken cancellationToken)
     {
-        if (securityRoles.Contains(bindingInfo.SecurityRole))
+        if (securityRoles.Contains(virtualBindingInfo.SecurityRole))
         {
             return await queryableSource.GetQueryable<TPermission>()
-                .Where(bindingInfo.GetFilter(serviceProvider))
+                .Where(virtualBindingInfo.GetFilter(serviceProvider))
                 .Select(bindingInfo.Principal.Path)
                 .Select(principalVisualIdentityInfo.Name.Path)
                 .GenericToListAsync(cancellationToken);
@@ -175,7 +200,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
         where TSecurityContext : ISecurityContext
         where TSecurityContextIdent : notnull
     {
-        foreach (var restrictionPath in bindingInfo.Restrictions)
+        foreach (var restrictionPath in virtualBindingInfo.Restrictions)
         {
             if (restrictionPath is Expression<Func<TPermission, TSecurityContext?>> singlePath)
             {

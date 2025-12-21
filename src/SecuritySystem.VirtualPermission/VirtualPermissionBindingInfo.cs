@@ -7,49 +7,30 @@ using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.VirtualPermission;
 
-public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole SecurityRole) : PermissionBindingInfo<TPermission, TPrincipal>
+public abstract record VirtualPermissionBindingInfo
+{
+	public abstract Type PermissionType { get; }
+
+    public required SecurityRole SecurityRole { get; init; }
+
+    public IReadOnlyList<LambdaExpression> Restrictions { get; init; } = [];
+
+    public IEnumerable<Type> GetSecurityContextTypes()
+    {
+        return this.Restrictions
+            .Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
+            .Distinct();
+    }
+}
+
+public record VirtualPermissionBindingInfo<TPermission> : VirtualPermissionBindingInfo
     where TPermission : notnull
 {
-	public IReadOnlyList<LambdaExpression> Restrictions { get; init; } = [];
+    public override Type PermissionType { get; } = typeof(TPermission);
 
-	public Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter { get; init; } = _ => _ => true;
 
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
-		Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
-		where TSecurityContext : ISecurityContext =>
+    public Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter { get; init; } = _ => _ => true;
 
-		this with { Restrictions = this.Restrictions.Concat([path]).ToList() };
-
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
-		Expression<Func<TPermission, TSecurityContext?>> path)
-		where TSecurityContext : ISecurityContext =>
-
-		this with { Restrictions = this.Restrictions.Concat([path]).ToList() };
-
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddFilter(
-		Expression<Func<TPermission, bool>> filter) => this.AddFilter(_ => filter);
-
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddFilter(
-		Func<IServiceProvider, Expression<Func<TPermission, bool>>> getFilter) =>
-
-		this with { GetFilter = sp => this.GetFilter(sp).BuildAnd(getFilter(sp)) };
-
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetPeriodFilter(
-		Expression<Func<TPermission, PermissionPeriod>> periodFilter) =>
-
-		this with { PermissionPeriod = periodFilter.ToPropertyAccessors() };
-
-	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetComment(
-		Expression<Func<TPermission, string>> commentPath) =>
-
-		this with { PermissionComment = commentPath.ToPropertyAccessors() };
-
-	public IEnumerable<Type> GetSecurityContextTypes()
-	{
-		return this.Restrictions
-			.Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
-			.Distinct();
-	}
 
 	public Expression<Func<TPermission, Array>> GetRestrictionsArrayExpr(IdentityInfo identityInfo, LambdaExpression? pureFilter)
 	{
