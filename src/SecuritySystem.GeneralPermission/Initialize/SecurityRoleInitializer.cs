@@ -26,8 +26,7 @@ public class SecurityRoleInitializer<TSecurityRole>(
 
         var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TSecurityRole>();
 
-        var innerServiceType = typeof(SecurityRoleInitializer<,,,>).MakeGenericType(
-            bindingInfo.PrincipalType,
+        var innerServiceType = typeof(SecurityRoleInitializer<,,>).MakeGenericType(
             bindingInfo.PermissionType,
             bindingInfo.SecurityRoleType,
             identityInfo.IdentityType);
@@ -50,12 +49,12 @@ public class SecurityRoleInitializer<TSecurityRole>(
         ((ISecurityInitializer)this.lazyInnerService.Value).Init(cancellationToken);
 }
 
-public class SecurityRoleInitializer<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+public class SecurityRoleInitializer<TPermission, TSecurityRole, TSecurityRoleIdent>(
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> bindingInfo,
     IQueryableSource queryableSource,
     IGenericRepository genericRepository,
     ISecurityRoleSource securityRoleSource,
-    ILogger<SecurityRoleInitializer<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>> logger,
+    ILogger<SecurityRoleInitializer<TPermission, TSecurityRole, TSecurityRoleIdent>> logger,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo,
     VisualIdentityInfo<TSecurityRole> visualIdentityInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,

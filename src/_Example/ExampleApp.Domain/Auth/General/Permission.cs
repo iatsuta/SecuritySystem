@@ -9,4 +9,4 @@ public class Permission
 	public virtual required SecurityRole SecurityRole { get; init; }
 }
 
-//public record Period(DateTime StartDate, DateTime? EndDate);
+//public record PeriodPermissionPeriod;

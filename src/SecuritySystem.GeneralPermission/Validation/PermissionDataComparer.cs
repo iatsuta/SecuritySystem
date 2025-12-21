@@ -5,7 +5,8 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.GeneralPermission.Validation;
 
 public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo)
     : IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>>
     where TPrincipal : class
@@ -41,19 +42,11 @@ public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPer
         PermissionData<TPermission, TPermissionRestriction> permissionData,
         PermissionData<TPermission, TPermissionRestriction> otherPermissionData)
     {
-        return bindingInfo.SecurityRole.Getter(permissionData.Permission) == bindingInfo.SecurityRole.Getter(otherPermissionData.Permission)
+        return generalBindingInfo.SecurityRole.Getter(permissionData.Permission) == generalBindingInfo.SecurityRole.Getter(otherPermissionData.Permission)
                && (bindingInfo.PermissionPeriod == null
-                   || this.IsIntersected(bindingInfo.PermissionPeriod.Getter(permissionData.Permission),
-                       bindingInfo.PermissionPeriod.Getter(otherPermissionData.Permission)))
+                   || bindingInfo.PermissionPeriod.Getter(permissionData.Permission)
+                       .IsIntersected(bindingInfo.PermissionPeriod.Getter(otherPermissionData.Permission)))
                && this.EqualsRestrictions(permissionData, otherPermissionData);
-    }
-
-    protected virtual bool IsIntersected((DateTime StartDate, DateTime? EndDate) period, (DateTime StartDate, DateTime? EndDate) otherPeriod)
-    {
-        var periodEnd = period.EndDate ?? DateTime.MaxValue;
-        var otherPeriodEnd = otherPeriod.EndDate ?? DateTime.MaxValue;
-
-        return period.StartDate <= otherPeriodEnd && otherPeriod.StartDate <= periodEnd;
     }
 
     protected virtual bool EqualsRestrictions(
@@ -84,6 +77,6 @@ public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPer
 
     public int GetHashCode(PermissionData<TPermission, TPermissionRestriction> permissionData)
     {
-        return permissionData.Restrictions.Count ^ bindingInfo.SecurityRole.Getter(permissionData.Permission).GetHashCode();
+        return permissionData.Restrictions.Count ^ generalBindingInfo.SecurityRole.Getter(permissionData.Permission).GetHashCode();
     }
 }

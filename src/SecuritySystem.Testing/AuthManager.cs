@@ -36,7 +36,7 @@ public class AuthManager(
             SecurityIdentity.Default,
             false,
             testPermission.SecurityRole,
-            (testPermission.Period.StartDate, testPermission.Period.EndDate),
+            testPermission.Period,
             nameof(TestPermission),
             testPermission.Restrictions));
 

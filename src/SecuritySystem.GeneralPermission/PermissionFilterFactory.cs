@@ -4,6 +4,7 @@ using CommonFramework.GenericRepository;
 using System.Linq.Expressions;
 
 using Microsoft.Extensions.DependencyInjection;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 

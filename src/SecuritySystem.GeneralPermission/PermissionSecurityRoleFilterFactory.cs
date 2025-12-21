@@ -20,8 +20,7 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
 
         var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
 
-        var innerServiceType = typeof(PermissionSecurityRoleFilterFactory<,,,>).MakeGenericType(
-            bindingInfo.PrincipalType,
+        var innerServiceType = typeof(PermissionSecurityRoleFilterFactory<,,>).MakeGenericType(
             bindingInfo.PermissionType,
             bindingInfo.SecurityRoleType,
             securityRoleIdentityInfo.IdentityType);
@@ -37,8 +36,8 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
         this.lazyInnerService.Value.CreateFilter(identType, idents);
 }
 
-public class PermissionSecurityRoleFilterFactory<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+public class PermissionSecurityRoleFilterFactory< TPermission, TSecurityRole, TSecurityRoleIdent>(
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> bindingInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo) : IPermissionSecurityRoleFilterFactory<TPermission>
     where TSecurityRoleIdent : notnull

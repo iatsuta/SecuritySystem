@@ -1,19 +1,18 @@
-﻿using CommonFramework;
+﻿using System.Linq.Expressions;
+
+using CommonFramework;
 using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Credential;
-using SecuritySystem.Services;
 
-using System.Linq.Expressions;
-
-namespace SecuritySystem.GeneralPermission.AvailableSecurity;
+namespace SecuritySystem.Services;
 
 public class AvailablePermissionFilterFactory<TPermission>(
     IServiceProvider serviceProvider,
     IVisualIdentityInfoSource visualIdentityInfoSource,
-    IGeneralPermissionBindingInfoSource bindingInfoSource) : IAvailablePermissionFilterFactory<TPermission>
+    IPermissionBindingInfoSource bindingInfoSource) : IAvailablePermissionFilterFactory<TPermission>
 {
     private readonly Lazy<IAvailablePermissionFilterFactory<TPermission>> lazyInnerService = new(() =>
     {
@@ -35,7 +34,7 @@ public class AvailablePermissionFilterFactory<TPermission>(
 }
 
 public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     TimeProvider timeProvider,
     IUserNameResolver<TPrincipal> userNameResolver,
     ISecurityRolesIdentsResolver securityRolesIdentsResolver,
@@ -53,11 +52,7 @@ public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
         {
             var today = timeProvider.GetUtcNow().Date;
 
-            yield return
-
-                from period in bindingInfo.PermissionPeriod.Path
-
-                select period.StartDate <= today && (period.EndDate == null || today <= period.EndDate);
+            yield return bindingInfo.PermissionPeriod.Path.Select(PermissionPeriod.GetContainsExpression(today));
         }
 
         var principalName = userNameResolver.Resolve(securityRule.CustomCredential ?? defaultSecurityRuleCredential);

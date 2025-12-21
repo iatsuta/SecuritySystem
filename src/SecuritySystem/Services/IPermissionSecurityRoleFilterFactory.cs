@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace SecuritySystem.GeneralPermission;
+namespace SecuritySystem.Services;
 
 public interface IPermissionSecurityRoleFilterFactory<TPermission>
 {

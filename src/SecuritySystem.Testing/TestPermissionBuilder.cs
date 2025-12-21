@@ -14,7 +14,7 @@ public class TestPermissionBuilder
 
     public SecurityRole? SecurityRole { get; set; }
 
-    public (DateTime StartDate, DateTime? EndDate) Period { get; set; } = (DateTime.MinValue, null);
+    public PermissionPeriod Period { get; set; } = PermissionPeriod.Eternity;
 
     public Dictionary<Type, Array> Restrictions { get; } = new();
 

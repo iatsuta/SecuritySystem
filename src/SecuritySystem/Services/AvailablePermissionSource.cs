@@ -1,6 +1,6 @@
 ﻿using CommonFramework.GenericRepository;
 
-namespace SecuritySystem.GeneralPermission.AvailableSecurity;
+namespace SecuritySystem.Services;
 
 public class AvailablePermissionSource<TPermission>(
     IQueryableSource queryableSource,

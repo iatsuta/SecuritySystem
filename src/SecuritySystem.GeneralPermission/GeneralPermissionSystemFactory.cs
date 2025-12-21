@@ -4,7 +4,7 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class GeneralPermissionSystemFactory(IServiceProvider serviceProvider, GeneralPermissionBindingInfo bindingInfo) : IPermissionSystemFactory
+public class GeneralPermissionSystemFactory(IServiceProvider serviceProvider, PermissionBindingInfo bindingInfo) : IPermissionSystemFactory
 {
     public IPermissionSystem Create(SecurityRuleCredential securityRuleCredential)
     {

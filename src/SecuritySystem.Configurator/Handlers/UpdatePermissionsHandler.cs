@@ -61,7 +61,7 @@ public class UpdatePermissionsHandler(
             new UntypedSecurityIdentity(permission.PermissionId),
 	        permission.IsVirtual,
 	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
-	        (permission.StartDate, permission.EndDate),
+            new PermissionPeriod(permission.StartDate, permission.EndDate),
 	        permission.Comment,
 	        restrictionsRequest.ToDictionary());
     }
@@ -74,7 +74,7 @@ public class UpdatePermissionsHandler(
 
         public string RoleId { get; set; } = default!;
 
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
 

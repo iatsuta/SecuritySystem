@@ -9,6 +9,7 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
     private readonly Lock locker = new ();
 
     public void Validate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
+        where TPermission : notnull
     {
         lock (this.locker)
         {
@@ -24,6 +25,7 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
     }
 
     private void InternalValidate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
+        where TPermission : notnull
     {
         var securityContextRestrictions = securityRoleSource
                                           .GetSecurityRole(bindingInfo.SecurityRole)

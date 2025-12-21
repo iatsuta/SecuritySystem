@@ -8,7 +8,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     where TPermission : class
     where TSecurityRole : notnull
 {
-    private Expression<Func<TPermission, (DateTime StartDate, DateTime? EndDate)>>? periodPath;
+    private Expression<Func<TPermission, PermissionPeriod>>? periodPath;
 
     private Expression<Func<TPermission, string>>? commentPath;
 
@@ -17,20 +17,24 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     private bool? isReadonly;
 
 
-
-
-    public TGeneralPermissionBindingInfo ApplyOptionalPaths<TGeneralPermissionBindingInfo>(TGeneralPermissionBindingInfo bindingInfo)
-        where TGeneralPermissionBindingInfo : GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole>
+    public TPermissionBindingInfo ApplyOptionalPaths<TPermissionBindingInfo>(TPermissionBindingInfo bindingInfo)
+        where TPermissionBindingInfo : PermissionBindingInfo<TPermission, TPrincipal>
     {
         return bindingInfo
             .PipeMaybe(this.periodPath, (b, v) => b with { PermissionPeriod = v.ToPropertyAccessors() })
             .PipeMaybe(this.commentPath, (b, v) => b with { PermissionComment = v.ToPropertyAccessors() })
-            .PipeMaybe(this.descriptionPath, (b, v) => b with { SecurityRoleDescription = v.ToPropertyAccessors() })
             .PipeMaybe(this.isReadonly, (b, v) => b with { IsReadonly = v });
     }
 
+    public TGeneralPermissionBindingInfo ApplyGeneralOptionalPaths<TGeneralPermissionBindingInfo>(TGeneralPermissionBindingInfo bindingInfo)
+        where TGeneralPermissionBindingInfo : GeneralPermissionBindingInfo<TPermission, TSecurityRole>
+    {
+        return bindingInfo
+            .PipeMaybe(this.descriptionPath, (b, v) => b with { SecurityRoleDescription = v.ToPropertyAccessors() });
+    }
+
     public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
-        Expression<Func<TPermission, (DateTime StartDate, DateTime? EndDate)>> newPeriodPath)
+        Expression<Func<TPermission, PermissionPeriod>> newPeriodPath)
     {
         this.periodPath = newPeriodPath;
 

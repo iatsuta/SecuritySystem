@@ -18,13 +18,16 @@ public class GeneralPrincipalManagementService(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
-    IEnumerable<GeneralPermissionBindingInfo> bindingInfoList,
+    IEnumerable<PermissionBindingInfo> bindingInfoList,
+    IGeneralPermissionBindingInfoSource generalBindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IPrincipalManagementService
 {
     private readonly Lazy<IPrincipalManagementService> lazyInnerService = new(() =>
     {
         var bindingInfo = bindingInfoList.Single(bi => !bi.IsReadonly);
+
+        var generalBindingInfo = generalBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
@@ -34,13 +37,13 @@ public class GeneralPrincipalManagementService(
 
         var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
 
-        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
+        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(generalBindingInfo.SecurityRoleType);
 
         var innerServiceType = typeof(GeneralPrincipalManagementService<,,,,,,,,>)
             .MakeGenericType(
                 bindingInfo.PrincipalType,
                 bindingInfo.PermissionType,
-                bindingInfo.SecurityRoleType,
+                generalBindingInfo.SecurityRoleType,
                 restrictionBindingInfo.PermissionRestrictionType,
                 restrictionBindingInfo.SecurityContextTypeType,
                 restrictionBindingInfo.SecurityContextObjectIdentType,
@@ -52,6 +55,7 @@ public class GeneralPrincipalManagementService(
             serviceProvider,
             innerServiceType,
             bindingInfo,
+            generalBindingInfo,
             restrictionBindingInfo,
             principalVisualIdentityInfo,
             permissionIdentityInfo,
@@ -79,7 +83,8 @@ public class GeneralPrincipalManagementService(
 
 public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
     TSecurityContextObjectIdent, TSecurityRoleIdent, TPermissionIdent, TSecurityContextTypeIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     ISecurityRepository<TSecurityRole> securityRoleRepository,
     IQueryableSource queryableSource,
@@ -230,7 +235,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         var newDbPermission = new TPermission();
 
         bindingInfo.Principal.Setter(newDbPermission, dbPrincipal);
-        bindingInfo.SecurityRole.Setter(newDbPermission, dbRole);
+        generalBindingInfo.SecurityRole.Setter(newDbPermission, dbRole);
 
         bindingInfo.PermissionPeriod?.Setter(newDbPermission, typedPermission.Period);
         bindingInfo.PermissionComment?.Setter(newDbPermission, typedPermission.Comment);
@@ -277,7 +282,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
             throw new Exception("wrong typed permission");
         }
 
-        var dbSecurityRoleId = bindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
+        var dbSecurityRoleId = generalBindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
 
         var dbSecurityRole = securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(dbSecurityRoleId));
 

@@ -7,15 +7,12 @@ using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.VirtualPermission;
 
-public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole SecurityRole, Expression<Func<TPermission, TPrincipal>> PrincipalPath)
+public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole SecurityRole) : PermissionBindingInfo<TPermission, TPrincipal>
+    where TPermission : notnull
 {
 	public IReadOnlyList<LambdaExpression> Restrictions { get; init; } = [];
 
 	public Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter { get; init; } = _ => _ => true;
-
-	public Expression<Func<TPermission, (DateTime StartDate, DateTime? EndDate)>>? PeriodFilter { get; init; }
-
-	public Expression<Func<TPermission, string>>? CommentPath { get; init; }
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> AddRestriction<TSecurityContext>(
 		Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
@@ -38,14 +35,14 @@ public record VirtualPermissionBindingInfo<TPrincipal, TPermission>(SecurityRole
 		this with { GetFilter = sp => this.GetFilter(sp).BuildAnd(getFilter(sp)) };
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetPeriodFilter(
-		Expression<Func<TPermission, (DateTime StartDate, DateTime? EndDate)>> periodFilter) =>
+		Expression<Func<TPermission, PermissionPeriod>> periodFilter) =>
 
-		this with { PeriodFilter = periodFilter };
+		this with { PermissionPeriod = periodFilter.ToPropertyAccessors() };
 
 	public VirtualPermissionBindingInfo<TPrincipal, TPermission> SetComment(
 		Expression<Func<TPermission, string>> commentPath) =>
 
-		this with { CommentPath = commentPath };
+		this with { PermissionComment = commentPath.ToPropertyAccessors() };
 
 	public IEnumerable<Type> GetSecurityContextTypes()
 	{

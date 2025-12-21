@@ -1,4 +1,4 @@
-﻿namespace SecuritySystem.GeneralPermission;
+﻿namespace SecuritySystem.Services;
 
 public interface IAvailablePrincipalSource<out TPrincipal>
 {

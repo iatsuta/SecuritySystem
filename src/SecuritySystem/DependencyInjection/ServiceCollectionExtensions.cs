@@ -1,5 +1,12 @@
 ﻿using System.Globalization;
 
+using CommonFramework;
+using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource.DependencyInjection;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
+
+using HierarchicalExpand.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.AvailableSecurity;
@@ -20,13 +27,6 @@ using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
-
-using CommonFramework;
-using CommonFramework.ExpressionEvaluate;
-using CommonFramework.IdentitySource.DependencyInjection;
-using CommonFramework.VisualIdentitySource.DependencyInjection;
-
-using HierarchicalExpand.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
 
@@ -65,6 +65,13 @@ public static class ServiceCollectionExtensions
         private IServiceCollection RegisterGeneralServices()
         {
             return services
+
+                .AddSingleton(typeof(IManagedPrincipalHeaderConverter<>), typeof(ManagedPrincipalHeaderConverter<>))
+                .AddScoped(typeof(IPrincipalDomainService<>), typeof(PrincipalDomainService<>))
+                .AddScoped(typeof(IAvailablePermissionFilterFactory<>), typeof(AvailablePermissionFilterFactory<>))
+                .AddScoped(typeof(IAvailablePermissionSource<>), typeof(AvailablePermissionSource<>))
+                .AddScoped(typeof(IAvailablePrincipalSource<>), typeof(AvailablePrincipalSource<>))
+                .AddSingleton<IPermissionBindingInfoSource, PermissionBindingInfoSource>()
 
                 .AddSingleton(typeof(ErrorMissedUserService<>))
 

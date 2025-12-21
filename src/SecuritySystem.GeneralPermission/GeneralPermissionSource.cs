@@ -7,13 +7,14 @@ using SecuritySystem.ExternalSystem;
 using System.Linq.Expressions;
 
 using Microsoft.Extensions.DependencyInjection;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPermissionSource<TPermission>(
     IServiceProvider serviceProvider,
     IVisualIdentityInfoSource visualIdentityInfoSource,
-    IGeneralPermissionBindingInfoSource bindingInfoSource,
+    IPermissionBindingInfoSource bindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
 {
@@ -55,7 +56,7 @@ public class GeneralPermissionSource<TPermission>(
 }
 
 public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IRawPermissionConverter<TPermissionRestriction> rawPermissionConverter,

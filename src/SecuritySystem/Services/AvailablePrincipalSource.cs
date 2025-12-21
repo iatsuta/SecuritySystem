@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace SecuritySystem.GeneralPermission;
+namespace SecuritySystem.Services;
 
 public class AvailablePrincipalSource<TPrincipal>(
     IServiceProvider serviceProvider,
-    IGeneralPermissionBindingInfoSource bindingInfoSource) : IAvailablePrincipalSource<TPrincipal>
+    IPermissionBindingInfoSource bindingInfoSource) : IAvailablePrincipalSource<TPrincipal>
 {
     private readonly Lazy<IAvailablePrincipalSource<TPrincipal>> lazyInnerService = new(() =>
     {
@@ -23,7 +23,7 @@ public class AvailablePrincipalSource<TPrincipal>(
 }
 
 public class AvailablePrincipalSource<TPrincipal, TPermission>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource) : IAvailablePrincipalSource<TPrincipal>
 {
     public IQueryable<TPrincipal> GetAvailablePrincipalsQueryable(DomainSecurityRule.RoleBaseSecurityRule securityRule)

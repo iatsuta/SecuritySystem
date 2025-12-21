@@ -6,6 +6,7 @@ using GenericQueryable;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -17,20 +18,19 @@ public class GeneralPermissionSystem<TPermission>(
 {
     private readonly Lazy<IPermissionSystem<TPermission>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
+        var generalBindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
 
-        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
+        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(generalBindingInfo.SecurityRoleType);
 
-        var innerServiceType = typeof(GeneralPermissionSystem<,,,>).MakeGenericType(
-            bindingInfo.PrincipalType,
-            bindingInfo.PermissionType,
-            bindingInfo.SecurityRoleType,
+        var innerServiceType = typeof(GeneralPermissionSystem<,,>).MakeGenericType(
+            generalBindingInfo.PermissionType,
+            generalBindingInfo.SecurityRoleType,
             securityRoleIdentityInfo.IdentityType);
 
         return (IPermissionSystem<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
-            bindingInfo,
+            generalBindingInfo,
             securityRoleIdentityInfo,
             securityRuleCredential);
     });
@@ -55,16 +55,15 @@ public class GeneralPermissionSystem<TPermission>(
         this.InnerService.GetAvailableSecurityRoles(cancellationToken);
 }
 
-public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TSecurityRoleIdent>(
+public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleIdent>(
     IServiceProvider serviceProvider,
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     ISecurityRoleSource securityRoleSource,
     SecurityRuleCredential securityRuleCredential,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo)
     : IPermissionSystem<TPermission>
 
-    where TPrincipal : class
     where TPermission : class
     where TSecurityRole : class
     where TSecurityRoleIdent : notnull
@@ -94,7 +93,7 @@ public class GeneralPermissionSystem<TPrincipal, TPermission, TSecurityRole, TSe
     {
         var dbRolesIdents = await availablePermissionSource
             .GetQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
-            .Select(bindingInfo.SecurityRole.Path.Select(securityRoleIdentityInfo.Id.Path))
+            .Select(generalBindingInfo.SecurityRole.Path.Select(securityRoleIdentityInfo.Id.Path))
             .Distinct()
             .GenericToListAsync(cancellationToken);
 

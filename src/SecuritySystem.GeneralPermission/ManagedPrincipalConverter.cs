@@ -7,31 +7,35 @@ using GenericQueryable;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class ManagedPrincipalConverter<TPrincipal>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
-    IGeneralPermissionBindingInfoSource bindingInfoSource,
+    IPermissionBindingInfoSource bindingInfoSource,
+    IGeneralPermissionBindingInfoSource generalBindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IManagedPrincipalConverter<TPrincipal>
 {
     private readonly Lazy<IManagedPrincipalConverter<TPrincipal>> lazyInnerService = new(() =>
     {
         var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
+        var generalBindingInfo = generalBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
+
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
         var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
 
-        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.SecurityRoleType);
+        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(generalBindingInfo.SecurityRoleType);
 
         var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
 
         var innerServiceType = typeof(ManagedPrincipalConverter<,,,,,,,,>).MakeGenericType(
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType,
-            bindingInfo.SecurityRoleType,
+            generalBindingInfo.SecurityRoleType,
             restrictionBindingInfo.PermissionRestrictionType,
             restrictionBindingInfo.SecurityContextTypeType,
             restrictionBindingInfo.SecurityContextObjectIdentType,
@@ -56,7 +60,8 @@ public class ManagedPrincipalConverter<TPrincipal>(
 
 public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent,
     TPermissionIdent, TSecurityRoleIdent, TSecurityContextTypeIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     IQueryableSource queryableSource,
     IManagedPrincipalHeaderConverter<TPrincipal> headerConverter,
@@ -90,7 +95,7 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TSecurityRole, T
             .Where(restrictionBindingInfo.Permission.Path.Select(p => p == permission))
             .GenericToListAsync(cancellationToken);
 
-        var securityRoleId = bindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(permission);
+        var securityRoleId = generalBindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(permission);
 
         var securityRole = securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(securityRoleId));
 

@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
-using SecuritySystem.GeneralPermission.AvailableSecurity;
 using SecuritySystem.GeneralPermission.Initialize;
 using SecuritySystem.GeneralPermission.Validation;
 using SecuritySystem.Services;
@@ -17,7 +16,9 @@ public static class SecuritySystemSettingsExtensions
 {
     extension(ISecuritySystemSettings securitySystemSettings)
     {
-        public ISecuritySystemSettings AddGeneralPermission(GeneralPermissionBindingInfo bindingInfo,
+        public ISecuritySystemSettings AddGeneralPermission(
+            PermissionBindingInfo bindingInfo,
+            GeneralPermissionBindingInfo generalBindingInfo,
             GeneralPermissionRestrictionBindingInfo restrictionBindingInfo)
         {
             return securitySystemSettings
@@ -25,25 +26,19 @@ public static class SecuritySystemSettingsExtensions
                 .AddExtensions(services => services
 
                     .AddSingleton(bindingInfo)
+                    .AddSingleton(generalBindingInfo)
                     .AddSingleton(restrictionBindingInfo)
 
                     .AddSingleton(typeof(IPermissionRestrictionTypeFilterFactory<>), typeof(PermissionRestrictionTypeFilterFactory<>))
                     .AddScoped(typeof(IPermissionRestrictionFilterFactory<>), typeof(PermissionRestrictionFilterFactory<>))
                     .AddSingleton(typeof(IRawPermissionConverter<>), typeof(RawPermissionConverter<>))
-                    .AddScoped(typeof(IPrincipalDomainService<>), typeof(PrincipalDomainService<>))
                     .AddSingleton(typeof(IPermissionSecurityRoleFilterFactory<>), typeof(PermissionSecurityRoleFilterFactory<>))
-                    .AddScoped(typeof(IAvailablePermissionFilterFactory<>), typeof(AvailablePermissionFilterFactory<>))
                     .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
-                    .AddScoped(typeof(IAvailablePermissionSource<>), typeof(AvailablePermissionSource<>))
 
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
                     .AddScoped(typeof(IManagedPrincipalConverter<>), typeof(ManagedPrincipalConverter<>))
-
-                    .AddSingleton(typeof(IManagedPrincipalHeaderConverter<>), typeof(ManagedPrincipalHeaderConverter<>))
-
-                    .AddScoped(typeof(IAvailablePrincipalSource<>), typeof(AvailablePrincipalSource<>))
 
                     .AddScoped<ISecurityValidator<PrincipalData>, PrincipalRootValidator>()
 
@@ -76,11 +71,15 @@ public static class SecuritySystemSettingsExtensions
 
             setupAction?.Invoke(settings);
 
-            var bindingInfo = new GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole>
+            var bindingInfo = new PermissionBindingInfo<TPermission, TPrincipal>
             {
                 Principal = principalPath.ToPropertyAccessors(),
-                SecurityRole = securityRolePath.ToPropertyAccessors(),
             }.Pipe(settings.ApplyOptionalPaths);
+
+            var generalBindingInfo = new GeneralPermissionBindingInfo<TPermission, TSecurityRole>
+            {
+                SecurityRole = securityRolePath.ToPropertyAccessors(),
+            }.Pipe(settings.ApplyGeneralOptionalPaths);
 
             var restrictionBindingInfo =
                 new GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission>
@@ -90,7 +89,7 @@ public static class SecuritySystemSettingsExtensions
                     SecurityContextObjectId = securityContextObjectIdPath.ToPropertyAccessors()
                 };
 
-            return securitySystemSettings.AddGeneralPermission(bindingInfo, restrictionBindingInfo);
+            return securitySystemSettings.AddGeneralPermission(bindingInfo, generalBindingInfo, restrictionBindingInfo);
         }
     }
 }

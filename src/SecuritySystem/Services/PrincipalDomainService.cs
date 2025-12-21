@@ -7,16 +7,15 @@ using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
-namespace SecuritySystem.GeneralPermission;
+namespace SecuritySystem.Services;
 
 public class PrincipalDomainService<TPrincipal>(
     IServiceProvider serviceProvider,
     IIdentityInfoSource identityInfoSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
-    IGeneralPermissionBindingInfoSource bindingInfoSource) : IPrincipalDomainService<TPrincipal>
+    IPermissionBindingInfoSource bindingInfoSource) : IPrincipalDomainService<TPrincipal>
 {
     private readonly Lazy<IPrincipalDomainService<TPrincipal>> lazyInnerService = new(() =>
     {
@@ -49,7 +48,7 @@ public class PrincipalDomainService<TPrincipal>(
 }
 
 public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     IQueryableSource queryableSource,
 	IGenericRepository genericRepository,
 	IEnumerable<IUserSource> userSources,

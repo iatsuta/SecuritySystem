@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.UserSource;
 using SecuritySystem.Credential;
+using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 using System.Reflection;
@@ -20,6 +21,7 @@ namespace SecuritySystem.VirtualPermission;
 public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
     VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
     IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
 
 	where TPrincipal : class
@@ -27,17 +29,16 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
 {
     private readonly Lazy<IPrincipalSourceService> lazyInnerService = new(() =>
     {
-        var principalIdentityInfo = identityInfoSource.GetIdentityInfo<TPrincipal>();
+        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
 
         var permissionIdentityInfo = identityInfoSource.GetIdentityInfo<TPermission>();
 
-        var innerServiceType = typeof(VirtualPrincipalSourceService<,,,>).MakeGenericType(
+        var innerServiceType = typeof(VirtualPrincipalSourceService<,,>).MakeGenericType(
             typeof(TPrincipal),
             typeof(TPermission),
-            principalIdentityInfo.IdentityType,
             permissionIdentityInfo.IdentityType);
 
-        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo, principalIdentityInfo, permissionIdentityInfo);
+        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo, principalVisualIdentityInfo, permissionIdentityInfo);
     });
 
     private IPrincipalSourceService InnerService => this.lazyInnerService.Value;
@@ -60,26 +61,23 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
 	}
 }
 
-public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalIdent, TPermissionIdent>(
+public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionIdent>(
     IServiceProvider serviceProvider,
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IQueryableSource queryableSource,
     IUserQueryableSource<TPrincipal> userQueryableSource,
     VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo,
     IIdentityInfoSource identityInfoSource,
-    IVisualIdentityInfoSource visualIdentityInfoSource,
-    IdentityInfo<TPrincipal, TPrincipalIdent> principalIdentityInfo,
+    IManagedPrincipalHeaderConverter<TPrincipal> managedPrincipalHeaderConverter,
+    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
     IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo) : IPrincipalSourceService
 
     where TPrincipal : class
     where TPermission : class
-    where TPrincipalIdent : notnull
     where TPermissionIdent : notnull
 {
-    private readonly Expression<Func<TPrincipal, string>> principalNamePath = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path;
-
     private readonly IExpressionEvaluator expressionEvaluator =
-        expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalIdent, TPermissionIdent>));
+        expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionIdent>));
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
@@ -88,26 +86,19 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
         int limit,
         CancellationToken cancellationToken)
     {
-        var toPrincipalAnonHeaderExpr =
-            ExpressionEvaluateHelper.InlineEvaluate(ee =>
-                ExpressionHelper.Create((TPrincipal principal) =>
-                    new { Id = ee.Evaluate(principalIdentityInfo.Id.Path, principal), Name = ee.Evaluate(principalNamePath, principal) }));
-
-        var anonHeaders = await queryableSource
+        return await queryableSource
             .GetQueryable<TPermission>()
             .Where(bindingInfo.GetFilter(serviceProvider))
-            .Select(bindingInfo.PrincipalPath)
+            .Select(bindingInfo.Principal.Path)
             .Where(
                 string.IsNullOrWhiteSpace(nameFilter)
                     ? _ => true
-                    : principalNamePath.Select(principalName => principalName.Contains(nameFilter)))
-            .OrderBy(principalNamePath)
+                    : principalVisualIdentityInfo.Name.Path.Select(principalName => principalName.Contains(nameFilter)))
+            .OrderBy(principalVisualIdentityInfo.Name.Path)
             .Take(limit)
-            .Select(toPrincipalAnonHeaderExpr)
             .Distinct()
+            .Select(managedPrincipalHeaderConverter.ConvertExpression)
             .GenericToListAsync(cancellationToken);
-
-        return anonHeaders.Select(anonHeader => new ManagedPrincipalHeader(TypedSecurityIdentity.Create(anonHeader.Id), anonHeader.Name, true));
     }
 
     public async Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
@@ -120,13 +111,11 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
         }
         else
         {
-            var header = new ManagedPrincipalHeader(TypedSecurityIdentity.Create(principalIdentityInfo.Id.Getter(principal)),
-                this.expressionEvaluator.Evaluate(principalNamePath, principal),
-                true);
+            var header = managedPrincipalHeaderConverter.Convert(principal);
 
             var permissions = await queryableSource.GetQueryable<TPermission>()
                 .Where(bindingInfo.GetFilter(serviceProvider))
-                .Where(bindingInfo.PrincipalPath.Select(p => p == principal))
+                .Where(bindingInfo.Principal.Path.Select(p => p == principal))
                 .GenericToListAsync(cancellationToken);
 
             return new ManagedPrincipal(header, permissions.Select(this.ToManagedPermission).ToList());
@@ -150,8 +139,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
             TypedSecurityIdentity.Create(permissionIdentityInfo.Id.Getter(permission)),
             true,
             bindingInfo.SecurityRole,
-            bindingInfo.PeriodFilter == null ? (DateTime.MinValue, null) : this.expressionEvaluator.Evaluate(bindingInfo.PeriodFilter, permission),
-            bindingInfo.CommentPath == null ? "Virtual Permission" : this.expressionEvaluator.Evaluate(bindingInfo.CommentPath, permission),
+            bindingInfo.GetSafePeriod(permission),
+            bindingInfo.GetSafeComment(permission),
             restrictions);
     }
 
@@ -163,8 +152,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPrincipalId
         {
             return await queryableSource.GetQueryable<TPermission>()
                 .Where(bindingInfo.GetFilter(serviceProvider))
-                .Select(bindingInfo.PrincipalPath)
-                .Select(principalNamePath)
+                .Select(bindingInfo.Principal.Path)
+                .Select(principalVisualIdentityInfo.Name.Path)
                 .GenericToListAsync(cancellationToken);
         }
         else

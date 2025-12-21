@@ -16,6 +16,7 @@ public class VirtualPermissionRestrictionSource<TPrincipal, TPermission, TSecuri
 
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
+    where TPermission : notnull
 {
     private readonly IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo =
         identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();

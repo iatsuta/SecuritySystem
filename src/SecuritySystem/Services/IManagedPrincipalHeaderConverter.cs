@@ -2,7 +2,7 @@
 
 using SecuritySystem.ExternalSystem.Management;
 
-namespace SecuritySystem.GeneralPermission;
+namespace SecuritySystem.Services;
 
 public interface IManagedPrincipalHeaderConverter<TPrincipal>
 {

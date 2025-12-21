@@ -12,7 +12,7 @@ public record PermissionDto
 
     public required IReadOnlyList<ContextDto> Contexts { get; init; }
 
-    public required DateTime StartDate { get; init; }
+    public required DateTime? StartDate { get; init; }
 
     public required DateTime? EndDate { get; init; }
 

@@ -2,8 +2,6 @@
 
 public class GeneralPermissionBindingInfoSource : IGeneralPermissionBindingInfoSource
 {
-    private readonly IReadOnlyDictionary<Type, GeneralPermissionBindingInfo> principalDict;
-
     private readonly IReadOnlyDictionary<Type, GeneralPermissionBindingInfo> permissionDict;
 
     private readonly IReadOnlyDictionary<Type, GeneralPermissionBindingInfo> securityRoleDict;
@@ -12,12 +10,9 @@ public class GeneralPermissionBindingInfoSource : IGeneralPermissionBindingInfoS
     {
         var cache = bindingInfoList.ToList();
 
-        this.principalDict = cache.ToDictionary(v => v.PrincipalType);
         this.permissionDict = cache.ToDictionary(v => v.PermissionType);
         this.securityRoleDict = cache.ToDictionary(v => v.SecurityRoleType);
     }
-
-    public GeneralPermissionBindingInfo GetForPrincipal(Type principalType) => this.principalDict[principalType];
 
     public GeneralPermissionBindingInfo GetForPermission(Type permissionType) => this.permissionDict[permissionType];
 

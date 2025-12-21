@@ -22,7 +22,6 @@
   <Project Path="SecuritySystem.DiTests/SecuritySystem.DiTests.csproj" />
   
   <Project Path="SecuritySystem.GeneralPermission/SecuritySystem.GeneralPermission.csproj" />
-  <Project Path="SecuritySystem.GeneralPermission.Abstract/SecuritySystem.GeneralPermission.Abstract.csproj" />
   <Project Path="SecuritySystem.Testing/SecuritySystem.Testing.csproj" />
   
   <Project Path="SecuritySystem.VirtualPermission/SecuritySystem.VirtualPermission.csproj" />

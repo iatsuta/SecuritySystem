@@ -7,7 +7,8 @@ using SecuritySystem.ExternalSystem.SecurityContextStorage;
 namespace SecuritySystem.GeneralPermission.Validation;
 
 public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    GeneralPermissionBindingInfo<TPermission, TPrincipal, TSecurityRole> bindingInfo,
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
     IDomainObjectDisplayService domainObjectDisplayService,
     ISecurityContextInfoSource securityContextInfoSource,
@@ -27,7 +28,7 @@ public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TP
     {
         var permission = permissionData.Permission;
 
-        yield return $"Role: {domainObjectDisplayService.ToString(bindingInfo.SecurityRole.Getter(permissionData.Permission))}";
+        yield return $"Role: {domainObjectDisplayService.ToString(generalBindingInfo.SecurityRole.Getter(permissionData.Permission))}";
 
         if (bindingInfo.PermissionPeriod != null)
         {

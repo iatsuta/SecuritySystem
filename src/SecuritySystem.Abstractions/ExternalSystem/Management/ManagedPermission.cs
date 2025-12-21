@@ -4,6 +4,6 @@ public record ManagedPermission(
     SecurityIdentity Identity,
     bool IsVirtual,
     SecurityRole SecurityRole,
-    (DateTime StartDate, DateTime? EndDate) Period,
+    PermissionPeriod Period,
     string Comment,
     IReadOnlyDictionary<Type, Array> Restrictions);

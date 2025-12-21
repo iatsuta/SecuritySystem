@@ -28,7 +28,7 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 
 	private readonly Expression<Func<TPermission, string>> fullNamePath =
 
-		bindingInfo.PrincipalPath.Select(visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path);
+		bindingInfo.Principal.Path.Select(visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>().Name.Path);
 
 	public bool HasAccess() => this.GetPermissionQuery().Any();
 
@@ -51,9 +51,8 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
 		return queryableSource
 			.GetQueryable<TPermission>()
 			.Where(bindingInfo.GetFilter(serviceProvider))
-			.PipeMaybe(bindingInfo.PeriodFilter,
-				(q, filter) => q.Where(filter.Select(period =>
-					period.StartDate <= today && (period.EndDate == null || today <= period.EndDate))))
+			.PipeMaybe(bindingInfo.PermissionPeriod,
+				(q, period) => q.Where(period.Path.Select(PermissionPeriod.GetContainsExpression(today))))
 			.PipeMaybe(
 				userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),
 				(q, principalName) => q.Where(this.fullNamePath.Select(name => name == principalName)));
