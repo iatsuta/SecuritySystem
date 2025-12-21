@@ -37,6 +37,7 @@ public class ManagedPrincipalConverter<TPrincipal>(
             serviceProvider,
             innerServiceType,
             bindingInfo,
+            generalBindingInfo,
             restrictionBindingInfo);
     });
 

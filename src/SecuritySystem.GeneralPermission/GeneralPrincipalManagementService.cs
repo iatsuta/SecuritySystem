@@ -313,6 +313,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
                 var dbSecurityContextType =
                     await securityContextTypeRepository.GetObjectAsync(restriction.Key, cancellationToken);
 
+                restrictionBindingInfo.Permission.Setter(newPermissionRestriction, dbPermission);
                 restrictionBindingInfo.SecurityContextObjectId.Setter(newPermissionRestriction, restriction.securityContextId);
                 restrictionBindingInfo.SecurityContextType.Setter(newPermissionRestriction, dbSecurityContextType);
 
