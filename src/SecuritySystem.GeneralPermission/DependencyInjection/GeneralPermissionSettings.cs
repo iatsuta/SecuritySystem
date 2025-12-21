@@ -8,7 +8,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     where TPermission : class
     where TSecurityRole : notnull
 {
-    private Expression<Func<TPermission, PermissionPeriod>>? periodPath;
+    private PropertyAccessors<TPermission, PermissionPeriod>? periodAccessors;
 
     private Expression<Func<TPermission, string>>? commentPath;
 
@@ -21,7 +21,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
         where TPermissionBindingInfo : PermissionBindingInfo<TPermission, TPrincipal>
     {
         return bindingInfo
-            .PipeMaybe(this.periodPath, (b, v) => b with { PermissionPeriod = v.ToPropertyAccessors() })
+            .PipeMaybe(this.periodAccessors, (b, v) => b with { PermissionPeriod = v })
             .PipeMaybe(this.commentPath, (b, v) => b with { PermissionComment = v.ToPropertyAccessors() })
             .PipeMaybe(this.isReadonly, (b, v) => b with { IsReadonly = v });
     }
@@ -34,9 +34,12 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     }
 
     public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
-        Expression<Func<TPermission, PermissionPeriod>> newPeriodPath)
+        Expression<Func<TPermission, PermissionPeriod>> newPeriodPath,
+        Action<TPermission, PermissionPeriod>? setter = null)
     {
-        this.periodPath = newPeriodPath;
+        this.periodAccessors = setter == null
+            ? newPeriodPath.ToPropertyAccessors()
+            : new PropertyAccessors<TPermission, PermissionPeriod>(newPeriodPath, newPeriodPath.Compile(), setter);
 
         return this;
     }

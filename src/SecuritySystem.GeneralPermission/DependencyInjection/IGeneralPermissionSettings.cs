@@ -5,7 +5,8 @@ namespace SecuritySystem.GeneralPermission.DependencyInjection;
 public interface IGeneralPermissionSettings<TPermission, TSecurityRole>
 {
     IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
-        Expression<Func<TPermission, PermissionPeriod>> periodPath);
+        Expression<Func<TPermission, PermissionPeriod>> periodPath,
+        Action<TPermission, PermissionPeriod>? setter = null);
 
     IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionComment(Expression<Func<TPermission, string>> commentPath);
 

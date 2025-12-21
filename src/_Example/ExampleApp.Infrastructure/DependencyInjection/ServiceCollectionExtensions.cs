@@ -99,7 +99,9 @@ public static class ServiceCollectionExtensions
                             (AuthGeneral.PermissionRestriction pr) => pr.Permission,
                             pr => pr.SecurityContextType,
                             pr => pr.SecurityContextId,
-                            b => b.SetSecurityRoleDescription(sr => sr.Description)));
+                            b => b
+                                .SetSecurityRoleDescription(sr => sr.Description)
+                                .SetPermissionPeriod(v => new PermissionPeriod(v.StartDate, v.EndDate), (permission, period) => permission.SetPeriod(period))));
         }
     }
 }

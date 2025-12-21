@@ -330,6 +330,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
             var permissionData = new PermissionData<TPermission, TPermissionRestriction>(dbPermission,
                 restrictionMergeResult.CombineItems.Select(v => v.Item1).Concat(newPermissionRestrictions).ToList());
 
+            await genericRepository.SaveAsync(dbPermission, cancellationToken);
+
             return (permissionData, true);
         }
     }
