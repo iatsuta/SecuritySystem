@@ -31,7 +31,7 @@ public static class SecuritySystemSettingsExtensions
 
                     .AddSingleton(typeof(IPermissionRestrictionTypeFilterFactory<>), typeof(PermissionRestrictionTypeFilterFactory<>))
                     .AddScoped(typeof(IPermissionRestrictionFilterFactory<>), typeof(PermissionRestrictionFilterFactory<>))
-                    .AddSingleton(typeof(IRawPermissionConverter<>), typeof(RawPermissionConverter<>))
+                    .AddScoped(typeof(IRawPermissionConverter<>), typeof(RawPermissionConverter<>))
                     .AddSingleton(typeof(IPermissionSecurityRoleFilterFactory<>), typeof(PermissionSecurityRoleFilterFactory<>))
                     .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
 

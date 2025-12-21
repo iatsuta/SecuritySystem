@@ -17,7 +17,11 @@ public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvid
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(typeof(TPermission));
 
         var innerServiceType =
-            typeof(PermissionFilterFactory<,,,>).MakeGenericType(restrictionBindingInfo.PermissionType, restrictionBindingInfo.PermissionRestrictionType);
+            typeof(PermissionFilterFactory<,,,>).MakeGenericType(
+                restrictionBindingInfo.PermissionType,
+                restrictionBindingInfo.PermissionRestrictionType,
+                restrictionBindingInfo.SecurityContextTypeType,
+                restrictionBindingInfo.SecurityContextObjectIdentType);
 
         return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, restrictionBindingInfo);
     });
@@ -41,7 +45,7 @@ public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecur
     {
         return new Func<SecurityContextRestriction<ISecurityContext>, Expression<Func<TPermission, bool>>>(this.CreateFilter)
             .CreateGenericMethod(securityContextRestriction.SecurityContextType)
-            .Invoke<Expression<Func<TPermission, bool>>>(this);
+            .Invoke<Expression<Func<TPermission, bool>>>(this, securityContextRestriction);
     }
 
     public Expression<Func<TPermission, bool>> CreateFilter<TSecurityContext>(

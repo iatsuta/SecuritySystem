@@ -74,7 +74,7 @@ public static class ServiceCollectionExtensions
 
                         .AddDomainSecurityServices(rb =>
                             rb.Add<TestObject>(b => b
-                                    .SetView(ExampleRoles.TestManager)
+                                    .SetView(new[] { ExampleRoles.TestManager, ExampleRoles.BuManager})
                                     .SetPath(SecurityPath<TestObject>.Create(testObj => testObj.BusinessUnit).And(testObj => testObj.Location)))
                                 .Add<Employee>(b => b
                                     .SetView(DomainSecurityRule.CurrentUser))
@@ -115,7 +115,8 @@ public static class ServiceCollectionExtensions
                                         v => v.StartDate,
                                         v => v.StartDate,
                                         (permission, startDate) => permission.StartDate = startDate ?? DateTime.MinValue),
-                                    new PropertyAccessors<AuthGeneral.Permission, DateTime?>(v => v.EndDate))));
+                                    new PropertyAccessors<AuthGeneral.Permission, DateTime?>(v => v.EndDate))
+                                .SetPermissionComment(v => v.Comment)));
         }
     }
 }
