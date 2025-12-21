@@ -30,7 +30,9 @@ public static class SecuritySystemSettingsExtensions
 
                 foreach (var virtualBindingInfo in virtualBindingInfoList)
                 {
-                    services.AddScoped<IPrincipalSourceService>(sp => ActivatorUtilities.CreateInstance<VirtualPrincipalSourceService>(sp, virtualBindingInfo));
+                    var serviceType = typeof(VirtualPrincipalSourceService<>).MakeGenericType(bindingInfo.PermissionType);
+
+                    services.AddScoped(typeof(IPrincipalSourceService), sp => ActivatorUtilities.CreateInstance(sp, serviceType, virtualBindingInfo));
                 }
             });
         }

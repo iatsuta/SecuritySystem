@@ -73,6 +73,11 @@ public static class ServiceCollectionExtensions
                 .AddScoped(typeof(IAvailablePrincipalSource<>), typeof(AvailablePrincipalSource<>))
                 .AddSingleton<IPermissionBindingInfoSource, PermissionBindingInfoSource>()
 
+                .AddSingleton(typeof(ISecurityIdentityExtractor<>), typeof(SecurityIdentityExtractor<>))
+                .AddSingleton<ISecurityIdentityExtractor, SecurityIdentityExtractor>()
+                .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
+                .AddSingleton<IPrincipalDataSecurityIdentityExtractor, PrincipalDataSecurityIdentityExtractor>()
+
                 .AddSingleton(typeof(ErrorMissedUserService<>))
 
                 .AddSingleton<IFormatProviderSource>(new FormatProviderSource(CultureInfo.CurrentCulture))
@@ -83,9 +88,6 @@ public static class ServiceCollectionExtensions
                 .AddSingleton(typeof(ISecurityIdentityFilterFactory<>), typeof(SecurityIdentityFilterFactory<>))
 
                 .AddSingleton<IExpressionEvaluatorStorage>(_ => new ExpressionEvaluatorStorage(LambdaCompileMode.All))
-
-                .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
-                .AddSingleton<ISecurityIdentityExtractor, SecurityIdentityExtractor>()
 
                 .AddSingleton(typeof(IDefaultUserConverter<>), typeof(DefaultUserConverter<>))
                 .AddScoped(typeof(ICurrentUserSource<>), typeof(CurrentUserSource<>))

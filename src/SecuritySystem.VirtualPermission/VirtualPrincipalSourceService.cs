@@ -18,74 +18,41 @@ using System.Reflection;
 
 namespace SecuritySystem.VirtualPermission;
 
-public class VirtualPrincipalSourceService(
+public class VirtualPrincipalSourceService<TPermission>(
     IServiceProvider serviceProvider,
-    VirtualPermissionBindingInfo virtualBindingInfo,
-    IVisualIdentityInfoSource visualIdentityInfoSource,
-    IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
-{
-    public Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Type PrincipalType { get; }
-}
-
-public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
-    IServiceProvider serviceProvider,
+    IPermissionBindingInfoSource bindingInfoSource,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
-    IVisualIdentityInfoSource visualIdentityInfoSource,
-    IIdentityInfoSource identityInfoSource) : IPrincipalSourceService
-
-	where TPrincipal : class
-	where TPermission : class
+    IVisualIdentityInfoSource visualIdentityInfoSource) : IPrincipalSourceService
+    where TPermission : class
 {
     private readonly Lazy<IPrincipalSourceService> lazyInnerService = new(() =>
     {
-        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
 
-        var permissionIdentityInfo = identityInfoSource.GetIdentityInfo<TPermission>();
+        var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
-        var innerServiceType = typeof(VirtualPrincipalSourceService<,,>).MakeGenericType(
-            typeof(TPrincipal),
-            typeof(TPermission),
-            permissionIdentityInfo.IdentityType);
+        var innerServiceType = typeof(VirtualPrincipalSourceService<,>).MakeGenericType(
+            bindingInfo.PrincipalType,
+            bindingInfo.PermissionType);
 
-        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, virtualBindingInfo, principalVisualIdentityInfo, permissionIdentityInfo);
+        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo, virtualBindingInfo, principalVisualIdentityInfo);
     });
 
     private IPrincipalSourceService InnerService => this.lazyInnerService.Value;
 
     public Type PrincipalType => this.InnerService.PrincipalType;
 
-    public Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
-	{
-		return this.InnerService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
-	}
+    public Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken) =>
+        this.InnerService.GetPrincipalsAsync(nameFilter, limit, cancellationToken);
 
-	public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
-	{
-		return this.InnerService.TryGetPrincipalAsync(userCredential, cancellationToken);
-	}
+    public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken) =>
+        this.InnerService.TryGetPrincipalAsync(userCredential, cancellationToken);
 
-	public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
-	{
-		return this.InnerService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
-	}
+    public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken) =>
+        this.InnerService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
 }
 
-public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionIdent>(
+public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
     IServiceProvider serviceProvider,
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IQueryableSource queryableSource,
@@ -94,15 +61,14 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
     IIdentityInfoSource identityInfoSource,
     IManagedPrincipalHeaderConverter<TPrincipal> managedPrincipalHeaderConverter,
-    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
-    IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo) : IPrincipalSourceService
+    ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor,
+    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo) : IPrincipalSourceService
 
     where TPrincipal : class
     where TPermission : class
-    where TPermissionIdent : notnull
 {
     private readonly IExpressionEvaluator expressionEvaluator =
-        expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionIdent>));
+        expressionEvaluatorStorage.GetForType(typeof(VirtualPrincipalSourceService<TPrincipal, TPermission>));
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
@@ -161,7 +127,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission, TPermissionI
             .ToDictionary();
 
         return new ManagedPermission(
-            TypedSecurityIdentity.Create(permissionIdentityInfo.Id.Getter(permission)),
+            permissionIdentityExtractor.Extract(permission),
             true,
             virtualBindingInfo.SecurityRole,
             bindingInfo.GetSafePeriod(permission),

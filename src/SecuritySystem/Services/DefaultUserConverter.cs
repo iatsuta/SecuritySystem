@@ -35,19 +35,19 @@ public class DefaultUserConverter<TUser>(
 }
 
 public class DefaultUserConverter<TUser, TIdent>(
-	IdentityInfo<TUser, TIdent> identityInfo,
-	VisualIdentityInfo<TUser> visualIdentityInfo) : IDefaultUserConverter<TUser>
-	where TIdent : notnull
+    IdentityInfo<TUser, TIdent> identityInfo,
+    VisualIdentityInfo<TUser> visualIdentityInfo) : IDefaultUserConverter<TUser>
+    where TIdent : notnull
 {
-	private readonly Tuple<Expression<Func<TUser, User>>, Func<TUser, User>> convertData = FuncHelper.Create(() =>
+    private readonly Tuple<Expression<Func<TUser, User>>, Func<TUser, User>> convertData = FuncHelper.Create(() =>
     {
         var convertExpr = ExpressionEvaluateHelper.InlineEvaluate<Func<TUser, User>>(ee =>
-            user => new User(ee.Evaluate(visualIdentityInfo.Name.Path, user), TypedSecurityIdentity.Create(ee.Evaluate(identityInfo.Id.Path, user))));
+            user => new User(ee.Evaluate(visualIdentityInfo.Name.Path, user), new TypedSecurityIdentity<TIdent>(ee.Evaluate(identityInfo.Id.Path, user))));
 
-		return new Tuple<Expression<Func<TUser, User>>, Func<TUser, User>>(convertExpr, convertExpr.Compile());
-	}).Invoke();
+        return new Tuple<Expression<Func<TUser, User>>, Func<TUser, User>>(convertExpr, convertExpr.Compile());
+    }).Invoke();
 
-	public Expression<Func<TUser, User>> ConvertExpression => convertData.Item1;
+    public Expression<Func<TUser, User>> ConvertExpression => convertData.Item1;
 
-	public Func<TUser, User> ConvertFunc => convertData.Item2;
+    public Func<TUser, User> ConvertFunc => convertData.Item2;
 }

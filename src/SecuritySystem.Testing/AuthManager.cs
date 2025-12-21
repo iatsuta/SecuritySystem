@@ -11,7 +11,7 @@ public class AuthManager(
     IPrincipalManagementService principalManagementService,
     IRootPrincipalSourceService rootPrincipalSourceService,
     IUserCredentialNameResolver credentialNameResolver,
-    ISecurityIdentityExtractor securityIdentityExtractor)
+    IPrincipalDataSecurityIdentityExtractor securityIdentityExtractor)
 {
     private readonly IPrincipalSourceService principalSourceService = rootPrincipalSourceService.ForPrincipal(principalManagementService.PrincipalType);
 

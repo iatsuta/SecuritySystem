@@ -37,18 +37,18 @@ public class GetPrincipalHandler(
 
 		return principal
 			.Permissions
-			.Select(typedPermission =>
+			.Select(permission =>
 				new PermissionDto
 				{
-					Id = typedPermission.Identity.GetId().ToString()!,
-					IsVirtual = typedPermission.IsVirtual,
-					Role = typedPermission.SecurityRole.Name,
-					RoleId = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole).Identity.GetId().ToString()!,
-					Comment = typedPermission.Comment,
-					StartDate = typedPermission.Period.StartDate,
-					EndDate = typedPermission.Period.EndDate,
-					Contexts = typedPermission
-						.Restrictions
+					Id = permission.Identity.GetId().ToString()!,
+					IsVirtual = permission.IsVirtual,
+					Role = permission.SecurityRole.Name,
+					RoleId = securityRoleSource.GetSecurityRole(permission.SecurityRole).Identity.GetId().ToString()!,
+					Comment = permission.Comment,
+					StartDate = permission.Period.StartDate,
+					EndDate = permission.Period.EndDate,
+					Contexts = permission
+                        .Restrictions
 						.Select(restriction =>
 						{
 							var typedCache = allSecurityContextDict[restriction.Key];
@@ -69,7 +69,7 @@ public class GetPrincipalHandler(
 			.ToList();
 	}
 
-	private IReadOnlyDictionary<Type, IReadOnlyDictionary<object, string>> GetSecurityContextDict(ManagedPrincipal principal)
+	private Dictionary<Type, Dictionary<object, string>> GetSecurityContextDict(ManagedPrincipal principal)
 	{
 		var request =
 
@@ -85,7 +85,7 @@ public class GetPrincipalHandler(
 
 			let typedSecurityContextStorage = securityContextStorage.GetTyped(g.Key.SecurityContextType)
 
-			let identsDict = (IReadOnlyDictionary<object, string>)typedSecurityContextStorage
+			let identsDict = typedSecurityContextStorage
 				.GetSecurityContextsByIdents(g.Distinct().ToArray(g.Key.IdentType))
 				.ToDictionary(scd => scd.Id, scd => scd.Name)
 

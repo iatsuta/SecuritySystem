@@ -1,6 +1,5 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
-using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
@@ -16,7 +15,6 @@ namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPrincipalManagementService(
     IServiceProvider serviceProvider,
-    IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IEnumerable<PermissionBindingInfo> bindingInfoList,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource,
@@ -33,23 +31,14 @@ public class GeneralPrincipalManagementService(
 
         var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
-        var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
-
-        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
-
-        var securityRoleIdentityInfo = identityInfoSource.GetIdentityInfo(generalBindingInfo.SecurityRoleType);
-
-        var innerServiceType = typeof(GeneralPrincipalManagementService<,,,,,,,,>)
+        var innerServiceType = typeof(GeneralPrincipalManagementService<,,,,,>)
             .MakeGenericType(
                 bindingInfo.PrincipalType,
                 bindingInfo.PermissionType,
                 generalBindingInfo.SecurityRoleType,
                 restrictionBindingInfo.PermissionRestrictionType,
                 restrictionBindingInfo.SecurityContextTypeType,
-                restrictionBindingInfo.SecurityContextObjectIdentType,
-                securityRoleIdentityInfo.IdentityType,
-                permissionIdentityInfo.IdentityType,
-                securityContextTypeIdentityInfo.IdentityType);
+                restrictionBindingInfo.SecurityContextObjectIdentType);
 
         return (IPrincipalManagementService)ActivatorUtilities.CreateInstance(
             serviceProvider,
@@ -57,10 +46,7 @@ public class GeneralPrincipalManagementService(
             bindingInfo,
             generalBindingInfo,
             restrictionBindingInfo,
-            principalVisualIdentityInfo,
-            permissionIdentityInfo,
-            securityContextTypeIdentityInfo,
-            securityRoleIdentityInfo);
+            principalVisualIdentityInfo);
     });
 
     private IPrincipalManagementService InnerService => this.lazyInnerService.Value;
@@ -82,7 +68,7 @@ public class GeneralPrincipalManagementService(
 }
 
 public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
-    TSecurityContextObjectIdent, TSecurityRoleIdent, TPermissionIdent, TSecurityContextTypeIdent>(
+    TSecurityContextObjectIdent>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
@@ -95,23 +81,16 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     ISecurityContextInfoSource securityContextInfoSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource,
-    ISecurityIdentityConverter<TPermissionIdent> permissionIdentConverter,
-    ISecurityIdentityConverter<TSecurityContextTypeIdent> securityContextTypeIdentityConverter,
-    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
-    IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
-    IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo,
-    IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo)
+    ISecurityIdentityExtractor securityIdentityExtractor,
+    VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo)
     : IPrincipalManagementService
 
     where TPrincipal : class, new()
     where TPermission : class, new()
     where TSecurityRole : class
-    where TSecurityRoleIdent : notnull
-    where TPermissionIdent : notnull, new()
     where TPermissionRestriction : class, new()
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
-    where TSecurityContextTypeIdent : notnull
 {
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
@@ -178,8 +157,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(bindingInfo.Principal.Path.Select(p => p == dbPrincipal))
             .GenericToListAsync(cancellationToken);
 
-        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, v => permissionIdentityInfo.Id.Getter(v),
-            p => (object?)permissionIdentConverter.TryConvert(p.Identity) ?? new object());
+        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, securityIdentityExtractor.Extract,
+            p => securityIdentityExtractor.TryConvert<TPermission>(p.Identity) ?? new object());
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 
@@ -215,20 +194,20 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         IEnumerable<ManagedPermission> typedPermissions,
         CancellationToken cancellationToken)
     {
-        return await typedPermissions.SyncWhenAll(typedPermission => this.CreatePermissionAsync(dbPrincipal, typedPermission, cancellationToken));
+        return await typedPermissions.SyncWhenAll(managedPermission => this.CreatePermissionAsync(dbPrincipal, managedPermission, cancellationToken));
     }
 
     private async Task<PermissionData<TPermission, TPermissionRestriction>> CreatePermissionAsync(
         TPrincipal dbPrincipal,
-        ManagedPermission typedPermission,
+        ManagedPermission managedPermission,
         CancellationToken cancellationToken)
     {
-        if (!typedPermission.Identity.IsDefault || typedPermission.IsVirtual)
+        if (!managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
         {
             throw new Exception("wrong typed permission");
         }
 
-        var securityRole = securityRoleSource.GetSecurityRole(typedPermission.SecurityRole);
+        var securityRole = securityRoleSource.GetSecurityRole(managedPermission.SecurityRole);
 
         var dbRole = await securityRoleRepository.GetObjectAsync(securityRole.Identity, cancellationToken);
 
@@ -237,12 +216,12 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         bindingInfo.Principal.Setter(newDbPermission, dbPrincipal);
         generalBindingInfo.SecurityRole.Setter(newDbPermission, dbRole);
 
-        bindingInfo.PermissionPeriod?.Setter(newDbPermission, typedPermission.Period);
-        bindingInfo.PermissionComment?.Setter(newDbPermission, typedPermission.Comment);
+        bindingInfo.PermissionPeriod?.Setter(newDbPermission, managedPermission.Period);
+        bindingInfo.PermissionComment?.Setter(newDbPermission, managedPermission.Comment);
 
         await genericRepository.SaveAsync(newDbPermission, cancellationToken);
 
-        var newPermissionRestrictions = await typedPermission.Restrictions.SyncWhenAll(async restrictionGroup =>
+        var newPermissionRestrictions = await managedPermission.Restrictions.SyncWhenAll(async restrictionGroup =>
         {
             var securityContextTypeIdentity = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Identity;
 
@@ -275,18 +254,20 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     }
 
     private async Task<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)> UpdatePermission(TPermission dbPermission,
-        ManagedPermission typedPermission, CancellationToken cancellationToken)
+        ManagedPermission managedPermission, CancellationToken cancellationToken)
     {
-        if (typedPermission.Identity.IsDefault || typedPermission.IsVirtual)
+        if (managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
         {
             throw new Exception("wrong typed permission");
         }
 
-        var dbSecurityRoleId = generalBindingInfo.SecurityRole.Getter.Composite(securityRoleIdentityInfo.Id.Getter).Invoke(dbPermission);
+        var securityRole = generalBindingInfo
+            .SecurityRole
+            .Getter(dbPermission)
+            .Pipe(securityIdentityExtractor.Extract)
+            .Pipe(securityRoleSource.GetSecurityRole);
 
-        var dbSecurityRole = securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(dbSecurityRoleId));
-
-        if (dbSecurityRole != typedPermission.SecurityRole)
+        if (securityRole != managedPermission.SecurityRole)
         {
             throw new SecuritySystemException("Permission role can't be changed");
         }
@@ -296,17 +277,17 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
             .GenericToListAsync(cancellationToken);
 
         var restrictionMergeResult = dbRestrictions.GetMergeResult(
-            typedPermission.Restrictions
-                .ChangeKey(t => securityContextTypeIdentityConverter.Convert(securityContextInfoSource.GetSecurityContextInfo(t).Identity).Id)
+            managedPermission.Restrictions
+                .ChangeKey(t => securityContextInfoSource.GetSecurityContextInfo(t).Identity)
                 .SelectMany(pair => pair.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => (pair.Key, securityContextId))),
             pr => (
-                restrictionBindingInfo.SecurityContextType.Getter.Composite(securityContextTypeIdentityInfo.Id.Getter).Invoke(pr),
-                restrictionBindingInfo.SecurityContextObjectId.Getter.Invoke(pr)),
+                securityIdentityExtractor.Extract(restrictionBindingInfo.SecurityContextType.Getter(pr)),
+                restrictionBindingInfo.SecurityContextObjectId.Getter(pr)),
             pair => pair);
 
         if (restrictionMergeResult.IsEmpty
-            && (bindingInfo.PermissionComment == null || bindingInfo.PermissionComment.Getter(dbPermission) == typedPermission.Comment)
-            && (bindingInfo.PermissionPeriod == null || bindingInfo.PermissionPeriod.Getter(dbPermission) == typedPermission.Period))
+            && (bindingInfo.PermissionComment == null || bindingInfo.PermissionComment.Getter(dbPermission) == managedPermission.Comment)
+            && (bindingInfo.PermissionPeriod == null || bindingInfo.PermissionPeriod.Getter(dbPermission) == managedPermission.Period))
         {
             var permissionData = new PermissionData<TPermission, TPermissionRestriction>(dbPermission,
                 restrictionMergeResult.CombineItems.Select(v => v.Item1).ToList());
@@ -315,15 +296,15 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         }
         else
         {
-            bindingInfo.PermissionComment?.Setter.Invoke(dbPermission, typedPermission.Comment);
-            bindingInfo.PermissionPeriod?.Setter.Invoke(dbPermission, typedPermission.Period);
+            bindingInfo.PermissionComment?.Setter.Invoke(dbPermission, managedPermission.Comment);
+            bindingInfo.PermissionPeriod?.Setter.Invoke(dbPermission, managedPermission.Period);
 
             var newPermissionRestrictions = await restrictionMergeResult.AddingItems.SyncWhenAll(async restriction =>
             {
                 var newPermissionRestriction = new TPermissionRestriction();
 
                 var dbSecurityContextType =
-                    await securityContextTypeRepository.GetObjectAsync(TypedSecurityIdentity.Create(restriction.Key), cancellationToken);
+                    await securityContextTypeRepository.GetObjectAsync(restriction.Key, cancellationToken);
 
                 restrictionBindingInfo.SecurityContextObjectId.Setter(newPermissionRestriction, restriction.securityContextId);
                 restrictionBindingInfo.SecurityContextType.Setter(newPermissionRestriction, dbSecurityContextType);

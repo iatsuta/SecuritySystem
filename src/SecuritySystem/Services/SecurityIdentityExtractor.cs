@@ -1,37 +1,54 @@
-﻿using System.Collections.Concurrent;
-
-using CommonFramework.IdentitySource;
+﻿using CommonFramework.IdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem.ExternalSystem.Management;
+using System.Collections.Concurrent;
 
 namespace SecuritySystem.Services;
 
-public class SecurityIdentityExtractor(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : ISecurityIdentityExtractor
+public class SecurityIdentityExtractor<TDomainObject>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource)
+    : ISecurityIdentityExtractor<TDomainObject>
 {
-    private readonly ConcurrentDictionary<Type, ISecurityIdentityExtractor> cache = new();
-
-    public TypedSecurityIdentity Extract(PrincipalData principalData)
+    private readonly Lazy<ISecurityIdentityExtractor<TDomainObject>> lazyInnerService = new(() =>
     {
-        return this.cache.GetOrAdd(principalData.PrincipalType, _ =>
-        {
-            var identityInfo = identityInfoSource.GetIdentityInfo(principalData.PrincipalType);
+        var identityInfo = identityInfoSource.GetIdentityInfo<TDomainObject>();
 
-            var serviceType = typeof(SecurityIdentityExtractor<,>).MakeGenericType(principalData.PrincipalType, identityInfo.IdentityType);
+        var innerServiceType = typeof(SecurityIdentityExtractor<,>).MakeGenericType(identityInfo.DomainObjectType, identityInfo.IdentityType);
 
-            return (ISecurityIdentityExtractor)ActivatorUtilities.CreateInstance(serviceProvider, serviceType, identityInfo);
-        }).Extract(principalData);
-    }
+        return (ISecurityIdentityExtractor<TDomainObject>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            identityInfo);
+    });
+
+    public ISecurityIdentityConverter Converter => this.lazyInnerService.Value.Converter;
+
+    public TypedSecurityIdentity Extract(TDomainObject domainObject) => this.lazyInnerService.Value.Extract(domainObject);
 }
 
-public class SecurityIdentityExtractor<TPrincipal, TPrincipalIdent>(IdentityInfo<TPrincipal, TPrincipalIdent> identityInfo) : ISecurityIdentityExtractor
-    where TPrincipalIdent : notnull
+public class SecurityIdentityExtractor<TDomainObject, TDomainObjectIdent>(ISecurityIdentityConverter<TDomainObjectIdent> converter, IdentityInfo<TDomainObject, TDomainObjectIdent> identityInfo)
+    : ISecurityIdentityExtractor<TDomainObject>
+    where TDomainObjectIdent : notnull
 {
-    public TypedSecurityIdentity Extract(PrincipalData principalData)
-    {
-        var typedPrincipalData = (PrincipalData<TPrincipal>)principalData;
+    public ISecurityIdentityConverter Converter { get; } = converter;
 
-        return TypedSecurityIdentity.Create(identityInfo.Id.Getter(typedPrincipalData.Principal));
+    public TypedSecurityIdentity Extract(TDomainObject domainObject) => TypedSecurityIdentity.Create(identityInfo.Id.Getter(domainObject));
+}
+
+public class SecurityIdentityExtractor(IServiceProvider serviceProvider) : ISecurityIdentityExtractor
+{
+    private readonly ConcurrentDictionary<Type, object> cache = new();
+
+    public TypedSecurityIdentity Extract<TDomainObject>(TDomainObject domainObject) =>
+        this.GetExtractor<TDomainObject>().Extract(domainObject);
+
+    public TypedSecurityIdentity? TryConvert<TDomainObject>(SecurityIdentity securityIdentity) =>
+        this.GetExtractor<TDomainObject>().Converter.TryConvert(securityIdentity);
+
+    private ISecurityIdentityExtractor<TDomainObject> GetExtractor<TDomainObject>()
+    {
+        return (ISecurityIdentityExtractor<TDomainObject>)this.cache.GetOrAdd(
+            typeof(TDomainObject),
+            _ => serviceProvider.GetRequiredService<ISecurityIdentityExtractor<TDomainObject>>());
     }
 }
