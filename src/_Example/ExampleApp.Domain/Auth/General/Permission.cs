@@ -1,6 +1,4 @@
-﻿using SecuritySystem;
-
-namespace ExampleApp.Domain.Auth.General;
+﻿namespace ExampleApp.Domain.Auth.General;
 
 public class Permission
 {
