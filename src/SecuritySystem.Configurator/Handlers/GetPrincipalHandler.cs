@@ -30,8 +30,7 @@ public class GetPrincipalHandler(
 
 	private async Task<List<PermissionDto>> GetPermissionsAsync(UserCredential userCredential, CancellationToken cancellationToken)
 	{
-		var principal = await principalSourceService.TryGetPrincipalAsync(userCredential, cancellationToken)
-		                ?? throw new SecuritySystemException($"Principal with id {userCredential} not found");
+		var principal = await principalSourceService.GetPrincipalAsync(userCredential, cancellationToken);
 
 		var allSecurityContextDict = this.GetSecurityContextDict(principal);
 

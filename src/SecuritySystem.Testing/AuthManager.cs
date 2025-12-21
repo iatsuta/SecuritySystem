@@ -69,8 +69,6 @@ public class AuthManager(
 
     public async Task<ManagedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
     {
-        var principal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
-
-        return principal ?? throw new UserSourceException($"Principal \"{userCredential}\" not found");
+        return await principalSourceService.GetPrincipalAsync(this.userCredential, cancellationToken);
     }
 }

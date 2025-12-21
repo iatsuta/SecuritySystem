@@ -67,6 +67,7 @@ public static class ServiceCollectionExtensions
                                     v => v.Parent,
                                     new AncestorLinkInfo<BusinessUnit, BusinessUnitDirectAncestorLink>(link => link.Ancestor, link => link.Child),
                                     new AncestorLinkInfo<BusinessUnit, BusinessUnitUndirectAncestorLink>(view => view.Source, view => view.Target)))
+
                         .AddSecurityContext<Location>(
                             new Guid("{9756440C-6643-4AAD-AB57-A901F3917BA4}"),
                             scb => scb.SetIdentityPath(loc => loc.MyId))
@@ -81,8 +82,15 @@ public static class ServiceCollectionExtensions
                                     .SetView(ExampleRoles.TestManager.ToSecurityRule(HierarchicalExpandType.All))
                                     .SetPath(SecurityPath<BusinessUnit>.Create(v => v))))
 
-                        .AddSecurityRole(ExampleRoles.TestManager, new SecurityRoleInfo(new Guid("{72D24BB5-F661-446A-A458-53D301805971}")))
-                        .AddSecurityRole(SecurityRole.Administrator, new SecurityRoleInfo(new Guid("{2573CFDC-91CD-4729-AE97-82AB2F235E23}")))
+                        .AddSecurityRole(SecurityRole.Administrator,
+                            new SecurityRoleInfo(new Guid("{2573CFDC-91CD-4729-AE97-82AB2F235E23}")))
+
+                        .AddSecurityRole(ExampleRoles.TestManager,
+                            new SecurityRoleInfo(new Guid("{16EBA629-4319-4C15-AED3-032E4E09866D}")) { IsVirtual = true })
+
+                        .AddSecurityRole(ExampleRoles.BuManager,
+                            new SecurityRoleInfo(new Guid("{72D24BB5-F661-446A-A458-53D301805971}"))
+                                { Restriction = SecurityPathRestriction.Create<BusinessUnit>(true) })
 
                         .AddVirtualPermission<Employee, TestManager>(
                             domainObject => domainObject.Employee,

@@ -18,43 +18,30 @@ public class TestPermissionBuilder
 
     public Dictionary<Type, Array> Restrictions { get; } = new();
 
-    //protected TIdentity? GetSingleIdentity<TIdentity>(Type type, Func<SecurityIdentity, TIdentity> map)
-    //    where TIdentity : notnull
-    //{
-    //    return this.Restrictions.GetValueOrDefault(type) is [var v] ? v : null;
-    //}
+    protected TypedSecurityIdentity<TIdent>? GetSingle<TSecurityContext, TIdent>()
+        where TSecurityContext: ISecurityContext
+        where TIdent : notnull
+    {
+        var arr = (TIdent[]?)this.Restrictions.GetValueOrDefault(typeof(TSecurityContext));
 
-    //protected void SetSingleIdentity<TIdentity>(Type type, Func<TIdentity, SecurityIdentity> map, TIdentity? value)
-    //    where TIdentity : struct
-    //{
-    //    if (value == null)
-    //    {
-    //        this.Restrictions[type] = [];
-    //    }
-    //    else
-    //    {
-    //        this.Restrictions[type] = new List<SecurityIdentity> { map(value.Value) };
-    //    }
-    //}
+        var value = arr is null ? default : arr.Select(TIdent? (v) => v).SingleOrDefault();
 
-    //protected TIdentity GetSingleIdentityC<TIdentity>(Type type, Func<SecurityIdentity, TIdentity> map)
-    //    where TIdentity : class
-    //{
-    //    return this.Restrictions.GetValueOrDefault(type).Maybe(v => map(v.Single()));
-    //}
+        return value is null ? null : new TypedSecurityIdentity<TIdent>(value);
+    }
 
-    //protected void SetSingleIdentityC<TIdentity>(Type type, Func<TIdentity, SecurityIdentity> map, TIdentity? value)
-    //    where TIdentity : class
-    //{
-    //    if (value == null)
-    //    {
-    //        this.Restrictions[type] = new List<SecurityIdentity>();
-    //    }
-    //    else
-    //    {
-    //        this.Restrictions[type] = new List<SecurityIdentity> { map(value) };
-    //    }
-    //}
+    protected void SetSingle<TSecurityContext, TIdent>(TypedSecurityIdentity<TIdent>? value)
+        where TSecurityContext : ISecurityContext
+        where TIdent : notnull
+    {
+        if (value == null)
+        {
+            this.Restrictions.Remove(typeof(TSecurityContext));
+        }
+        else
+        {
+            this.Restrictions[typeof(TSecurityContext)] = new[] { value.Id };
+        }
+    }
 
 
     public static implicit operator TestPermission(TestPermissionBuilder testPermissionBuilder)
