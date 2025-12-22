@@ -4,13 +4,16 @@ using SecuritySystem.Credential;
 
 namespace SecuritySystem.ExternalSystem.Management;
 
-public interface IPrincipalManagementService : IPrincipalSourceService
+public interface IPrincipalManagementService
 {
-    Task<object> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default);
+    Type PrincipalType { get; }
 
-    Task<object> UpdatePrincipalNameAsync(UserCredential userCredential, string principalName, CancellationToken cancellationToken);
+    Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default);
 
-    Task<object> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken = default);
+    Task<PrincipalData> UpdatePrincipalNameAsync(UserCredential userCredential, string principalName, CancellationToken cancellationToken);
 
-    Task<MergeResult<object, object>> UpdatePermissionsAsync(Guid principalId, IEnumerable<TypedPermission> typedPermissions, CancellationToken cancellationToken = default);
+    Task<PrincipalData> RemovePrincipalAsync(UserCredential userCredential, bool force, CancellationToken cancellationToken = default);
+
+    Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<ManagedPermission> typedPermissions,
+        CancellationToken cancellationToken = default);
 }

@@ -1,6 +1,4 @@
-﻿using CommonFramework;
-
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
@@ -11,23 +9,22 @@ using SecuritySystem.Services;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class UpdatePermissionsHandler(
-    [CurrentUserWithoutRunAs] ISecuritySystem securitySystem,
+    [WithoutRunAs] ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    IPrincipalManagementService principalManagementService,
-    IIdentityInfoSource identityInfoSource,
+    IDomainObjectIdentsParser domainObjectIdentsParser,
+	IPrincipalManagementService principalManagementService,
     IConfiguratorIntegrationEvents? configuratorIntegrationEvents = null) : BaseWriteHandler, IUpdatePermissionsHandler
 {
     public async Task Execute(HttpContext context, CancellationToken cancellationToken)
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = new Guid((string)context.Request.RouteValues["id"]!);
         var permissions = await this.ParseRequestBodyAsync<List<RequestBodyDto>>(context);
 
-        var typedPermissions = permissions.Select(this.ToTypedPermission).ToList();
+        var typedPermissions = permissions.Select(this.ToManagedPermission).ToList();
 
-        var mergeResult = await principalManagementService.UpdatePermissionsAsync(principalId, typedPermissions, cancellationToken);
+        var mergeResult = await principalManagementService.UpdatePermissionsAsync(context.ExtractSecurityIdentity(), typedPermissions, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
         {
@@ -48,35 +45,25 @@ public class UpdatePermissionsHandler(
         }
     }
 
-    private TypedPermission ToTypedPermission(RequestBodyDto permission)
+    private ManagedPermission ToManagedPermission(RequestBodyDto permission)
     {
         var restrictionsRequest =
 
             from restriction in permission.Contexts
 
-            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(new Guid(restriction.Id)).Type
+            let securityContextType = securityContextInfoSource.GetSecurityContextInfo(new UntypedSecurityIdentity(restriction.Id)).Type
 
-            let identityType = identityInfoSource.GetIdentityInfo(securityContextType).IdentityType
-
-            let idents = new Func<IEnumerable<string>, Array>(ParseIdents<int>).CreateGenericMethod(identityType).Invoke<Array>(null, restriction.Entities)
+            let idents = domainObjectIdentsParser.Parse(securityContextType, restriction.Entities)
 
             select (securityContextType, idents);
 
-
-        return new TypedPermission(
-            string.IsNullOrWhiteSpace(permission.PermissionId) ? Guid.Empty : new Guid(permission.PermissionId),
-            permission.IsVirtual,
-            securityRoleSource.GetSecurityRole(new Guid(permission.RoleId)),
-            permission.StartDate,
-            permission.EndDate,
-            permission.Comment,
-            restrictionsRequest.ToDictionary());
-    }
-
-    private static Array ParseIdents<TIdent>(IEnumerable<string> untypedIdents)
-        where TIdent : IParsable<TIdent>
-    {
-        return untypedIdents.Select(ident => TIdent.Parse(ident, null)).ToArray();
+        return new ManagedPermission(
+            new UntypedSecurityIdentity(permission.PermissionId),
+	        permission.IsVirtual,
+	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
+            new PermissionPeriod(permission.StartDate, permission.EndDate),
+	        permission.Comment,
+	        restrictionsRequest.ToDictionary());
     }
 
     private class RequestBodyDto
@@ -87,7 +74,7 @@ public class UpdatePermissionsHandler(
 
         public string RoleId { get; set; } = default!;
 
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
 

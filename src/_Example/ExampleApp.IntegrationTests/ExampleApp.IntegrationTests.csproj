@@ -9,14 +9,11 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SecuritySystem.Testing\SecuritySystem.Testing.csproj" />
     <ProjectReference Include="..\ExampleApp.Api\ExampleApp.Api.csproj" />
   </ItemGroup>
 

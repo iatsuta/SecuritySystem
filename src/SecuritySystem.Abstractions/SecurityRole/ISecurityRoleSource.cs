@@ -9,7 +9,7 @@ public interface ISecurityRoleSource
 
     FullSecurityRole GetSecurityRole(string name);
 
-    FullSecurityRole GetSecurityRole(Guid id);
+    FullSecurityRole GetSecurityRole(SecurityIdentity identity);
 
     IEnumerable<FullSecurityRole> GetRealRoles();
 }

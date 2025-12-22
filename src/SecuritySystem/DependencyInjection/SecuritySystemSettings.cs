@@ -1,29 +1,33 @@
 ﻿using CommonFramework.DependencyInjection;
+using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource.DependencyInjection;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
+
+using HierarchicalExpand.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem.Credential;
+using SecuritySystem.AccessDenied;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
 
-using System.Linq.Expressions;
-
 namespace SecuritySystem.DependencyInjection;
 
 public class SecuritySystemSettings : ISecuritySystemSettings
 {
+	private readonly HashSet<Type> userSourceTypes = new();
+
     private DomainSecurityRule.RoleBaseSecurityRule securityAdministratorRule = SecurityRole.Administrator;
 
     private readonly List<Action<IServiceCollection>> registerActions = [];
 
-    private Action<IServiceCollection> registerUserSourceAction = _ => { };
-
-    private Action<IServiceCollection> registerRunAsManagerAction= _ => { };
+    private Action<IServiceCollection>? registerRunAsManagerAction;
 
     private Action<IServiceCollection>? registerQueryableSourceAction;
 
@@ -39,7 +43,19 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
     private Type securityAccessorInfinityStorageType = typeof(FakeSecurityAccessorInfinityStorage);
 
-    public bool InitializeDefaultRoles { get; set; } = true;
+    private Type principalManagementServiceType = typeof(FakePrincipalManagementService);
+
+
+
+
+    public readonly List<Action<IIdentitySourceSettings>> IdentitySetupActions = new();
+
+    public readonly List<Action<IVisualIdentitySourceSettings>> VisualIdentitySetupActions = new();
+
+    public readonly List<Action<IHierarchicalExpandSettings>> HierarchicalSetupActions = new();
+
+
+	public bool InitializeDefaultRoles { get; set; } = true;
 
     public ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule)
     {
@@ -48,17 +64,29 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(Guid ident, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
-        where TSecurityContext : ISecurityContext
+    public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(TypedSecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
+        where TSecurityContext : class, ISecurityContext
     {
-        this.registerActions.Add(sc =>
-        {
-            var builder = new SecurityContextInfoBuilder<TSecurityContext>(ident);
+	    var builder = new SecurityContextInfoBuilder<TSecurityContext>(identity);
 
-            setup?.Invoke(builder);
+	    setup?.Invoke(builder);
 
-            builder.Register(sc);
-        });
+	    if (builder.IdentitySetupAction != null)
+	    {
+            this.IdentitySetupActions.Add(builder.IdentitySetupAction);
+	    }
+
+	    if (builder.VisualIdentitySetupAction != null)
+	    {
+		    this.VisualIdentitySetupActions.Add(builder.VisualIdentitySetupAction);
+	    }
+
+	    if (builder.HierarchicalSetupAction != null)
+	    {
+		    this.HierarchicalSetupActions.Add(builder.HierarchicalSetupAction);
+	    }
+
+		this.registerActions.Add(sc => builder.Register(sc));
 
         return this;
     }
@@ -121,56 +149,67 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetUserSource<TUser>(
-        Expression<Func<TUser, Guid>> idPath,
-        Expression<Func<TUser, string>> namePath,
-        Expression<Func<TUser, bool>> filter,
-        Expression<Func<TUser, TUser?>>? runAsPath = null)
-        where TUser : class
+    public ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>>? setupUserSource)
+	    where TUser : class
     {
-        this.registerUserSourceAction = sc =>
-                                        {
-                                            var info = new UserPathInfo<TUser>(idPath, namePath, filter);
-                                            sc.AddSingleton(info);
-                                            sc.AddSingleton<IUserPathInfo>(info);
+	    if (!userSourceTypes.Add(typeof(TUser)))
+	    {
+		    throw new Exception($"{nameof(UserSource<>)} for {typeof(TUser).Name} already initialized");
+	    }
 
-                                            sc.AddScoped<IUserSource<TUser>, UserSource<TUser>>();
-                                            sc.AddScopedFrom<IUserSource, IUserSource<TUser>>();
+	    var userSourceBuilder = new UserSourceBuilder<TUser>();
 
-                                            sc.AddScoped<ICurrentUserSource<TUser>, CurrentUserSource<TUser>>();
+	    setupUserSource?.Invoke(userSourceBuilder);
 
-                                            sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
+	    if (userSourceBuilder.VisualIdentitySetupAction != null)
+	    {
+		    this.VisualIdentitySetupActions.Add(userSourceBuilder.VisualIdentitySetupAction);
+	    }
 
-                                            sc.AddScoped<IUserCredentialNameByIdResolver, UserSourceCredentialNameByIdResolver<TUser>>();
+		this.registerActions.Add(sc =>
+	    {
+			var info = new UserSourceInfo<TUser>(userSourceBuilder.FilterPath);
 
-                                            if (runAsPath != null)
-                                            {
-                                                if (this.registerGenericRepositoryAction == null)
-                                                {
-                                                    throw new InvalidOperationException("GenericRepository must be initialized");
-                                                }
+		    sc.AddSingleton<UserSourceInfo>(info);
+		    sc.AddSingleton(info);
 
-                                                sc.AddSingleton(new UserSourceRunAsAccessorData<TUser>(runAsPath));
-                                                sc.AddSingleton<IUserSourceRunAsAccessor<TUser>, UserSourceRunAsAccessor<TUser>>();
-                                                sc.AddScoped<IRunAsManager, UserSourceRunAsManager<TUser>>();
-                                            }
-                                        };
+		    sc.AddScoped(typeof(IMissedUserService<TUser>), userSourceBuilder.MissedUserServiceType);
+	    });
 
-        return this;
-    }
+	    if (userSourceBuilder.RunAsPath != null)
+	    {
+		    if (this.registerRunAsManagerAction == null)
+		    {
+			    this.registerRunAsManagerAction = sc =>
+			    {
+				    sc.AddSingleton(new UserSourceRunAsInfo<TUser>(userSourceBuilder.RunAsPath));
+				    sc.AddScoped<IRunAsManager, RunAsManager<TUser>>();
+				    sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
 
-    public ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
-        where TRunAsManager : class, IRunAsManager
-    {
-        this.registerRunAsManagerAction = sc => sc.AddScoped<IRunAsManager, TRunAsManager>();
+                    sc.AddScoped<IUserSource>(sp => sp.GetRequiredService<IUserSource<TUser>>());
+                };
+		    }
+		    else
+		    {
+			    throw new InvalidOperationException("RunAs already initialized");
+		    }
+	    }
 
-        return this;
+	    return this;
     }
 
     public ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
         where TStorage : class, ISecurityAccessorInfinityStorage
     {
         this.securityAccessorInfinityStorageType = typeof(TStorage);
+
+        return this;
+    }
+
+    public ISecuritySystemSettings SetPrincipalManagementService<TPrincipalManagementService>()
+        where TPrincipalManagementService : class, IPrincipalManagementService
+    {
+        this.principalManagementServiceType = typeof(TPrincipalManagementService);
 
         return this;
     }
@@ -215,13 +254,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetQueryableSource(Func<IServiceProvider, IQueryableSource> selector)
-    {
-        this.registerQueryableSourceAction = sc => sc.AddScoped(selector);
-
-        return this;
-    }
-
     public ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService
     {
@@ -245,27 +277,22 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetGenericRepository(Func<IServiceProvider, IGenericRepository> selector)
-    {
-        this.registerGenericRepositoryAction = sc => sc.AddScoped(selector);
-
-        return this;
-    }
-
     public void Initialize(IServiceCollection services)
     {
         (this.registerQueryableSourceAction ?? throw new InvalidOperationException("QueryableSource must be initialized")).Invoke(services);
 
-        (this.registerRawUserAuthenticationServiceAction ?? throw new InvalidOperationException("RawUserAuthenticationService must be initialized")).Invoke(services);
+        (this.registerGenericRepositoryAction ?? throw new InvalidOperationException("GenericRepository must be initialized")).Invoke(services);
 
-        this.registerGenericRepositoryAction?.Invoke(services);
+		(this.registerRawUserAuthenticationServiceAction ?? throw new InvalidOperationException("RawUserAuthenticationService must be initialized")).Invoke(services);
 
         services.AddSingleton(new SecurityAdministratorRuleInfo(this.securityAdministratorRule));
 
         this.registerActions.ForEach(v => v(services));
 
-        this.registerUserSourceAction(services);
-        this.registerRunAsManagerAction(services);
+        if (this.registerRunAsManagerAction != null)
+        {
+	        this.registerRunAsManagerAction(services);
+		}
 
         if (this.InitializeDefaultRoles)
         {
@@ -276,6 +303,8 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         services.AddSingleton(typeof(IAccessDeniedExceptionService), this.accessDeniedExceptionServiceType);
 
         services.AddScoped(typeof(ISecurityAccessorInfinityStorage), this.securityAccessorInfinityStorageType);
+
+        services.AddScoped(typeof(IPrincipalManagementService), this.principalManagementServiceType);
 
         services.AddSingleton(this.defaultSecurityRuleCredential);
 

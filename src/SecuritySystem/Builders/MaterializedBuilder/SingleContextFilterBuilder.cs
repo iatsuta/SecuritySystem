@@ -1,32 +1,33 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
-public class SingleContextFilterBuilder<TDomainObject, TSecurityContext, TIdent>(
-    SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
-    SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo)
-    : ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TIdent>(securityContextRestriction)
-    where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+public class SingleContextFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(
+	SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
+	SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
+	IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
+	: ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(securityContextRestriction)
+	where TSecurityContext : class, ISecurityContext
+	where TSecurityContextIdent : notnull
 {
-    protected override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TIdent> permissionIdents)
-    {
-        var singleFilter = identityInfo.CreateContainsFilter(permissionIdents);
+	protected override Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TSecurityContextIdent> permissionIdents)
+	{
+		var singleFilter = identityInfo.CreateContainsFilter(permissionIdents);
 
-        var containsFilterExpr = securityPath.Expression!.Select(singleFilter);
+		var containsFilterExpr = securityPath.Expression!.Select(singleFilter);
 
-        if (securityPath.Required)
-        {
-            return containsFilterExpr;
-        }
-        else
-        {
-            var grandAccessFilter = securityPath.Expression.Select(securityObject => securityObject == null);
+		if (securityPath.Required)
+		{
+			return containsFilterExpr;
+		}
+		else
+		{
+			var grandAccessFilter = securityPath.Expression.Select(securityObject => securityObject == null);
 
-            return grandAccessFilter.BuildOr(containsFilterExpr);
-        }
-    }
+			return grandAccessFilter.BuildOr(containsFilterExpr);
+		}
+	}
 }

@@ -6,29 +6,34 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
 {
     private readonly HashSet<object> validated = new (ReferenceEqualityComparer.Instance);
 
-    public void Validate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
+    private readonly Lock locker = new ();
+
+    public void Validate(VirtualPermissionBindingInfo virtualBindingInfo)
     {
-        if (this.validated.Contains(bindingInfo))
+        lock (this.locker)
         {
-            return;
+            if (this.validated.Contains(virtualBindingInfo))
+            {
+                return;
+            }
+
+            this.InternalValidate(virtualBindingInfo);
+
+            this.validated.Add(virtualBindingInfo);
         }
-
-        this.InternalValidate(bindingInfo);
-
-        this.validated.Add(bindingInfo);
     }
 
-    private void InternalValidate<TPrincipal, TPermission>(VirtualPermissionBindingInfo<TPrincipal, TPermission> bindingInfo)
+    private void InternalValidate(VirtualPermissionBindingInfo virtualBindingInfo)
     {
         var securityContextRestrictions = securityRoleSource
-                                          .GetSecurityRole(bindingInfo.SecurityRole)
+                                          .GetSecurityRole(virtualBindingInfo.SecurityRole)
                                           .Information
                                           .Restriction
                                           .SecurityContextRestrictions;
 
         if (securityContextRestrictions != null)
         {
-            var bindingContextTypes = bindingInfo.GetSecurityContextTypes().ToList();
+            var bindingContextTypes = virtualBindingInfo.GetSecurityContextTypes().ToList();
 
             var invalidTypes = bindingContextTypes.Except(securityContextRestrictions.Select(r => r.SecurityContextType)).ToList();
 

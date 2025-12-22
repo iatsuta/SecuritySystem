@@ -1,9 +1,10 @@
-﻿using SecuritySystem.DomainServices.DependencySecurity._Base;
+﻿using CommonFramework.GenericRepository;
+using CommonFramework.RelativePath;
+
+using SecuritySystem.DomainServices.DependencySecurity._Base;
 using SecuritySystem.Expanders;
 using SecuritySystem.Providers;
 using SecuritySystem.Providers.DependencySecurity;
-using SecuritySystem.RelativeDomainPathInfo;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.DomainServices.DependencySecurity;
 

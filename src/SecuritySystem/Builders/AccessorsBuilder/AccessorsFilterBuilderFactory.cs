@@ -1,12 +1,14 @@
 ﻿using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource;
+
+using HierarchicalExpand;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.HierarchicalExpand;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
@@ -64,12 +66,12 @@ public class AccessorsFilterBuilderFactory<TPermission, TDomainObject>(
         return new ConditionFilterBuilder<TPermission, TDomainObject>(expressionEvaluatorStorage, securityPath);
     }
 
-    protected override AccessorsFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
+    protected override AccessorsFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TSecurityContextIdent>(
         SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
         SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-        IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     {
-        return new SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+        return new SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
             expressionEvaluatorStorage,
             permissionSystem,
             hierarchicalObjectExpanderFactory,
@@ -78,12 +80,12 @@ public class AccessorsFilterBuilderFactory<TPermission, TDomainObject>(
             identityInfo);
     }
 
-    protected override AccessorsFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TIdent>(
+    protected override AccessorsFilterBuilder<TPermission, TDomainObject> CreateBuilder<TSecurityContext, TSecurityContextIdent>(
         SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
         SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-        IdentityInfo<TSecurityContext, TIdent> identityInfo)
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
     {
-        return new ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+        return new ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
             expressionEvaluatorStorage,
             permissionSystem,
             hierarchicalObjectExpanderFactory,

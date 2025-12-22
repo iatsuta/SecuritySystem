@@ -1,4 +1,5 @@
-﻿using SecuritySystem.ExternalSystem;
+﻿using SecuritySystem.AccessDenied;
+using SecuritySystem.ExternalSystem;
 using SecuritySystem.SecurityRuleInfo;
 
 // ReSharper disable once CheckNamespace
@@ -11,6 +12,9 @@ public class SecuritySystemFactory(
 {
     public ISecuritySystem Create(SecurityRuleCredential securityRuleCredential)
     {
-        return new SecuritySystem(accessDeniedExceptionService, permissionSystems.Select(f => f.Create(securityRuleCredential)).ToList(), domainSecurityRoleExtractor);
+        return new SecuritySystem(
+            accessDeniedExceptionService,
+            permissionSystems.Select(f => f.Create(securityRuleCredential)).ToList(),
+            domainSecurityRoleExtractor);
     }
 }

@@ -17,7 +17,7 @@ public record RelativeConditionInfo<TRelativeDomainObject>(Expression<Func<TRela
 
     public virtual bool Equals(RelativeConditionInfo<TRelativeDomainObject>? other) =>
         ReferenceEquals(this, other)
-        || (other is not null && ExpressionComparer.Value.Equals(this.Condition, other.Condition));
+        || (other is not null && ExpressionComparer.Default.Equals(this.Condition, other.Condition));
 
     public override int GetHashCode() => 0;
 }

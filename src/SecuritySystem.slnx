@@ -16,8 +16,14 @@
   
   <Project Path="SecuritySystem/SecuritySystem.csproj" />
   <Project Path="SecuritySystem.Abstractions/SecuritySystem.Abstractions.csproj" />
+  
   <Project Path="SecuritySystem.Configurator/SecuritySystem.Configurator.csproj" />
+  
   <Project Path="SecuritySystem.DiTests/SecuritySystem.DiTests.csproj" />
+  
+  <Project Path="SecuritySystem.GeneralPermission/SecuritySystem.GeneralPermission.csproj" />
+  <Project Path="SecuritySystem.Testing/SecuritySystem.Testing.csproj" />
+  
   <Project Path="SecuritySystem.VirtualPermission/SecuritySystem.VirtualPermission.csproj" />
   
 </Solution>

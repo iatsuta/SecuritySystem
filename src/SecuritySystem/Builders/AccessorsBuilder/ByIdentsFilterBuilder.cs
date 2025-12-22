@@ -1,40 +1,43 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.IdentitySource;
+
+using HierarchicalExpand;
 
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TIdent>(
+public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     IContextSecurityPath contextSecurityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TIdent> identityInfo) : AccessorsFilterBuilder<TPermission, TDomainObject>
+    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo) : AccessorsFilterBuilder<TPermission, TDomainObject>
     where TSecurityContext : class, ISecurityContext
-    where TIdent : notnull
+    where TSecurityContextIdent : notnull
 {
-    public override Expression<Func<TPermission, bool>> GetAccessorsFilter(
-        TDomainObject domainObject,
-        HierarchicalExpandType expandType)
+    private readonly IPermissionRestrictionSource<TPermission, TSecurityContextIdent> permissionRestrictionSource =
+        permissionSystem.GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(securityContextRestriction?.Filter);
+
+    public override Expression<Func<TPermission, bool>> GetAccessorsFilter(TDomainObject domainObject, HierarchicalExpandType expandType)
     {
         var securityObjects = this.GetSecurityObjects(domainObject).ToArray();
 
         var allowGrandAccess = securityContextRestriction?.Required != true;
 
         var grandAccessExpr = allowGrandAccess
-                                  ? permissionSystem.GetGrandAccessExpr<TSecurityContext>()
-                                  : _ => false;
+            ? permissionRestrictionSource.GetGrandAccessExpr()
+            : _ => false;
 
         if (securityObjects.Any())
         {
             var securityIdents = hierarchicalObjectExpanderFactory
-                                 .Create<TIdent>(typeof(TSecurityContext))
-                                 .Expand(securityObjects.Select(identityInfo.IdFunc), expandType.Reverse());
+                .Create<TSecurityContextIdent>(typeof(TSecurityContext))
+                .Expand(securityObjects.Select(identityInfo.Id.Getter), expandType.Reverse());
 
-            return grandAccessExpr.BuildOr(permissionSystem.GetContainsIdentsExpr(securityIdents, securityContextRestriction?.Filter));
+            return grandAccessExpr.BuildOr(permissionRestrictionSource.GetContainsIdentsExpr(securityIdents));
         }
         else
         {

@@ -6,15 +6,6 @@ public class RuntimePermissionOptimizationService : IRuntimePermissionOptimizati
     {
         var cachedPermissions = permissions.ToList();
 
-        //if (cachedPermissions.All(permission => permission.Values.All(arr => arr.GetType().GetElementType() == typeof(Guid))))
-        //{
-        //    var guidPermissions = cachedPermissions.Select(permission => permission.ChangeValue(arr => ((Guid[])arr).ToList()));
-
-        //    var optimized = new RuntimeGuidPermissionOptimizationService().Optimize(guidPermissions);
-
-        //    return optimized.Select(permission => permission.ChangeValue(Array (list) => list.ToArray()));
-        //}
-
         var orderedTypes = cachedPermissions
             .SelectMany(p => p)
             .GroupBy(p => p.Key)

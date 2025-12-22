@@ -9,7 +9,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class GetBusinessRoleHandler(
-    [CurrentUserWithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs]ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityOperationInfoSource securityOperationInfoSource,
     IRootPrincipalSourceService principalSourceService)
@@ -19,9 +19,7 @@ public class GetBusinessRoleHandler(
     {
         if (!securitySystem.IsSecurityAdministrator()) return new BusinessRoleDetailsDto { Operations = [], Principals = [] };
 
-        var securityRoleId = new Guid((string)context.Request.RouteValues["id"]!);
-
-        var securityRole = securityRoleSource.GetSecurityRole(securityRoleId);
+        var securityRole = securityRoleSource.GetSecurityRole(context.ExtractSecurityIdentity());
 
         var operations =
             securityRole

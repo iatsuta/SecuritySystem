@@ -8,7 +8,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class DeletePrincipalHandler(
-    [CurrentUserWithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs] ISecuritySystem securitySystem,
     IPrincipalManagementService principalManagementService,
     IConfiguratorIntegrationEvents? configuratorIntegrationEvents = null)
     : BaseWriteHandler, IDeletePrincipalHandler
@@ -17,9 +17,7 @@ public class DeletePrincipalHandler(
     {
         securitySystem.CheckAccess(ApplicationSecurityRule.SecurityAdministrator);
 
-        var principalId = new Guid((string?)context.Request.RouteValues["id"]!);
-
-        var principal = await principalManagementService.RemovePrincipalAsync(principalId, false, cancellationToken);
+        var principal = await principalManagementService.RemovePrincipalAsync(context.ExtractSecurityIdentity(), false, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
             await configuratorIntegrationEvents.PrincipalRemovedAsync(principal, cancellationToken);

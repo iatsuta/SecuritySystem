@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using HierarchicalExpand;
+using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.DiTests.Rules;
 using SecuritySystem.Expanders;
-using SecuritySystem.HierarchicalExpand;
 
 namespace SecuritySystem.DiTests;
 

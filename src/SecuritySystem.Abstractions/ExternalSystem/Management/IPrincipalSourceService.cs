@@ -1,12 +1,6 @@
-﻿using SecuritySystem.Credential;
+﻿namespace SecuritySystem.ExternalSystem.Management;
 
-namespace SecuritySystem.ExternalSystem.Management;
-
-public interface IPrincipalSourceService
+public interface IPrincipalSourceService : IPrincipalSourceServiceBase
 {
-    Task<IEnumerable<TypedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken = default);
-
-    Task<TypedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken = default);
-
-    Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken = default);
+    Type PrincipalType { get; }
 }

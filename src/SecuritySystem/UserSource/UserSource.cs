@@ -1,42 +1,43 @@
-﻿using System.Linq.Expressions;
-
-using CommonFramework;
+﻿using GenericQueryable;
 
 using SecuritySystem.Credential;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;
 
-public class UserSource<TUser>(IQueryableSource queryableSource, UserPathInfo<TUser> userPathInfo) : IUserSource<TUser>
-    where TUser : class
+public class UserSource<TUser>(IUserQueryableSource<TUser> userQueryableSource, IMissedUserService<TUser> missedUserService) : IUserSource<TUser>
+	where TUser : class
 {
-    public TUser? TryGetUser(UserCredential userCredential) => this.GetQueryable(userCredential).SingleOrDefault();
+	private readonly Dictionary<UserCredential, TUser?> tryGetUserCache = new();
 
-    public TUser GetUser(UserCredential userCredential) =>
-        this.TryGetUser(userCredential) ?? throw this.GetNotFoundException(userCredential);
+	private readonly Dictionary<UserCredential, TUser> getUserCache = new();
 
-    User? IUserSource.TryGetUser(UserCredential userCredential) =>
-        this.GetQueryable(userCredential).Select(userPathInfo.ToDefaultUserExpr).SingleOrDefault();
+	private IUserSource<User>? simpleCache;
 
-    User IUserSource.GetUser(UserCredential userCredential) =>
-        ((IUserSource)this).TryGetUser(userCredential) ?? throw this.GetNotFoundException(userCredential);
 
-    private IQueryable<TUser> GetQueryable(UserCredential userCredential) =>
-        queryableSource
-            .GetQueryable<TUser>()
-            .Where(userPathInfo.Filter)
-            .Where(this.GetCredentialFilter(userCredential));
+	public Type UserType { get; } = typeof(TUser);
 
-    private Expression<Func<TUser, bool>> GetCredentialFilter(UserCredential userCredential)
-    {
-        return userCredential switch
-        {
-            UserCredential.NamedUserCredential { Name: var name } => userPathInfo.NamePath.Select(objName => objName == name),
-            UserCredential.IdentUserCredential { Id: var id } => userPathInfo.IdPath.Select(objId => objId == id),
-            _ => throw new ArgumentOutOfRangeException(nameof(userCredential))
-        };
-    }
+    public async Task<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	{
+		if (!tryGetUserCache.TryGetValue(userCredential, out var result))
+		{
+			tryGetUserCache[userCredential] = result = await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
+		}
 
-    private Exception GetNotFoundException(UserCredential userCredential) =>
-        new UserSourceException($"{typeof(TUser).Name} \"{userCredential}\" not found");
+		return result;
+	}
+
+	public async Task<TUser> GetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
+	{
+		if (!getUserCache.TryGetValue(userCredential, out var result))
+		{
+			getUserCache[userCredential] = result = await this.TryGetUserAsync(userCredential, cancellationToken) ?? missedUserService.GetUser(userCredential);
+		}
+
+		return result;
+	}
+
+    public IUserSource<User> ToSimple()
+	{
+		return this.simpleCache ??= new UserSource<User>(userQueryableSource.ToSimple(), missedUserService.ToSimple());
+	}
 }

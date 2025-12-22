@@ -1,8 +1,8 @@
 ﻿namespace SecuritySystem.Configurator.Models;
 
-public class EntityDto
+public record EntityDto
 {
-    public Guid Id { get; set; }
+    public required string Id { get; init; }
 
-    public string Name { get; set; } = null!;
+	public required string Name { get; init; }
 }

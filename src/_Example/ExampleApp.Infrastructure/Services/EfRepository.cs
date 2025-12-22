@@ -1,6 +1,8 @@
 ﻿using ExampleApp.Application;
 
-using SecuritySystem;
+using Microsoft.EntityFrameworkCore;
+
+using SecuritySystem.AccessDenied;
 using SecuritySystem.Providers;
 
 namespace ExampleApp.Infrastructure.Services;
@@ -11,20 +13,16 @@ public class EfRepository<TDomainObject>(
     IAccessDeniedExceptionService accessDeniedExceptionService) : IRepository<TDomainObject>
     where TDomainObject : class
 {
-    public async Task UpdateAsync(TDomainObject domainObject, CancellationToken cancellationToken)
+    public async Task SaveAsync(TDomainObject domainObject, CancellationToken cancellationToken)
     {
         this.CheckAccess(domainObject);
 
-        dbContext.Update(domainObject);
+        var state = dbContext.Entry(domainObject).State;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task InsertAsync(TDomainObject domainObject, CancellationToken cancellationToken)
-    {
-        this.CheckAccess(domainObject);
-
-        dbContext.Add(domainObject);
+        if (state == EntityState.Detached)
+        {
+            await dbContext.AddAsync(domainObject, cancellationToken);
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }

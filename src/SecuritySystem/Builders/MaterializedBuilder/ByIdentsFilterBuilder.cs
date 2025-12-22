@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace SecuritySystem.Builders.MaterializedBuilder;
 
-public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TIdent>(SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
+public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TSecurityContextIdent>(SecurityContextRestriction<TSecurityContext>? securityContextRestriction)
     : SecurityFilterBuilder<TDomainObject>
     where TSecurityContext : class, ISecurityContext
 {
@@ -11,7 +11,7 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TId
     {
         if (permission.TryGetValue(typeof(TSecurityContext), out var securityIdents))
         {
-            return this.GetSecurityFilterExpression((IEnumerable<TIdent>)securityIdents);
+            return this.GetSecurityFilterExpression((IEnumerable<TSecurityContextIdent>)securityIdents);
         }
         else
         {
@@ -21,5 +21,5 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TId
         }
     }
 
-    protected abstract Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TIdent> permissionIdents);
+    protected abstract Expression<Func<TDomainObject, bool>> GetSecurityFilterExpression(IEnumerable<TSecurityContextIdent> permissionIdents);
 }

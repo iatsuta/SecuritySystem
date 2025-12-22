@@ -2,16 +2,20 @@
 
 namespace SecuritySystem.UserSource;
 
-public interface IUserSource<out TUser> : IUserSource
+public interface IUserSource<TUser> : IUserSource
 {
-    new TUser? TryGetUser(UserCredential userCredential);
+	Task<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken = default);
 
-    new TUser GetUser(UserCredential userCredential);
+	Task<TUser> GetUserAsync(UserCredential userCredential, CancellationToken cancellationToken = default);
+
+	TUser GetUser(UserCredential userCredential) => this.GetUserAsync(userCredential).GetAwaiter().GetResult();
+
+    TUser? TryGetUser(UserCredential userCredential) => this.TryGetUserAsync(userCredential).GetAwaiter().GetResult();
 }
 
 public interface IUserSource
 {
-    User? TryGetUser(UserCredential userCredential);
+    Type UserType { get; }
 
-    User GetUser(UserCredential userCredential);
+    IUserSource<User> ToSimple();
 }

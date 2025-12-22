@@ -1,66 +1,57 @@
-﻿using CommonFramework;
+﻿using SecuritySystem.Services;
+
+using System.Collections.Concurrent;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
 public class SecurityRoleSource : ISecurityRoleSource
 {
-    private readonly IReadOnlyDictionary<Guid, FullSecurityRole> securityRoleByIdDict;
+    private readonly IReadOnlyDictionary<TypedSecurityIdentity, FullSecurityRole> identityDict;
 
-    private readonly IReadOnlyDictionary<string, FullSecurityRole> securityRoleByNameDict;
+    private readonly IReadOnlyDictionary<string, FullSecurityRole> nameDict;
 
-    public SecurityRoleSource(IEnumerable<FullSecurityRole> securityRoles)
+    private readonly ConcurrentDictionary<SecurityIdentity, FullSecurityRole> baseIdentityCache = new();
+
+    private readonly ISecurityIdentityConverter rootIdentityConverter;
+
+    public SecurityRoleSource(IServiceProvider serviceProvider, IEnumerable<FullSecurityRole> securityRoles)
     {
         this.SecurityRoles = securityRoles.ToList();
 
-        this.Validate();
+        this.identityDict = this.SecurityRoles.ToDictionary(v => v.Identity);
 
-        this.securityRoleByIdDict = this.SecurityRoles.ToDictionary(v => v.Id);
+        this.nameDict = this.SecurityRoles.ToDictionary(v => v.Name);
 
-        this.securityRoleByNameDict = this.SecurityRoles.ToDictionary(v => v.Name);
+        this.rootIdentityConverter = new RootSecurityIdentityConverter(serviceProvider, this.SecurityRoles.Select(sr => sr.Identity.IdentType).Distinct());
     }
 
     public IReadOnlyList<FullSecurityRole> SecurityRoles { get; }
 
     public FullSecurityRole GetSecurityRole(SecurityRole securityRole) => this.GetSecurityRole(securityRole.Name);
 
-    public FullSecurityRole GetSecurityRole(string name)
-    {
-        return this.securityRoleByNameDict.GetValueOrDefault(name) ?? throw new Exception($"SecurityRole with name '{name}' not found");
-    }
+    public FullSecurityRole GetSecurityRole(string name) =>
+        this.nameDict.GetValueOrDefault(name) ?? throw new Exception($"SecurityRole with name '{name}' not found");
 
-    public FullSecurityRole GetSecurityRole(Guid id)
+    public FullSecurityRole GetSecurityRole(SecurityIdentity identity)
     {
-        return this.securityRoleByIdDict.GetValueOrDefault(id) ?? throw new Exception($"SecurityRole with id '{id}' not found");
+        return this.baseIdentityCache.GetOrAdd(identity, _ =>
+        {
+            var convertedIdentity = rootIdentityConverter.TryConvert(identity);
+
+            if (convertedIdentity != null && this.identityDict.TryGetValue(convertedIdentity, out var securityRole))
+            {
+                return securityRole;
+            }
+            else
+            {
+                throw new Exception($"SecurityRole with {nameof(identity)} '{identity}' not found");
+            }
+        });
     }
 
     public IEnumerable<FullSecurityRole> GetRealRoles()
     {
         return this.SecurityRoles.Where(sr => !sr.Information.IsVirtual);
-    }
-
-    private void Validate()
-    {
-        var idDuplicates = this.SecurityRoles
-                               .GetDuplicates(
-                                   new EqualityComparerImpl<FullSecurityRole>(
-                                       (sr1, sr2) => sr1.Id == sr2.Id,
-                                       sr => sr.Id.GetHashCode())).ToList();
-
-        if (idDuplicates.Any())
-        {
-            throw new Exception($"SecurityRole 'Id' duplicates: {idDuplicates.Join(", ", sr => sr.Id)}");
-        }
-
-        var nameDuplicates = this.SecurityRoles
-                                 .GetDuplicates(
-                                     new EqualityComparerImpl<FullSecurityRole>(
-                                         (sr1, sr2) => sr1.Name == sr2.Name,
-                                         sr => sr.Name.GetHashCode())).ToList();
-
-        if (nameDuplicates.Any())
-        {
-            throw new Exception($"SecurityRole 'Name' duplicates: {nameDuplicates.Join(", ", sr => sr.Name)}");
-        }
     }
 }

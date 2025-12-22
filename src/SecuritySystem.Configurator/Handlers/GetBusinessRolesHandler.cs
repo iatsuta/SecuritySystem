@@ -10,7 +10,7 @@ namespace SecuritySystem.Configurator.Handlers;
 public class GetBusinessRolesHandler(
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    [CurrentUserWithoutRunAs]ISecuritySystem securitySystem)
+    [WithoutRunAs]ISecuritySystem securitySystem)
     : BaseReadHandler, IGetBusinessRolesHandler
 {
     protected override async Task<object> GetDataAsync(HttpContext context, CancellationToken cancellationToken)
@@ -26,7 +26,7 @@ public class GetBusinessRolesHandler(
                .Select(
                    x => new FullRoleDto
                         {
-                            Id = x.Id,
+                            Id = x.Identity.GetId().ToString()!,
                             Name = x.Name,
                             IsVirtual = x.Information.IsVirtual,
                             Contexts =

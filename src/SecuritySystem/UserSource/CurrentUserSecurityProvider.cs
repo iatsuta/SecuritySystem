@@ -2,9 +2,13 @@
 
 using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
+using CommonFramework.IdentitySource;
+using CommonFramework.RelativePath;
+using CommonFramework.VisualIdentitySource;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Providers;
-using SecuritySystem.RelativeDomainPathInfo;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.Services;
 
@@ -12,30 +16,47 @@ namespace SecuritySystem.UserSource;
 
 public class CurrentUserSecurityProvider<TDomainObject>(
     IServiceProvider serviceProvider,
-    IUserPathInfo userPathInfo,
+    IEnumerable<UserSourceInfo> userSourceInfoList,
+    IIdentityInfoSource identityInfoSource,
     CurrentUserSecurityProviderRelativeKey? key = null) : ISecurityProvider<TDomainObject>
 {
-    private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerProvider = LazyHelper.Create(
-        () =>
-        {
-            var generics = new[] { typeof(TDomainObject), userPathInfo.UserDomainObjectType };
+    private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerProvider = new(() =>
+    {
+	    var (actualUserSourceInfo, actualRelativeDomainPathInfo) =
+		    TryGetActualUserSourceInfo() ?? throw new SecuritySystemException($"Can't found RelativePath for {typeof(TDomainObject)}");
 
-            var relativeDomainPathInfoType = typeof(IRelativeDomainPathInfo<,>).MakeGenericType(generics);
+	    var identityInfo = identityInfoSource.GetIdentityInfo(actualUserSourceInfo.UserType);
 
-            var relativePathKey = key?.Name;
+		return (ISecurityProvider<TDomainObject>)
+            ActivatorUtilities.CreateInstance(
+                serviceProvider,
+                typeof(CurrentUserSecurityProvider<,,>).MakeGenericType(typeof(TDomainObject), actualUserSourceInfo.UserType, identityInfo.IdentityType),
+                actualRelativeDomainPathInfo, identityInfo);
 
-            var relativeDomainPathInfo = relativePathKey == null
-                                             ? serviceProvider.GetRequiredService(relativeDomainPathInfoType)
-                                             : serviceProvider.GetRequiredKeyedService(relativeDomainPathInfoType, relativePathKey);
+		(UserSourceInfo, object)? TryGetActualUserSourceInfo()
+		{
+			foreach (var userSourceInfo in userSourceInfoList)
+			{
+				var relativeDomainPathInfoType = typeof(IRelativeDomainPathInfo<,>).MakeGenericType(typeof(TDomainObject), userSourceInfo.UserType);
 
-            return (ISecurityProvider<TDomainObject>)
-                ActivatorUtilities.CreateInstance(
-                    serviceProvider,
-                    typeof(CurrentUserSecurityProvider<,>).MakeGenericType(generics),
-                    relativeDomainPathInfo);
-        });
+				var relativePathKey = key?.Name;
 
-    private ISecurityProvider<TDomainObject> InnerProvider => this.lazyInnerProvider.Value;
+				var relativeDomainPathInfo = relativePathKey == null
+					? serviceProvider.GetService(relativeDomainPathInfoType)
+					: serviceProvider.GetKeyedService(relativeDomainPathInfoType, relativePathKey);
+
+				if (relativeDomainPathInfo != null)
+				{
+					return (userSourceInfo, relativeDomainPathInfo);
+				}
+			}
+
+			return null;
+		}
+	});
+
+
+	private ISecurityProvider<TDomainObject> InnerProvider => this.lazyInnerProvider.Value;
 
     public IQueryable<TDomainObject> InjectFilter(IQueryable<TDomainObject> queryable) => this.InnerProvider.InjectFilter(queryable);
 
@@ -46,21 +67,28 @@ public class CurrentUserSecurityProvider<TDomainObject>(
     public SecurityAccessorData GetAccessorData(TDomainObject domainObject) => this.InnerProvider.GetAccessorData(domainObject);
 }
 
-public class CurrentUserSecurityProvider<TDomainObject, TUser>(
-    IExpressionEvaluatorStorage expressionEvaluatorStorage,
-    IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
-    UserPathInfo<TUser> userPathInfo,
-    ICurrentUser currentUser) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
-    where TUser : class
+public class CurrentUserSecurityProvider<TDomainObject, TUser, TIdent>(
+	IExpressionEvaluatorStorage expressionEvaluatorStorage,
+	IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
+	IdentityInfo<TUser, TIdent> identityInfo,
+	IVisualIdentityInfoSource visualIdentityInfoSource,
+	ISecurityIdentityConverter<TIdent> securityIdentityConverter,
+	ICurrentUserSource<TUser> currentUserSource) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
+	where TUser : class
+	where TIdent : notnull
 {
-    public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
+	private readonly Func<TUser, string> nameSelector = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Getter;
 
-        relativeDomainPathInfo.CreateCondition(userPathInfo.IdPath.Select(userId => userId == currentUser.Id));
+	public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
 
-    public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
-    {
-        var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
+		relativeDomainPathInfo.CreateCondition(
+			identityInfo.Id.Path.Select(
+				ExpressionHelper.GetEqualityWithExpr(securityIdentityConverter.Convert(currentUserSource.ToSimple().CurrentUser.Identity).Id)));
 
-        return SecurityAccessorData.Return(users.Select(user => this.ExpressionEvaluator.Evaluate(userPathInfo.NamePath, user)));
-    }
+	public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
+	{
+		var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
+
+		return SecurityAccessorData.Return(users.Select(nameSelector));
+	}
 }

@@ -1,25 +1,27 @@
 ﻿using System.Linq.Expressions;
 
-using Microsoft.Extensions.DependencyInjection;
+using CommonFramework.IdentitySource.DependencyInjection;
+using CommonFramework.VisualIdentitySource.DependencyInjection;
 
-using SecuritySystem.HierarchicalExpand;
+using HierarchicalExpand;
+using HierarchicalExpand.DependencyInjection;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.DependencyInjection;
 
-public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityContextInfoBuilder<TSecurityContext>
-	where TSecurityContext : ISecurityContext
+public class SecurityContextInfoBuilder<TSecurityContext>(TypedSecurityIdentity identity) : ISecurityContextInfoBuilder<TSecurityContext>
+	where TSecurityContext : class, ISecurityContext
 {
 	private readonly List<Action<IServiceCollection>> extensions = new();
 
 	private string name = typeof(TSecurityContext).Name;
 
-	private Func<TSecurityContext, string> displayFunc = securityContext => securityContext.ToString() ?? typeof(TSecurityContext).Name;
+	public Action<IHierarchicalExpandSettings>? HierarchicalSetupAction { get; private set; }
 
-	private HierarchicalInfo<TSecurityContext>? hierarchicalInfo;
+	public Action<IIdentitySourceSettings>? IdentitySetupAction { get; private set; }
 
-	private FullAncestorLinkInfo<TSecurityContext>? fullAncestorLinkInfo;
-
-	private IdentityInfo? customIdentityInfo;
+	public Action<IVisualIdentitySourceSettings>? VisualIdentitySetupAction { get; private set; }
 
 	public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
 	{
@@ -28,17 +30,17 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 		return this;
 	}
 
-	public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> newDisplayFunc)
+	public ISecurityContextInfoBuilder<TSecurityContext> SetDisplayFunc(Func<TSecurityContext, string> displayFunc)
 	{
-		this.displayFunc = newDisplayFunc;
+		this.VisualIdentitySetupAction = s => s.SetDisplay(displayFunc);
 
 		return this;
 	}
 
-	public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TIdent>(Expression<Func<TSecurityContext, TIdent>> identityPath)
-		where TIdent : struct
+	public ISecurityContextInfoBuilder<TSecurityContext> SetIdentityPath<TSecurityContextIdent>(Expression<Func<TSecurityContext, TSecurityContextIdent>> identityPath)
+		where TSecurityContextIdent : struct
 	{
-		this.customIdentityInfo = new IdentityInfo<TSecurityContext, TIdent>(identityPath);
+		this.IdentitySetupAction = s => s.SetId(identityPath);
 
 		return this;
 	}
@@ -47,8 +49,7 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 		HierarchicalInfo<TSecurityContext> newHierarchicalInfo,
 		FullAncestorLinkInfo<TSecurityContext> newFullAncestorLinkInfo)
 	{
-		this.hierarchicalInfo = newHierarchicalInfo;
-		this.fullAncestorLinkInfo = newFullAncestorLinkInfo;
+		this.HierarchicalSetupAction = s => s.AddHierarchicalInfo(newHierarchicalInfo, newFullAncestorLinkInfo);
 
 		return this;
 	}
@@ -62,32 +63,10 @@ public class SecurityContextInfoBuilder<TSecurityContext>(Guid id) : ISecurityCo
 
 	public void Register(IServiceCollection services)
 	{
-		var securityContextInfo = new SecurityContextInfo<TSecurityContext>(id, this.name);
+		var securityContextInfo = new SecurityContextInfo<TSecurityContext>(identity, this.name);
 
 		services.AddSingleton(securityContextInfo);
 		services.AddSingleton<SecurityContextInfo>(securityContextInfo);
-		services.AddSingleton<ISecurityContextDisplayService<TSecurityContext>>(new SecurityContextDisplayService<TSecurityContext>(this.displayFunc));
-
-		if (this.customIdentityInfo != null)
-		{
-			services.AddSingleton(this.customIdentityInfo);
-		}
-
-		if (this.hierarchicalInfo != null)
-		{
-			services.AddSingleton(this.hierarchicalInfo);
-		}
-
-		if (this.fullAncestorLinkInfo != null)
-		{
-			services.AddSingleton<FullAncestorLinkInfo>(this.fullAncestorLinkInfo);
-			services.AddSingleton(this.fullAncestorLinkInfo);
-
-			var directLinkType =
-				typeof(FullAncestorLinkInfo<,>).MakeGenericType(this.fullAncestorLinkInfo.DomainObjectType, this.fullAncestorLinkInfo.DirectedLinkType);
-
-			services.Add(ServiceDescriptor.Singleton(directLinkType, this.fullAncestorLinkInfo));
-		}
 
 		foreach (var extension in this.extensions)
 		{

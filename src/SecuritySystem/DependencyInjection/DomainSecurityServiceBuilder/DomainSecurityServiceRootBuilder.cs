@@ -1,10 +1,9 @@
 ﻿using System.Reflection;
 
 using CommonFramework;
+using CommonFramework.RelativePath;
 
 using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.RelativeDomainPathInfo;
 
 namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 

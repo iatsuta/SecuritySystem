@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.GenericRepository;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using SecuritySystem.AccessDenied;
 using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.ExternalSystem;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
-using System.Linq.Expressions;
 
 namespace SecuritySystem.DependencyInjection;
 
@@ -14,8 +18,8 @@ public interface ISecuritySystemSettings
 
     ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule);
 
-    ISecuritySystemSettings AddSecurityContext<TSecurityContext>(Guid ident, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
-        where TSecurityContext : ISecurityContext;
+    ISecuritySystemSettings AddSecurityContext<TSecurityContext>(TypedSecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
+        where TSecurityContext : class, ISecurityContext;
 
     ISecuritySystemSettings AddDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setup);
 
@@ -38,18 +42,14 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetAccessDeniedExceptionService<TAccessDeniedExceptionService>()
         where TAccessDeniedExceptionService : class, IAccessDeniedExceptionService;
 
-    ISecuritySystemSettings SetRunAsManager<TRunAsManager>()
-        where TRunAsManager : class, IRunAsManager;
-
-    ISecuritySystemSettings SetUserSource<TUser>(
-        Expression<Func<TUser, Guid>> idPath,
-        Expression<Func<TUser, string>> namePath,
-        Expression<Func<TUser, bool>> filter,
-        Expression<Func<TUser, TUser?>>? runAsPath = null)
-        where TUser : class;
+    ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>>? setupUserSource = null)
+	    where TUser : class;
 
     ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
         where TStorage : class, ISecurityAccessorInfinityStorage;
+
+    ISecuritySystemSettings SetPrincipalManagementService<TPrincipalManagementService>()
+        where TPrincipalManagementService : class, IPrincipalManagementService;
 
     ISecuritySystemSettings SetDefaultSecurityRuleCredential(SecurityRuleCredential securityRuleCredential);
 
@@ -63,16 +63,11 @@ public interface ISecuritySystemSettings
 
     ISecuritySystemSettings SetQueryableSource<TQueryableSource>()
         where TQueryableSource : class, IQueryableSource;
+    ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
+	    where TGenericRepository : class, IGenericRepository;
 
-    ISecuritySystemSettings SetQueryableSource(Func<IServiceProvider, IQueryableSource> selector);
-
-    ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
+	ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService;
 
     ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector);
-
-    ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
-        where TGenericRepository : class, IGenericRepository;
-
-    ISecuritySystemSettings SetGenericRepository(Func<IServiceProvider, IGenericRepository> selector);
 }
