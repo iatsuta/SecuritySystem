@@ -31,7 +31,7 @@ public class PermissionRequiredContextValidator<TPermission, TPermissionRestrict
             {
                 var missedTypes = missedTypeInfoList.Join(", ");
 
-                throw new SecuritySystemValidationException($"{nameof(TPermission)} must contain the required contexts: {missedTypes}");
+                throw new SecuritySystemValidationException($"{typeof(TPermission).Name} must contain the required contexts: {missedTypes}");
             }
         }
     }
