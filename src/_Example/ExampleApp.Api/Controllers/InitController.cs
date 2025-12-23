@@ -25,11 +25,9 @@ public class InitController(
 	{
 		await dbContext.Database.EnsureDeletedAsync(cancellationToken);
 		await dbContext.Database.EnsureCreatedAsync(cancellationToken);
-
 		await dbContext.SaveChangesAsync(cancellationToken);
 
 		await dbContext.EnsureViewsCreatedAsync(cancellationToken);
-
 		await dbContext.SaveChangesAsync(cancellationToken);
 
 		{
@@ -51,7 +49,7 @@ public class InitController(
 			dbContext.Add(testBu);
 
 			var testChildBu = new BusinessUnit { Name = $"Test{nameof(BusinessUnit)}{index}-Child", Parent = testBu };
-			dbContext.Add(testBu);
+			dbContext.Add(testChildBu);
 
 			var testEmployee = new Employee { Login = $"Test{nameof(Employee)}{index}" };
 			dbContext.Add(testEmployee);
