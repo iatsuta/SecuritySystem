@@ -1,4 +1,4 @@
-﻿namespace SecuritySystem.Services;
+﻿namespace SecuritySystem.Validation;
 
 public interface ISecurityValidator<in T>
 {

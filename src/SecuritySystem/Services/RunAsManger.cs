@@ -16,8 +16,7 @@ public class RunAsManager<TUser>(
 	IGenericRepository genericRepository,
 	IUserCredentialMatcher<TUser> userCredentialMatcher,
 	IDefaultUserConverter<TUser> toDefaultUserConverter,
-    ErrorMissedUserService<TUser> missedUserService)
-	: IRunAsManager
+    ErrorMissedUserService<TUser> missedUserService) : IRunAsManager
 	where TUser : class
 {
 	private readonly Lazy<TUser?> lazyNativeTryCurrentUser = new(() => userSource.TryGetUser(rawUserAuthenticationService.GetUserName()));

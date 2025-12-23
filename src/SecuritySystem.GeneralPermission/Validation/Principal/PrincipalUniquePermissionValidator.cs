@@ -1,16 +1,14 @@
 ﻿using CommonFramework;
 using CommonFramework.VisualIdentitySource;
-
 using SecuritySystem.ExternalSystem.Management;
-using SecuritySystem.Services;
 
-namespace SecuritySystem.GeneralPermission.Validation;
+namespace SecuritySystem.GeneralPermission.Validation.Principal;
 
 public class PrincipalUniquePermissionValidator<TPrincipal, TPermission, TPermissionRestriction>(
 	IVisualIdentityInfoSource visualIdentityInfoSource,
-	IDisplayPermissionService<PermissionData<TPermission, TPermissionRestriction>> displayPermissionService,
-	IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>> comparer)
-	: ISecurityValidator<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>>
+	IDisplayPermissionService<TPermission, TPermissionRestriction> displayPermissionService,
+	IPermissionEqualityComparer<TPermission, TPermissionRestriction> comparer)
+	: IPrincipalValidator<TPrincipal, TPermission, TPermissionRestriction>
 {
 	private readonly VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TPrincipal>();
 

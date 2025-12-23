@@ -25,6 +25,8 @@ public static class TypedSecurityContextStorageExtensions
 
         private readonly IDictionaryCache<TIdent, bool> existsCache = new DictionaryCache<TIdent, bool>(baseSource.IsExists);
 
+        private readonly IDictionaryCache<SecurityIdentity, bool> baseExistsCache = new DictionaryCache<SecurityIdentity, bool>(baseSource.IsExists);
+
         public IEnumerable<SecurityContextData<TIdent>> GetSecurityContexts()
         {
             return this.lazySecurityContexts.Value;
@@ -42,6 +44,10 @@ public static class TypedSecurityContextStorageExtensions
         public bool IsExists(TIdent securityEntityId)
         {
             return this.existsCache[securityEntityId];
+        }
+        public bool IsExists(SecurityIdentity securityIdentity)
+        {
+            return this.baseExistsCache[securityIdentity];
         }
 
         IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContextsByIdents(Array securityContextIdents)

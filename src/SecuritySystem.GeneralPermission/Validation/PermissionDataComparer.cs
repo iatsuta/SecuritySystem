@@ -2,19 +2,56 @@
 
 using SecuritySystem.ExternalSystem.Management;
 
+using Microsoft.Extensions.DependencyInjection;
+
+using SecuritySystem.Services;
+
 namespace SecuritySystem.GeneralPermission.Validation;
 
-//public class PermissionDataComparer<TPermission, TPermissionRestriction> : IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>>
-//{
+public class PermissionEqualityComparer<TPermission, TPermissionRestriction>(
+    IServiceProvider serviceProvider,
+    IPermissionBindingInfoSource bindingInfoSource,
+    IGeneralPermissionBindingInfoSource generalBindingInfoSource,
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource
+    ) : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
+{
+    private readonly Lazy<IPermissionEqualityComparer<TPermission, TPermissionRestriction>> lazyInnerService = new(() =>
+    {
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
 
-//}
+        var generalBindingInfo = generalBindingInfoSource.GetForPermission(typeof(TPermission));
 
-public class PermissionDataComparer<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(typeof(TPermission));
+
+        var innerServiceType = typeof(PermissionEqualityComparer<,,,,>)
+            .MakeGenericType(
+                generalBindingInfo.PermissionType,
+                generalBindingInfo.SecurityRoleType,
+                restrictionBindingInfo.PermissionRestrictionType,
+                restrictionBindingInfo.SecurityContextTypeType,
+                restrictionBindingInfo.SecurityContextObjectIdentType);
+
+        return (IPermissionEqualityComparer<TPermission, TPermissionRestriction>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            bindingInfo,
+            generalBindingInfo,
+            restrictionBindingInfo);
+    });
+
+    public bool Equals(PermissionData<TPermission, TPermissionRestriction>? x, PermissionData<TPermission, TPermissionRestriction>? y) =>
+        this.lazyInnerService.Value.Equals(x, y);
+
+    public int GetHashCode(PermissionData<TPermission, TPermissionRestriction> obj) =>
+        this.lazyInnerService.Value.GetHashCode(obj);
+}
+
+public class PermissionEqualityComparer<TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+    PermissionBindingInfo<TPermission> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo)
-    : IEqualityComparer<PermissionData<TPermission, TPermissionRestriction>>
-    where TPrincipal : class
+    : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
+
     where TPermission : class
     where TSecurityRole : class
     where TPermissionRestriction : class

@@ -9,6 +9,7 @@ using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
+using SecuritySystem.UserSource;
 
 namespace SecuritySystem.DependencyInjection;
 
@@ -33,6 +34,9 @@ public interface ISecuritySystemSettings
         where TPermissionSystemFactory : class, IPermissionSystemFactory;
 
     ISecuritySystemSettings AddPermissionSystem(Func<IServiceProvider, IPermissionSystemFactory> getFactory);
+
+    ISecuritySystemSettings AddRunAsValidator<TValidator>()
+        where TValidator : class, IRunAsValidator;
 
     ISecuritySystemSettings AddExtensions(ISecuritySystemExtension extensions);
 

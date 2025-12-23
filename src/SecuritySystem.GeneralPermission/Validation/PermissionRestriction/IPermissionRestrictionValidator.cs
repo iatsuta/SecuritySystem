@@ -1,0 +1,5 @@
+﻿using SecuritySystem.Validation;
+
+namespace SecuritySystem.GeneralPermission.Validation.PermissionRestriction;
+
+public interface IPermissionRestrictionValidator<in TPermissionRestriction> : ISecurityValidator<TPermissionRestriction>;

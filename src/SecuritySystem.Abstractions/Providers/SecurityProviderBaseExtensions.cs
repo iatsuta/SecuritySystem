@@ -10,54 +10,64 @@ namespace SecuritySystem.Providers;
 
 public static class SecurityProviderBaseExtensions
 {
-    public static ISecurityProvider<TDomainObject> OverrideAccessDeniedResult<TDomainObject>(
-            this ISecurityProvider<TDomainObject> securityProvider,
-            Func<AccessResult.AccessDeniedResult, AccessResult.AccessDeniedResult> selector) =>
+    extension<TDomainObject>(ISecurityProvider<TDomainObject> securityProvider)
+    {
+        public ISecurityProvider<TDomainObject> OverrideAccessDeniedResult(Func<AccessResult.AccessDeniedResult, AccessResult.AccessDeniedResult> selector) =>
             new OverrideAccessDeniedResultSecurityProvider<TDomainObject>(securityProvider, selector);
 
-    public static ISecurityProvider<TDomainObject> And<TDomainObject>(
-        this ISecurityProvider<TDomainObject> securityProvider,
-        Expression<Func<TDomainObject, bool>> securityFilter,
-        IExpressionEvaluatorStorage expressionEvaluatorStorage) =>
-        securityProvider.And(new ConditionSecurityProvider<TDomainObject>(securityFilter, expressionEvaluatorStorage));
+        public ISecurityProvider<TDomainObject> And(Expression<Func<TDomainObject, bool>> securityFilter,
+            IExpressionEvaluatorStorage expressionEvaluatorStorage) =>
+            securityProvider.And(new ConditionSecurityProvider<TDomainObject>(securityFilter, expressionEvaluatorStorage));
 
-    public static ISecurityProvider<TDomainObject> Or<TDomainObject>(
-        this ISecurityProvider<TDomainObject> securityProvider,
-        Expression<Func<TDomainObject, bool>> securityFilter,
-        IExpressionEvaluatorStorage expressionEvaluatorStorage) =>
-        securityProvider.Or(new ConditionSecurityProvider<TDomainObject>(securityFilter, expressionEvaluatorStorage));
+        public ISecurityProvider<TDomainObject> Or(Expression<Func<TDomainObject, bool>> securityFilter,
+            IExpressionEvaluatorStorage expressionEvaluatorStorage) =>
+            securityProvider.Or(new ConditionSecurityProvider<TDomainObject>(securityFilter, expressionEvaluatorStorage));
 
-    public static ISecurityProvider<TDomainObject> And<TDomainObject>(
-        this ISecurityProvider<TDomainObject> securityProvider,
-        ISecurityProvider<TDomainObject> otherSecurityProvider) =>
-        new CompositeSecurityProvider<TDomainObject>(securityProvider, otherSecurityProvider, true);
+        public ISecurityProvider<TDomainObject> And(ISecurityProvider<TDomainObject> otherSecurityProvider) =>
+            new CompositeSecurityProvider<TDomainObject>(securityProvider, otherSecurityProvider, true);
 
-    public static ISecurityProvider<TDomainObject> Or<TDomainObject>(
-        this ISecurityProvider<TDomainObject> securityProvider,
-        ISecurityProvider<TDomainObject> otherSecurityProvider) =>
-        new CompositeSecurityProvider<TDomainObject>(securityProvider, otherSecurityProvider, false);
+        public ISecurityProvider<TDomainObject> Or(ISecurityProvider<TDomainObject> otherSecurityProvider) =>
+            new CompositeSecurityProvider<TDomainObject>(securityProvider, otherSecurityProvider, false);
 
-    public static ISecurityProvider<TDomainObject> And<TDomainObject>(
-        this IEnumerable<ISecurityProvider<TDomainObject>> securityProviders) =>
-        securityProviders.Match(
-            () => new DisabledSecurityProvider<TDomainObject>(),
-            single => single,
-            many => many.Aggregate((v1, v2) => v1.And(v2)));
+        public ISecurityProvider<TDomainObject> Negate() =>
+            new NegateSecurityProvider<TDomainObject>(securityProvider);
 
-    public static ISecurityProvider<TDomainObject> Or<TDomainObject>(
-        this IEnumerable<ISecurityProvider<TDomainObject>> securityProviders) =>
-        securityProviders.Match(
-            () => new AccessDeniedSecurityProvider<TDomainObject>(),
-            single => single,
-            many => many.Aggregate((v1, v2) => v1.Or(v2)));
+        public ISecurityProvider<TDomainObject> Except(
+            ISecurityProvider<TDomainObject> otherSecurityProvider) =>
+            securityProvider.And(otherSecurityProvider.Negate());
 
-    public static ISecurityProvider<TDomainObject> Negate<TDomainObject>(this ISecurityProvider<TDomainObject> securityProvider) =>
-        new NegateSecurityProvider<TDomainObject>(securityProvider);
+        public void CheckAccess(
+            TDomainObject domainObject,
+            IAccessDeniedExceptionService accessDeniedExceptionService)
+        {
+            switch (securityProvider.GetAccessResult(domainObject))
+            {
+                case AccessResult.AccessDeniedResult accessDenied:
+                    throw accessDeniedExceptionService.GetAccessDeniedException(accessDenied);
 
-    public static ISecurityProvider<TDomainObject> Except<TDomainObject>(
-        this ISecurityProvider<TDomainObject> securityProvider,
-        ISecurityProvider<TDomainObject> otherSecurityProvider) =>
-        securityProvider.And(otherSecurityProvider.Negate());
+                case AccessResult.AccessGrantedResult:
+                    break;
+
+                default:
+                    throw new InvalidOperationException("unknown access result");
+            }
+        }
+    }
+
+    extension<TDomainObject>(IEnumerable<ISecurityProvider<TDomainObject>> securityProviders)
+    {
+        public ISecurityProvider<TDomainObject> And() =>
+            securityProviders.Match(
+                () => new DisabledSecurityProvider<TDomainObject>(),
+                single => single,
+                many => many.Aggregate((v1, v2) => v1.And(v2)));
+
+        public ISecurityProvider<TDomainObject> Or() =>
+            securityProviders.Match(
+                () => new AccessDeniedSecurityProvider<TDomainObject>(),
+                single => single,
+                many => many.Aggregate((v1, v2) => v1.Or(v2)));
+    }
 
     private class CompositeSecurityProvider<TDomainObject>(
         ISecurityProvider<TDomainObject> securityProvider,
@@ -87,8 +97,8 @@ public static class SecurityProviderBaseExtensions
             var right = otherSecurityProvider.GetAccessorData(domainObject);
 
             return orAnd
-                       ? new SecurityAccessorData.AndSecurityAccessorData(left, right)
-                       : new SecurityAccessorData.OrSecurityAccessorData(left, right);
+                ? new SecurityAccessorData.AndSecurityAccessorData(left, right)
+                : new SecurityAccessorData.OrSecurityAccessorData(left, right);
         }
     }
 
@@ -120,25 +130,6 @@ public static class SecurityProviderBaseExtensions
             var baseResult = securityProvider.GetAccessorData(domainObject);
 
             return new SecurityAccessorData.NegateSecurityAccessorData(baseResult);
-        }
-    }
-
-    public static void CheckAccess<TDomainObject>(
-        this ISecurityProvider<TDomainObject> securityProvider,
-        TDomainObject domainObject,
-        IAccessDeniedExceptionService accessDeniedExceptionService)
-        where TDomainObject : class
-    {
-        switch (securityProvider.GetAccessResult(domainObject))
-        {
-            case AccessResult.AccessDeniedResult accessDenied:
-                throw accessDeniedExceptionService.GetAccessDeniedException(accessDenied);
-
-            case AccessResult.AccessGrantedResult:
-                break;
-
-            default:
-                throw new InvalidOperationException("unknown access result");
         }
     }
 }

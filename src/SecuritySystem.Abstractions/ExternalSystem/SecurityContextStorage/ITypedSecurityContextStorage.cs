@@ -5,6 +5,8 @@ public interface ITypedSecurityContextStorage
     IEnumerable<SecurityContextData<object>> GetSecurityContexts();
 
     IEnumerable<SecurityContextData<object>> GetSecurityContextsByIdents(Array securityContextIdents);
+
+    bool IsExists(SecurityIdentity securityIdentity);
 }
 
 public interface ITypedSecurityContextStorage<TSecurityContextIdent> : ITypedSecurityContextStorage

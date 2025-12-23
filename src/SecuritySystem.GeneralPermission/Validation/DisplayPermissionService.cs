@@ -1,23 +1,54 @@
 ﻿using CommonFramework;
 using CommonFramework.VisualIdentitySource;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
-public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
-    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+public class DisplayPermissionService<TPermission, TPermissionRestriction>(
+    IServiceProvider serviceProvider,
+    IPermissionBindingInfoSource bindingInfoSource,
+    IGeneralPermissionBindingInfoSource generalBindingInfoSource,
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IDisplayPermissionService<TPermission, TPermissionRestriction>
+{
+    private readonly Lazy<IDisplayPermissionService<TPermission, TPermissionRestriction>> lazyInnerService = new(() =>
+    {
+        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPermission));
+
+        var generalBindingInfo = generalBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
+
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
+
+        var innerServiceType = typeof(DisplayPermissionService<,,>).MakeGenericType(
+            generalBindingInfo.PermissionType,
+            generalBindingInfo.SecurityRoleType,
+            restrictionBindingInfo.PermissionRestrictionType);
+
+        return (IDisplayPermissionService<TPermission, TPermissionRestriction>)ActivatorUtilities.CreateInstance(
+            serviceProvider,
+            innerServiceType,
+            bindingInfo,
+            generalBindingInfo);
+    });
+
+
+    public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData) => this.lazyInnerService.Value.ToString(permissionData);
+}
+
+
+public class DisplayPermissionService<TPermission, TSecurityRole, TPermissionRestriction>(
+    PermissionBindingInfo<TPermission> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
     IDomainObjectDisplayService domainObjectDisplayService,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityContextStorage securityContextStorage,
-    VisualIdentityInfo<TSecurityContextType> securityContextTypeVisualIdentityInfo)
-    : IDisplayPermissionService<PermissionData<TPermission, TPermissionRestriction>>
+    IPermissionRestrictionRawConverter<TPermissionRestriction> rawPermissionConverter)
+    : IDisplayPermissionService<TPermission, TPermissionRestriction>
     where TSecurityRole : class
-    where TSecurityContextType : class
-    where TSecurityContextObjectIdent : notnull
 {
     public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData)
     {
@@ -32,7 +63,7 @@ public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TP
 
         if (bindingInfo.PermissionStartDate != null)
         {
-            yield return $"StartDate: { bindingInfo.PermissionStartDate.Getter(permission)}";
+            yield return $"StartDate: {bindingInfo.PermissionStartDate.Getter(permission)}";
         }
 
         if (bindingInfo.PermissionEndDate != null)
@@ -40,19 +71,15 @@ public class DisplayPermissionService<TPrincipal, TPermission, TSecurityRole, TP
             yield return $"EndDate: {bindingInfo.PermissionEndDate.Getter(permission)}";
         }
 
-        foreach (var securityContextTypeGroup in permissionData.Restrictions.GroupBy(
-                     restrictionBindingInfo.SecurityContextType.Getter,
-                     restrictionBindingInfo.SecurityContextObjectId.Getter))
+        foreach (var securityContextTypeGroup in rawPermissionConverter.Convert(permissionData.Restrictions))
         {
-            var securityContextTypeName = securityContextTypeVisualIdentityInfo.Name.Getter(securityContextTypeGroup.Key);
-
-            var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeName);
+            var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeGroup.Key);
 
             var securityEntities = securityContextStorage
                 .GetTyped(securityContextInfo.Type)
-                .GetSecurityContextsByIdents(securityContextTypeGroup.ToArray());
+                .GetSecurityContextsByIdents(securityContextTypeGroup.Value);
 
-            yield return $"{securityContextTypeName}: {securityEntities.Select(v => v.Name).Join(", ")}";
+            yield return $"{securityContextInfo.Name}: {securityEntities.Select(v => v.Name).Join(", ")}";
         }
     }
 }
