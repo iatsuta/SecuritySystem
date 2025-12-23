@@ -4,16 +4,18 @@ using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using HierarchicalExpand;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 public class HierarchicalTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>(
 	IQueryableSource queryableSource,
 	IIdentityInfoSource identityInfoSource,
-	LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage,
+    ISecurityIdentityConverter<TSecurityContextIdent> securityIdentityConverter,
+    LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage,
 	IDomainObjectDisplayService displayService,
 	HierarchicalInfo<TSecurityContext> hierarchicalInfo)
-	: TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(queryableSource, identityInfoSource, localStorage)
+	: TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(queryableSource, identityInfoSource, securityIdentityConverter, localStorage)
 	where TSecurityContext : class, ISecurityContext
 	where TSecurityContextIdent : notnull
 {

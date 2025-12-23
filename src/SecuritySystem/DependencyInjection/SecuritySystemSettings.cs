@@ -134,6 +134,14 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
+    public ISecuritySystemSettings AddRunAsValidator<TValidator>()
+        where TValidator : class, IRunAsValidator
+    {
+        this.registerActions.Add(sc => sc.AddScoped<TValidator>());
+
+        return this;
+    }
+
     public ISecuritySystemSettings AddExtensions(ISecuritySystemExtension extensions)
     {
         this.registerActions.Add(extensions.AddServices);
@@ -184,9 +192,8 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 			    {
 				    sc.AddSingleton(new UserSourceRunAsInfo<TUser>(userSourceBuilder.RunAsPath));
 				    sc.AddScoped<IRunAsManager, RunAsManager<TUser>>();
-				    sc.AddScoped<IRunAsValidator, UserSourceRunAsValidator<TUser>>();
 
-                    sc.AddScoped<IUserSource>(sp => sp.GetRequiredService<IUserSource<TUser>>());
+                    sc.AddScopedFrom<IUserSource, IUserSource<TUser>>();
                 };
 		    }
 		    else

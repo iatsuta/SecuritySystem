@@ -1,12 +1,15 @@
 ﻿using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 
+using SecuritySystem.Services;
+
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 public abstract class TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(
 	IQueryableSource queryableSource,
 	IIdentityInfoSource identityInfoSource,
-	LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage)
+	ISecurityIdentityConverter<TSecurityContextIdent> securityIdentityConverter,
+    LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage)
 	: ITypedSecurityContextStorage<TSecurityContextIdent>
 	where TSecurityContext : class, ISecurityContext
 	where TSecurityContextIdent : notnull
@@ -52,7 +55,12 @@ public abstract class TypedSecurityContextStorageBase<TSecurityContext, TSecurit
 		return this.GetSecurityContextsByIdents(securityContextIdents.Cast<TSecurityContextIdent>()).Select(scd => scd.UpCast());
 	}
 
-	IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContexts()
+    public bool IsExists(SecurityIdentity securityIdentity)
+    {
+        return this.IsExists(securityIdentityConverter.Convert(securityIdentity).Id);
+    }
+
+    IEnumerable<SecurityContextData<object>> ITypedSecurityContextStorage.GetSecurityContexts()
 	{
 		return this.GetSecurityContexts().Select(scd => scd.UpCast());
 	}

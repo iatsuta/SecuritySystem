@@ -4,12 +4,13 @@ using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
+using SecuritySystem.GeneralPermission.Validation.Principal;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -74,7 +75,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     ISecurityRepository<TSecurityRole> securityRoleRepository,
     IQueryableSource queryableSource,
-    ISecurityValidator<PrincipalData> principalValidator,
+    [FromKeyedServices("Root")] IPrincipalValidator<TPrincipal, TPermission, TPermissionRestriction> principalValidator,
     ISecurityRoleSource securityRoleSource,
     IGenericRepository genericRepository,
     ISecurityRepository<TSecurityContextType> securityContextTypeRepository,
@@ -82,6 +83,8 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource,
     ISecurityIdentityExtractorFactory securityIdentityExtractorFactory,
+    IPermissionLoader<TPrincipal, TPermission> permissionLoader,
+    IPermissionRestrictionLoader<TPermission, TPermissionRestriction> permissionRestrictionLoader,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo)
     : IPrincipalManagementService
 
@@ -136,8 +139,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     private async Task<PrincipalData<TPrincipal, TPermission, TPermissionRestriction>> ToPrincipalData(TPrincipal dbPrincipal,
         CancellationToken cancellationToken)
     {
-        var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(bindingInfo.Principal.Path.Select(p => p == dbPrincipal))
-            .GenericToListAsync(cancellationToken);
+        var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal, cancellationToken);
 
         var permissionsData = await dbPermissions.SyncWhenAll(async dbPermission => await this.ToPermissionData(dbPermission, cancellationToken));
 
@@ -147,9 +149,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     private async Task<PermissionData<TPermission, TPermissionRestriction>> ToPermissionData(TPermission dbPermission,
         CancellationToken cancellationToken)
     {
-        var dbRestrictions = await queryableSource.GetQueryable<TPermissionRestriction>()
-            .Where(restrictionBindingInfo.Permission.Path.Select(p => p == dbPermission))
-            .GenericToListAsync(cancellationToken);
+        var dbRestrictions = await permissionRestrictionLoader.LoadAsync(dbPermission, cancellationToken);
 
         return new PermissionData<TPermission, TPermissionRestriction>(dbPermission, dbRestrictions.ToList());
     }
@@ -161,8 +161,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     {
         var dbPrincipal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
-        var dbPermissions = await queryableSource.GetQueryable<TPermission>().Where(bindingInfo.Principal.Path.Select(p => p == dbPrincipal))
-            .GenericToListAsync(cancellationToken);
+        var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal, cancellationToken);
 
         var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityExtractor.Extract,
             p => permissionIdentityExtractor.Converter.TryConvert(p.Identity) ?? new object());

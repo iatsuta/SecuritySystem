@@ -2,14 +2,17 @@
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
+using SecuritySystem.Services;
+
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
 public class PlainTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>(
     IQueryableSource queryableSource,
-    LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage,
     IIdentityInfoSource identityInfoSource,
+    ISecurityIdentityConverter<TSecurityContextIdent> securityIdentityConverter,
+    LocalStorage<TSecurityContext, TSecurityContextIdent> localStorage,
     IDomainObjectDisplayService displayService)
-    : TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(queryableSource, identityInfoSource, localStorage)
+    : TypedSecurityContextStorageBase<TSecurityContext, TSecurityContextIdent>(queryableSource, identityInfoSource, securityIdentityConverter, localStorage)
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {
