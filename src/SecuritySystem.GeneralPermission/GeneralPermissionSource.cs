@@ -1,18 +1,20 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using SecuritySystem.ExternalSystem;
+using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 
 using Microsoft.Extensions.DependencyInjection;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPermissionSource<TPermission>(
     IServiceProvider serviceProvider,
+    IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
@@ -24,20 +26,24 @@ public class GeneralPermissionSource<TPermission>(
 
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
+        var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
+
         var principalVisualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo(bindingInfo.PrincipalType);
 
-        var innerServiceType = typeof(GeneralPermissionSource<,,,,>).MakeGenericType(
+        var innerServiceType = typeof(GeneralPermissionSource<,,,,,>).MakeGenericType(
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType,
             restrictionBindingInfo.PermissionRestrictionType,
             restrictionBindingInfo.SecurityContextTypeType,
-            restrictionBindingInfo.SecurityContextObjectIdentType);
+            restrictionBindingInfo.SecurityContextObjectIdentType,
+            permissionIdentityInfo.IdentityType);
 
         return (IPermissionSource<TPermission>)ActivatorUtilities.CreateInstance(
             serviceProvider,
             innerServiceType,
             bindingInfo,
             restrictionBindingInfo,
+            permissionIdentityInfo,
             principalVisualIdentityInfo,
             securityRule);
     });
@@ -55,12 +61,13 @@ public class GeneralPermissionSource<TPermission>(
 
 }
 
-public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermissionIdent>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     IRawPermissionConverter<TPermissionRestriction> rawPermissionConverter,
     IQueryableSource queryableSource,
+    IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
 
@@ -69,6 +76,7 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
     where TPermissionRestriction : class
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
+    where TPermissionIdent : notnull
 {
     public bool HasAccess()
     {
@@ -77,12 +85,17 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
 
     public List<Dictionary<Type, Array>> GetPermissions(IEnumerable<Type> securityContextTypes)
     {
-        return availablePermissionSource
-            .GetQueryable(securityRule)
-            .GroupJoin(queryableSource.GetQueryable<TPermissionRestriction>(), v => v, restrictionBindingInfo.Permission.Path,
-                (_, restrictions) => new { restrictions })
-            .ToList()
-            .Select(pair => rawPermissionConverter.ConvertPermission(securityRule, pair.restrictions.ToList(), securityContextTypes))
+        var permissionIdents = availablePermissionSource.GetQueryable(securityRule).Select(permissionIdentityInfo.Id.Path).ToList();
+
+        var permissionRestrictions = queryableSource
+            .GetQueryable<TPermissionRestriction>()
+            .Where(restrictionBindingInfo.Permission.Path
+            .Select(permissionIdentityInfo.Id.Path).Select(id => permissionIdents.Contains(id)))
+            .ToList();
+
+        return permissionIdents.GroupJoin(
+                permissionRestrictions, id => id, restrictionBindingInfo.Permission.Getter.Composite(permissionIdentityInfo.Id.Getter),
+                (_, restrictions) => rawPermissionConverter.ConvertPermission(securityRule, restrictions.ToList(), securityContextTypes))
             .ToList();
     }
 

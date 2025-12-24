@@ -5,6 +5,8 @@ namespace SecuritySystem.Services;
 public interface ISecurityIdentityConverter
 {
     TypedSecurityIdentity? TryConvert(SecurityIdentity securityIdentity);
+
+    TypedSecurityIdentity Convert(SecurityIdentity securityIdentity);
 }
 
 public interface ISecurityIdentityConverter<TIdent> : ISecurityIdentityConverter
@@ -12,7 +14,7 @@ public interface ISecurityIdentityConverter<TIdent> : ISecurityIdentityConverter
 {
     new TypedSecurityIdentity<TIdent>? TryConvert(SecurityIdentity securityIdentity);
 
-    TypedSecurityIdentity<TIdent> Convert(SecurityIdentity securityIdentity);
+    new TypedSecurityIdentity<TIdent> Convert(SecurityIdentity securityIdentity);
 
 	Expression<Func<TSourceIdent, TIdent>> GetConvertExpression<TSourceIdent>();
 }

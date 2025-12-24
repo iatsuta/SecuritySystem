@@ -21,4 +21,9 @@ public class RootSecurityIdentityConverter(IServiceProvider serviceProvider, IEn
 
         return convertRequest.Distinct().SingleOrDefault();
     }
+
+    public TypedSecurityIdentity Convert(SecurityIdentity securityIdentity)
+    {
+        return this.TryConvert(securityIdentity) ?? throw new ArgumentOutOfRangeException(nameof(securityIdentity));
+    }
 }
