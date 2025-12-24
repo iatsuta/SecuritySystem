@@ -20,6 +20,7 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
 
             TypedSecurityIdentity<string> { Id: var stringId } when TIdent.TryParse(stringId, formatProviderSource.FormatProvider, out var id) =>
                 TypedSecurityIdentity.Create(id),
+
             _ => null
         };
     }

@@ -41,6 +41,10 @@ public class RootUserCredentialManager(
     {
         return this.SetRoleAsync(permissions).GetAwaiter().GetResult();
     }
+    public async Task<SecurityIdentity> SetRoleAsync(TestPermission permission, CancellationToken cancellationToken = default)
+    {
+        return await this.SetRoleAsync([permission], cancellationToken);
+    }
 
     public async Task<SecurityIdentity> SetRoleAsync(TestPermission[] permissions, CancellationToken cancellationToken = default)
     {
@@ -49,20 +53,15 @@ public class RootUserCredentialManager(
         return await this.AddRoleAsync(permissions, cancellationToken);
     }
 
-    public async Task<SecurityIdentity> SetRoleAsync(TestPermission permission, CancellationToken cancellationToken = default)
-    {
-        return await this.AddRoleAsync([permission], cancellationToken);
-    }
-
     public SecurityIdentity AddRole(params TestPermission[] permissions) =>
         this.AddRoleAsync(permissions).GetAwaiter().GetResult();
+
+    public async Task<SecurityIdentity> AddRoleAsync(TestPermission permission, CancellationToken cancellationToken = default) =>
+        await this.AddRoleAsync([permission], cancellationToken);
 
     public async Task<SecurityIdentity> AddRoleAsync(TestPermission[] permissions, CancellationToken cancellationToken = default) =>
         await this.ManagerEvaluator.EvaluateAsync(
             async manger => await manger.AddUserRoleAsync(permissions, cancellationToken));
-
-    public async Task<SecurityIdentity> AddRoleAsync(TestPermission permission, CancellationToken cancellationToken = default) =>
-        await this.AddRoleAsync([permission], cancellationToken);
 
     public void ClearRoles()
     {
