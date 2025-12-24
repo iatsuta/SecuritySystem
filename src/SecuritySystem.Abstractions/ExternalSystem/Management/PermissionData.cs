@@ -10,4 +10,11 @@ public abstract record PermissionData<TPermission>(TPermission Permission) : Per
     public override Type PermissionTypeType { get; } = typeof(TPermission);
 }
 
-public record PermissionData<TPermission, TPermissionRestriction>(TPermission Permission, IReadOnlyList<TPermissionRestriction> Restrictions) : PermissionData<TPermission>(Permission);
+public record PermissionData<TPermission, TPermissionRestriction>(TPermission Permission, IReadOnlyList<TPermissionRestriction> Restrictions)
+    : PermissionData<TPermission>(Permission)
+{
+    public PermissionData(TPermission permission, IEnumerable<TPermissionRestriction> restrictions)
+        : this(permission, restrictions.ToList())
+    {
+    }
+}

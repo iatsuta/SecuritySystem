@@ -19,7 +19,7 @@ public class CreatePrincipalHandler(
 
         var name = await this.ParseRequestBodyAsync<string>(context);
 
-        var principal = await principalManagementService.CreatePrincipalAsync(name, cancellationToken);
+        var principal = await principalManagementService.CreatePrincipalAsync(name, [], cancellationToken);
 
         if (configuratorIntegrationEvents != null)
             await configuratorIntegrationEvents.PrincipalCreatedAsync(principal, cancellationToken);
