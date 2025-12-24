@@ -4,17 +4,23 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.Testing;
 
-public class AuthManager(
-    Tuple<UserCredential?> baseUserCredential,
+public class UserCredentialManager(
     IRawUserAuthenticationService userAuthenticationService,
     IPrincipalManagementService principalManagementService,
     IRootPrincipalSourceService rootPrincipalSourceService,
     IUserCredentialNameResolver credentialNameResolver,
-    IPrincipalDataSecurityIdentityExtractor securityIdentityExtractor)
+    IPrincipalDataSecurityIdentityExtractor securityIdentityExtractor,
+    UserCredential? baseUserCredential = null)
 {
     private readonly IPrincipalSourceService principalSourceService = rootPrincipalSourceService.ForPrincipal(principalManagementService.PrincipalType);
 
-    private readonly UserCredential userCredential = baseUserCredential.Item1 ?? userAuthenticationService.GetUserName();
+    private readonly UserCredential userCredential = baseUserCredential ?? userAuthenticationService.GetUserName();
+
+    public UserCredentialManager WithCredential (UserCredential? newUserCredential)
+    {
+        return new UserCredentialManager(userAuthenticationService, principalManagementService, rootPrincipalSourceService, credentialNameResolver,
+            securityIdentityExtractor, newUserCredential);
+    }
 
     private string PrincipalName => credentialNameResolver.GetUserName(userCredential);
 
