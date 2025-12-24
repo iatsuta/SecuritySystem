@@ -1,6 +1,6 @@
 ﻿using SecuritySystem.Credential;
 
-namespace SecuritySystem.Testing;
+namespace SecuritySystem.Services;
 
 public interface IUserCredentialNameResolver
 {

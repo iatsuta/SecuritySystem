@@ -15,7 +15,7 @@ public class RootAuthManager(IServiceProvider rootServiceProvider, IIdentityInfo
 {
     public RootUserCredentialManager For(UserCredential? userCredential = null)
     {
-        return new RootUserCredentialManager(rootServiceProvider, userCredential);
+        return ActivatorUtilities.CreateInstance<RootUserCredentialManager>(rootServiceProvider, Tuple.Create(userCredential));
     }
 
     public async Task<TypedSecurityIdentity<TIdent>> GetSecurityContextIdentityAsync<TSecurityContext, TIdent>(string name, CancellationToken cancellationToken)

@@ -1,22 +1,20 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.Credential;
+﻿using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.Testing;
 
-public class RootUserCredentialManager(IServiceProvider rootServiceProvider, UserCredential? userCredential)
+public class RootUserCredentialManager(
+    AdministratorsRoleList administratorsRoleList,
+    ITestingEvaluator<UserCredentialManager> baseEvaluator,
+    ITestingUserAuthenticationService authenticationService,
+    Tuple<UserCredential?> userCredential)
 {
-    private TestingEvaluator<AuthManager> ManagerEvaluator { get; } = new (rootServiceProvider, sp => ActivatorUtilities.CreateInstance<AuthManager>(sp, Tuple.Create(userCredential)));
-
-    private ITestingUserAuthenticationService UserAuthenticationService =>
-        rootServiceProvider.GetRequiredService<ITestingUserAuthenticationService>();
-
-    private IEnumerable<SecurityRole> AdminRoles => rootServiceProvider.GetRequiredService<AdministratorsRoleList>().Roles;
+    private ITestingEvaluator<UserCredentialManager> ManagerEvaluator { get; } =
+        baseEvaluator.Select(service => service.WithCredential(userCredential.Item1));
 
     public void LoginAs()
     {
-        this.UserAuthenticationService.SetUser(userCredential);
+        authenticationService.SetUser(userCredential.Item1);
     }
 
     public SecurityIdentity CreatePrincipal()
@@ -36,7 +34,7 @@ public class RootUserCredentialManager(IServiceProvider rootServiceProvider, Use
 
     public Task<SecurityIdentity> SetAdminRoleAsync(CancellationToken cancellationToken = default)
     {
-        return this.SetRoleAsync(this.AdminRoles.Select(v => (TestPermission)v).ToArray(), cancellationToken);
+        return this.SetRoleAsync(administratorsRoleList.Roles.Select(TestPermission (v) => v).ToArray(), cancellationToken);
     }
 
     public SecurityIdentity SetRole(params TestPermission[] permissions)

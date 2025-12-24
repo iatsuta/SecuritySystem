@@ -12,11 +12,17 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddSecuritySystemTesting()
         {
-            return services.AddScoped<IUserCredentialNameResolver, UserCredentialNameResolver>()
-                .AddScoped<TestRawUserAuthenticationService>()
-                .ReplaceScopedFrom<IRawUserAuthenticationService, TestRawUserAuthenticationService>()
+            return services
+                .AddSingleton<TestingUserAuthenticationService>()
+                .AddSingletonFrom<ITestingUserAuthenticationService, TestingUserAuthenticationService>()
+                .ReplaceScopedFrom<IRawUserAuthenticationService, TestingUserAuthenticationService>()
+
+                .AddScoped(typeof(UserCredentialManager))
+
                 .AddSingleton<RootAuthManager>()
-                .AddValidator<DuplicateServiceUsageValidator>();
+                .AddSingleton(AdministratorsRoleList.Default)
+                .AddSingleton(TestRootUserInfo.Default)
+                .AddSingleton(typeof(ITestingEvaluator<>), typeof(TestingEvaluator<>));
         }
     }
 }

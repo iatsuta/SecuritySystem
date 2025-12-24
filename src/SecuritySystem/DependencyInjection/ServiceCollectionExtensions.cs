@@ -66,6 +66,8 @@ public static class ServiceCollectionExtensions
         {
             return services
 
+                .AddScoped<IUserCredentialNameResolver, UserCredentialNameResolver>()
+
                 .AddSingleton(typeof(IManagedPrincipalHeaderConverterFactory<>), typeof(ManagedPrincipalHeaderConverterFactory<>))
                 .AddSingleton(typeof(IManagedPrincipalHeaderConverter<>), typeof(ManagedPrincipalHeaderConverter<>))
                 .AddScoped(typeof(IPrincipalDomainService<>), typeof(PrincipalDomainService<>))

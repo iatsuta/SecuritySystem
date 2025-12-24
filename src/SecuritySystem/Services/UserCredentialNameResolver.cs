@@ -3,7 +3,7 @@
 using SecuritySystem.Credential;
 using SecuritySystem.UserSource;
 
-namespace SecuritySystem.Testing;
+namespace SecuritySystem.Services;
 
 public class UserCredentialNameResolver(IEnumerable<IUserSource> userSourceList) : IUserCredentialNameResolver
 {
