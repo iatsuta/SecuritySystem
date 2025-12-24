@@ -64,7 +64,7 @@ public class GeneralPermissionTests : TestBase
 
         var testPermission = new ExampleTestPermission(testRole) { BusinessUnit = buIdentity };
 
-        await this.AuthManager.For(principalName).SetRoleAsync(testPermission, cancellationToken);
+        await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.OtherRole], cancellationToken);
         this.AuthManager.For(principalName).LoginAs();
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();

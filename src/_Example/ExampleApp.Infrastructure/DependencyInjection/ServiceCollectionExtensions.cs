@@ -93,6 +93,9 @@ public static class ServiceCollectionExtensions
                             new SecurityRoleInfo(new Guid("{72D24BB5-F661-446A-A458-53D301805971}"))
                                 { Restriction = SecurityPathRestriction.Create<BusinessUnit>(true) })
 
+                        .AddSecurityRole(ExampleRoles.OtherRole,
+                            new SecurityRoleInfo(new Guid("{C6BE7D52-7F34-430C-9EEF-9CE6FD4D1FE5}")))
+
                         .AddVirtualPermission<Employee, TestManager>(
                             domainObject => domainObject.Employee,
                             b => b.ForRole(ExampleRoles.TestManager, bi => bi
