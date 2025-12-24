@@ -8,22 +8,7 @@ public class FakePrincipalManagementService : IPrincipalManagementService
 {
     public Type PrincipalType => throw new NotImplementedException();
 
-    public Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
+    public Task<PrincipalData> CreatePrincipalAsync(string principalName, IEnumerable<ManagedPermission> typedPermissions, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

@@ -54,8 +54,8 @@ public class GeneralPrincipalManagementService(
 
     public Type PrincipalType => this.InnerService.PrincipalType;
 
-    public Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken = default) =>
-        this.InnerService.CreatePrincipalAsync(principalName, cancellationToken);
+    public Task<PrincipalData> CreatePrincipalAsync(string principalName, IEnumerable<ManagedPermission> typedPermissions, CancellationToken cancellationToken = default) =>
+        this.InnerService.CreatePrincipalAsync(principalName, typedPermissions, cancellationToken);
 
     public Task<PrincipalData> UpdatePrincipalNameAsync(UserCredential userCredential, string principalName, CancellationToken cancellationToken) =>
         this.InnerService.UpdatePrincipalNameAsync(userCredential, principalName, cancellationToken);
@@ -104,11 +104,17 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
-    public async Task<PrincipalData> CreatePrincipalAsync(string principalName, CancellationToken cancellationToken)
+    public async Task<PrincipalData> CreatePrincipalAsync(
+        string principalName,
+        IEnumerable<ManagedPermission> typedPermissions,
+        CancellationToken cancellationToken)
     {
         var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
 
-        return new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(principal, []);
+        var result = await this.UpdatePermissionsAsync(principal, [], typedPermissions, cancellationToken);
+
+        return new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(principal,
+            result.AddingItems.Cast<PermissionData<TPermission, TPermissionRestriction>>());
     }
 
     public async Task<PrincipalData> UpdatePrincipalNameAsync(
@@ -151,7 +157,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     {
         var dbRestrictions = await permissionRestrictionLoader.LoadAsync(dbPermission, cancellationToken);
 
-        return new PermissionData<TPermission, TPermissionRestriction>(dbPermission, dbRestrictions.ToList());
+        return new PermissionData<TPermission, TPermissionRestriction>(dbPermission, dbRestrictions);
     }
 
     public async Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(
@@ -163,6 +169,15 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
         var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal, cancellationToken);
 
+        return await this.UpdatePermissionsAsync(dbPrincipal, dbPermissions, typedPermissions, cancellationToken);
+    }
+
+    private async Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(
+        TPrincipal dbPrincipal,
+        List<TPermission> dbPermissions,
+        IEnumerable<ManagedPermission> typedPermissions,
+        CancellationToken cancellationToken)
+    {
         var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityExtractor.Extract,
             p => permissionIdentityExtractor.Converter.TryConvert(p.Identity) ?? new object());
 
@@ -186,7 +201,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
 
         await principalValidator.ValidateAsync(
             new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(dbPrincipal,
-                updatedPermissions.Select(pair => pair.PermissonData).Concat(newPermissions).ToList()),
+                updatedPermissions.Select(pair => pair.PermissonData).Concat(newPermissions)),
             cancellationToken);
 
         return new MergeResult<PermissionData, PermissionData>(
@@ -250,7 +265,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
             return newPermissionRestrictions;
         });
 
-        return new PermissionData<TPermission, TPermissionRestriction>(newDbPermission, newPermissionRestrictions.SelectMany().ToList());
+        return new PermissionData<TPermission, TPermissionRestriction>(newDbPermission, newPermissionRestrictions.SelectMany());
     }
 
     private async Task<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)[]> UpdatePermissionsAsync(
@@ -298,7 +313,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
             && (bindingInfo.PermissionEndDate == null || bindingInfo.PermissionEndDate.Getter(dbPermission) == managedPermission.Period.EndDate))
         {
             var permissionData = new PermissionData<TPermission, TPermissionRestriction>(dbPermission,
-                restrictionMergeResult.CombineItems.Select(v => v.Item1).ToList());
+                restrictionMergeResult.CombineItems.Select(v => v.Item1));
 
             return (permissionData, false);
         }
@@ -330,7 +345,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
             }
 
             var permissionData = new PermissionData<TPermission, TPermissionRestriction>(dbPermission,
-                restrictionMergeResult.CombineItems.Select(v => v.Item1).Concat(newPermissionRestrictions).ToList());
+                restrictionMergeResult.CombineItems.Select(v => v.Item1).Concat(newPermissionRestrictions));
 
             await genericRepository.SaveAsync(dbPermission, cancellationToken);
 
