@@ -25,6 +25,11 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
         };
     }
 
+    TypedSecurityIdentity ISecurityIdentityConverter.Convert(SecurityIdentity securityIdentity)
+    {
+        return this.Convert(securityIdentity);
+    }
+
     public TypedSecurityIdentity<TIdent> Convert(SecurityIdentity securityIdentity)
     {
         return this.TryConvert(securityIdentity) ?? throw new ArgumentOutOfRangeException(nameof(securityIdentity));
