@@ -1,7 +1,7 @@
-﻿using CommonFramework.GenericRepository;
+﻿using CommonFramework.DependencyInjection;
+using CommonFramework.GenericRepository;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.AccessDenied;
 using SecuritySystem.DiTests.DomainObjects;
@@ -44,7 +44,7 @@ public class MainTests : TestBase
     {
         return base.CreateServices(serviceCollection)
             .AddScoped<BusinessUnitAncestorLinkSourceExecuteCounter>()
-            .Replace(ServiceDescriptor.Scoped<IQueryableSource>(sp => new TestQueryableSource { BaseQueryableSource = this.BuildQueryableSource(sp) }));
+            .ReplaceScopedFrom<IQueryableSource, IServiceProvider>(sp => new TestQueryableSource { BaseQueryableSource = this.BuildQueryableSource(sp) });
     }
 
     protected override IEnumerable<TestPermission> GetPermissions()

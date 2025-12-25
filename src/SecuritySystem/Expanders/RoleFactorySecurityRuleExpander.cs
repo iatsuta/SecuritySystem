@@ -1,6 +1,6 @@
 ﻿using CommonFramework;
-using Microsoft.Extensions.DependencyInjection;
 
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.Expanders;
 

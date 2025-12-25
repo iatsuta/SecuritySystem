@@ -2,6 +2,8 @@
 
 using System.Collections.Concurrent;
 
+using CommonFramework.DependencyInjection;
+
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
@@ -18,7 +20,7 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
 
     private readonly ISecurityIdentityConverter rootIdentityConverter;
 
-    public SecurityContextInfoSource(IServiceProvider serviceProvider, IEnumerable<SecurityContextInfo> securityContextInfoList)
+    public SecurityContextInfoSource(IServiceProxyFactory serviceProxyFactory, IEnumerable<SecurityContextInfo> securityContextInfoList)
     {
         this.SecurityContextInfoList = securityContextInfoList.ToList();
 
@@ -26,7 +28,9 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
         this.identityDict = this.typeDict.Values.ToDictionary(v => v.Identity);
         this.nameDict = this.typeDict.Values.ToDictionary(v => v.Name);
 
-        this.rootIdentityConverter = new RootSecurityIdentityConverter(serviceProvider, this.SecurityContextInfoList.Select(sr => sr.Identity.IdentType).Distinct());
+        this.rootIdentityConverter =
+            serviceProxyFactory.Create<ISecurityIdentityConverter, RootSecurityIdentityConverter>(
+                this.SecurityContextInfoList.Select(sr => sr.Identity.IdentType).Distinct());
     }
 
     public IReadOnlyList<SecurityContextInfo> SecurityContextInfoList { get; }
@@ -35,9 +39,9 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
         this.typeDict[type];
 
     public SecurityContextInfo GetSecurityContextInfo(string name) =>
-	    this.nameDict[name];
+        this.nameDict[name];
 
-	public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity identity)
+    public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity identity)
     {
         return this.baseIdentityCache.GetOrAdd(identity, _ =>
         {
@@ -49,7 +53,7 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
             }
             else
             {
-                throw new Exception($"SecurityContextType with {nameof(identity)} '{identity}' not found");
+                throw new Exception($"{nameof(SecurityContextInfo)} with {nameof(identity)} '{identity}' not found");
             }
         });
     }

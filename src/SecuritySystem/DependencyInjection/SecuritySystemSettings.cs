@@ -127,6 +127,13 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
+    public ISecuritySystemSettings AddPermissionSystem(Func<IServiceProvider, IPermissionSystemFactory> getFactory)
+    {
+        this.registerActions.Add(sc => sc.AddScopedFrom(getFactory));
+
+        return this;
+    }
+
     public ISecuritySystemSettings AddPermissionSystem(Func<IServiceProxyFactory, IPermissionSystemFactory> getFactory)
     {
         this.registerActions.Add(sc => sc.AddScopedFrom(getFactory));
@@ -265,6 +272,13 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService
     {
         this.registerRawUserAuthenticationServiceAction = sc => sc.AddScoped<IRawUserAuthenticationService, TRawUserAuthenticationService>();
+
+        return this;
+    }
+
+    public ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector)
+    {
+        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScopedFrom(selector);
 
         return this;
     }
