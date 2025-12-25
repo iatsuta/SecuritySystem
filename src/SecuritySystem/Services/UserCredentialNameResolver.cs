@@ -27,8 +27,8 @@ public class UserCredentialNameResolver(IEnumerable<IUserSource> userSourceList)
                     select user.Name;
 
                 return request.Distinct().Single(
-                    () => new Exception($"{nameof(UserCredential)} with id {identity} not found"),
-                    names => new Exception($"More one {nameof(UserCredential)} with id {identity}: {names.Join(", ", name => $"\"{name}\"")}"));
+                    () => new Exception($"{nameof(UserCredential)} with id {identity.GetId()} not found"),
+                    names => new Exception($"More one {nameof(UserCredential)} with id {identity.GetId()}: {names.Join(", ", name => $"\"{name}\"")}"));
             }
 
             default: throw new ArgumentOutOfRangeException(nameof(userCredential));

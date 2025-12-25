@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.Services;
 
 public class AvailablePrincipalSource<TPrincipal>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IPermissionBindingInfoSource bindingInfoSource) : IAvailablePrincipalSource<TPrincipal>
 {
     private readonly Lazy<IAvailablePrincipalSource<TPrincipal>> lazyInnerService = new(() =>
@@ -12,8 +12,7 @@ public class AvailablePrincipalSource<TPrincipal>(
 
         var innerServiceType = typeof(AvailablePrincipalSource<,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType);
 
-        return (IAvailablePrincipalSource<TPrincipal>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IAvailablePrincipalSource<TPrincipal>>(
             innerServiceType,
             bindingInfo);
     });

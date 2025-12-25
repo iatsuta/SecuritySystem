@@ -1,18 +1,16 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.UserSource;
 
 namespace SecuritySystem.Services;
 
 public class PrincipalDomainService<TPrincipal>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource) : IPrincipalDomainService<TPrincipal>
@@ -30,8 +28,7 @@ public class PrincipalDomainService<TPrincipal>(
             bindingInfo.PermissionType,
             identityInfo.IdentityType);
 
-        return (IPrincipalDomainService<TPrincipal>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPrincipalDomainService<TPrincipal>>(
             innerServiceType,
             bindingInfo,
             identityInfo,

@@ -5,9 +5,6 @@ using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.UserSource;
 using SecuritySystem.Credential;
@@ -15,11 +12,12 @@ using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 using System.Reflection;
+using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.VirtualPermission;
 
 public class VirtualPrincipalSourceService<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IPermissionBindingInfoSource bindingInfoSource,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
     IVisualIdentityInfoSource visualIdentityInfoSource) : IPrincipalSourceService
@@ -35,7 +33,7 @@ public class VirtualPrincipalSourceService<TPermission>(
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType);
 
-        return (IPrincipalSourceService)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo, virtualBindingInfo, principalVisualIdentityInfo);
+        return serviceProxyFactory.Create<IPrincipalSourceService>(innerServiceType, bindingInfo, virtualBindingInfo, principalVisualIdentityInfo);
     });
 
     private IPrincipalSourceService InnerService => this.lazyInnerService.Value;

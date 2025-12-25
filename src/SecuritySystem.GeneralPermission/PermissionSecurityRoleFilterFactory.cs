@@ -4,13 +4,12 @@ using CommonFramework.IdentitySource;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-
-using Microsoft.Extensions.DependencyInjection;
+using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionSecurityRoleFilterFactory<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionBindingInfoSource bindingInfoSource,
     IIdentityInfoSource identityInfoSource) : IPermissionSecurityRoleFilterFactory<TPermission>
 {
@@ -25,8 +24,7 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
             bindingInfo.SecurityRoleType,
             securityRoleIdentityInfo.IdentityType);
 
-        return (IPermissionSecurityRoleFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionSecurityRoleFilterFactory<TPermission>>(
             innerServiceType,
             bindingInfo,
             securityRoleIdentityInfo);

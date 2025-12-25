@@ -2,14 +2,12 @@
 using CommonFramework.GenericRepository;
 
 using System.Linq.Expressions;
-
-using Microsoft.Extensions.DependencyInjection;
-
+using CommonFramework.DependencyInjection;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvider, IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
+public class PermissionFilterFactory<TPermission>(IServiceProxyFactory serviceProxyFactory, IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IPermissionFilterFactory<TPermission>
 {
     private readonly Lazy<IPermissionFilterFactory<TPermission>> lazyInnerService = new(() =>
@@ -23,7 +21,7 @@ public class PermissionFilterFactory<TPermission>(IServiceProvider serviceProvid
                 restrictionBindingInfo.SecurityContextTypeType,
                 restrictionBindingInfo.SecurityContextObjectIdentType);
 
-        return (IPermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, restrictionBindingInfo);
+        return serviceProxyFactory.Create<IPermissionFilterFactory<TPermission>>(innerServiceType, restrictionBindingInfo);
     });
 
     public Expression<Func<TPermission, bool>> CreateFilter(SecurityContextRestriction securityContextRestriction) =>

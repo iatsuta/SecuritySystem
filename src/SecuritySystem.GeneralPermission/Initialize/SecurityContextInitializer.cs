@@ -1,11 +1,11 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using SecuritySystem.Services;
@@ -13,7 +13,7 @@ using SecuritySystem.Services;
 namespace SecuritySystem.GeneralPermission.Initialize;
 
 public class SecurityContextInitializer<TSecurityContextType>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource) : ISecurityContextInitializer<TSecurityContextType>
 {
@@ -25,7 +25,7 @@ public class SecurityContextInitializer<TSecurityContextType>(
 
         var innerServiceType = typeof(SecurityContextInitializer<,>).MakeGenericType(typeof(TSecurityContextType), identityInfo.IdentityType);
 
-        return (ISecurityContextInitializer<TSecurityContextType>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo, visualIdentityInfo);
+        return serviceProxyFactory.Create<ISecurityContextInitializer<TSecurityContextType>>(innerServiceType, identityInfo, visualIdentityInfo);
     });
 
     public Task<MergeResult<TSecurityContextType, SecurityContextInfo>> Init(CancellationToken cancellationToken) =>

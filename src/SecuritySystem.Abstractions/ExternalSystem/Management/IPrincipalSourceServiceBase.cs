@@ -13,7 +13,7 @@ public interface IPrincipalSourceServiceBase
 
         await this.TryGetPrincipalAsync(userCredential, cancellationToken)
 
-        ?? throw new UserSourceException($"Principal with id {userCredential} not found");
+        ?? throw new UserSourceException($"Principal with {nameof(userCredential)} '{userCredential}' not found");
 
     Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken);
 }

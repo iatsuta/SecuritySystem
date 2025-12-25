@@ -1,17 +1,14 @@
 ﻿using System.Linq.Expressions;
-
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.Services;
 
 public class ManagedPrincipalHeaderConverter<TPrincipal>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
@@ -25,8 +22,7 @@ public class ManagedPrincipalHeaderConverter<TPrincipal>(
 
         var innerServiceType = typeof(ManagedPrincipalHeaderConverter<,>).MakeGenericType(identityInfo.DomainObjectType, identityInfo.IdentityType);
 
-        return (IManagedPrincipalHeaderConverter<TPrincipal>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IManagedPrincipalHeaderConverter<TPrincipal>>(
             innerServiceType,
             customBindingInfo?.Item1 ?? bindingInfoSource.GetForPrincipal(typeof(TPrincipal)),
             identityInfo,

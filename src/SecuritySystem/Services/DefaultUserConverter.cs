@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.UserSource;
+﻿using SecuritySystem.UserSource;
 
 using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
@@ -12,20 +11,20 @@ using CommonFramework.VisualIdentitySource;
 namespace SecuritySystem.Services;
 
 public class DefaultUserConverter<TUser>(
-	IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
 	IIdentityInfoSource identityInfoSource,
 	IVisualIdentityInfoSource visualIdentityInfoSource) : IDefaultUserConverter<TUser>
 {
-	private readonly Lazy<IDefaultUserConverter<TUser>> lazyInnerUserSource = new(() =>
-	{
-		var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TUser));
+    private readonly Lazy<IDefaultUserConverter<TUser>> lazyInnerUserSource = new(() =>
+    {
+        var identityInfo = identityInfoSource.GetIdentityInfo(typeof(TUser));
 
-		var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>();
+        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>();
 
-		var innerUserSourceType = typeof(DefaultUserConverter<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType);
+        var innerUserSourceType = typeof(DefaultUserConverter<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType);
 
-		return (IDefaultUserConverter<TUser>)ActivatorUtilities.CreateInstance(serviceProvider, innerUserSourceType, identityInfo, visualIdentityInfo);
-	});
+        return serviceProxyFactory.Create<IDefaultUserConverter<TUser>>(innerUserSourceType, identityInfo, visualIdentityInfo);
+    });
 
 	private IDefaultUserConverter<TUser> InnerUserSource => lazyInnerUserSource.Value;
 

@@ -1,17 +1,16 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
 
 using GenericQueryable;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
+
 public class GeneralPermissionSystem<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IGeneralPermissionBindingInfoSource bindingInfoSource,
     SecurityRuleCredential securityRuleCredential) : IPermissionSystem<TPermission>
@@ -27,8 +26,7 @@ public class GeneralPermissionSystem<TPermission>(
             generalBindingInfo.SecurityRoleType,
             securityRoleIdentityInfo.IdentityType);
 
-        return (IPermissionSystem<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionSystem<TPermission>>(
             innerServiceType,
             generalBindingInfo,
             securityRoleIdentityInfo,
@@ -56,7 +54,7 @@ public class GeneralPermissionSystem<TPermission>(
 }
 
 public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleIdent>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     ISecurityRoleSource securityRoleSource,
@@ -75,18 +73,16 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
         where TSecurityContext : class, ISecurityContext
         where TSecurityContextIdent : notnull
     {
-        return ActivatorUtilities
-            .CreateInstance<GeneralPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(
-                serviceProvider,
+        return serviceProxyFactory
+            .Create<IPermissionRestrictionSource<TPermission, TSecurityContextIdent>,
+                GeneralPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(
                 new Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?>(restrictionFilterInfo));
     }
 
     public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        return ActivatorUtilities
-            .CreateInstance<GeneralPermissionSource<TPermission>>(
-                serviceProvider,
-                securityRule.TryApplyCredential(securityRuleCredential));
+        return serviceProxyFactory.Create<IPermissionSource<TPermission>, GeneralPermissionSource<TPermission>>(
+            securityRule.TryApplyCredential(securityRuleCredential));
     }
 
     public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)

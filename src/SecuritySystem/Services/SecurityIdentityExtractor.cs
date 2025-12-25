@@ -1,10 +1,11 @@
-﻿using CommonFramework.IdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.Services;
 
-public class SecurityIdentityExtractor<TDomainObject>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource)
+public class SecurityIdentityExtractor<TDomainObject>(
+    IServiceProxyFactory serviceProxyFactory,
+    IIdentityInfoSource identityInfoSource)
     : ISecurityIdentityExtractor<TDomainObject>
 {
     private readonly Lazy<ISecurityIdentityExtractor<TDomainObject>> lazyInnerService = new(() =>
@@ -13,8 +14,7 @@ public class SecurityIdentityExtractor<TDomainObject>(IServiceProvider servicePr
 
         var innerServiceType = typeof(SecurityIdentityExtractor<,>).MakeGenericType(identityInfo.DomainObjectType, identityInfo.IdentityType);
 
-        return (ISecurityIdentityExtractor<TDomainObject>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<ISecurityIdentityExtractor<TDomainObject>>(
             innerServiceType,
             identityInfo);
     });

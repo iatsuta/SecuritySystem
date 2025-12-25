@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class RawPermissionRestrictionLoader<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IRawPermissionRestrictionLoader<TPermission>
 {
     private readonly Lazy<IRawPermissionRestrictionLoader<TPermission>> lazyInnerService = new(() =>
@@ -14,9 +14,7 @@ public class RawPermissionRestrictionLoader<TPermission>(
             restrictionBindingInfo.PermissionType,
             restrictionBindingInfo.PermissionRestrictionType);
 
-        return (IRawPermissionRestrictionLoader<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
-            innerServiceType);
+        return serviceProxyFactory.Create<IRawPermissionRestrictionLoader<TPermission>>(innerServiceType);
     });
 
     public Task<Dictionary<Type, Array>> LoadAsync(TPermission permission, CancellationToken cancellationToken) =>

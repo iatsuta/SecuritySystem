@@ -1,12 +1,11 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class RawPermissionConverter<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IRawPermissionConverter<TPermissionRestriction>
     where TPermissionRestriction : class
@@ -19,9 +18,7 @@ public class RawPermissionConverter<TPermissionRestriction>(
             restrictionBindingInfo.PermissionRestrictionType,
             restrictionBindingInfo.SecurityContextObjectIdentType);
 
-        return (IRawPermissionConverter<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
-            innerServiceType);
+        return serviceProxyFactory.Create<IRawPermissionConverter<TPermissionRestriction>>(innerServiceType);
     });
 
     public Dictionary<Type, Array> ConvertPermission(

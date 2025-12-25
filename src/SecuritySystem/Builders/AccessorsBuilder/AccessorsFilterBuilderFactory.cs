@@ -1,10 +1,9 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
 
 using HierarchicalExpand;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
@@ -12,7 +11,7 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public class AccessorsFilterBuilderFactory<TDomainObject>(IServiceProvider serviceProvider, IEnumerable<IPermissionSystem> permissionSystems) :
+public class AccessorsFilterBuilderFactory<TDomainObject>(IServiceProxyFactory serviceProxyFactory, IEnumerable<IPermissionSystem> permissionSystems) :
     IAccessorsFilterFactory<TDomainObject>
 {
     public AccessorsFilterInfo<TDomainObject> CreateFilter(DomainSecurityRule.RoleBaseSecurityRule securityRule, SecurityPath<TDomainObject> securityPath)
@@ -21,7 +20,7 @@ public class AccessorsFilterBuilderFactory<TDomainObject>(IServiceProvider servi
         {
             var factoryType = typeof(AccessorsFilterBuilderFactory<,>).MakeGenericType(permissionSystem.PermissionType, typeof(TDomainObject));
 
-            var factory = (IAccessorsFilterFactory<TDomainObject>)ActivatorUtilities.CreateInstance(serviceProvider, factoryType, permissionSystem);
+            var factory = serviceProxyFactory.Create<IAccessorsFilterFactory<TDomainObject>>(factoryType, permissionSystem);
 
             return factory.CreateFilter(securityRule, securityPath);
         }).ToList();

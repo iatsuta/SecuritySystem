@@ -7,13 +7,12 @@ using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-
-using Microsoft.Extensions.DependencyInjection;
+using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPermissionSource<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
@@ -38,8 +37,7 @@ public class GeneralPermissionSource<TPermission>(
             restrictionBindingInfo.SecurityContextObjectIdentType,
             permissionIdentityInfo.IdentityType);
 
-        return (IPermissionSource<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionSource<TPermission>>(
             innerServiceType,
             bindingInfo,
             restrictionBindingInfo,

@@ -1,6 +1,5 @@
-﻿using CommonFramework.IdentitySource;
-using Microsoft.Extensions.DependencyInjection;
-
+﻿using CommonFramework.DependencyInjection;
+using CommonFramework.IdentitySource;
 using SecuritySystem.DomainServices.DependencySecurity._Base;
 using SecuritySystem.Expanders;
 
@@ -10,7 +9,7 @@ using SecuritySystem.Providers.DependencySecurity;
 namespace SecuritySystem.DomainServices.DependencySecurity;
 
 public class UntypedDependencyDomainSecurityService<TDomainObject, TBaseDomainObject>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     ISecurityRuleExpander securityRuleExpander,
     IDomainSecurityService<TBaseDomainObject> baseDomainSecurityService,
     IIdentityInfoSource identityInfoSource)
@@ -26,7 +25,7 @@ public class UntypedDependencyDomainSecurityService<TDomainObject, TBaseDomainOb
         var securityProviderType = typeof(UntypedDependencySecurityProvider<,,>)
             .MakeGenericType(typeof(TDomainObject), typeof(TBaseDomainObject), domainIdentityInfo.IdentityType);
 
-        return (ISecurityProvider<TDomainObject>)ActivatorUtilities.CreateInstance(serviceProvider, securityProviderType, baseProvider, domainIdentityInfo,
+        return serviceProxyFactory.Create<ISecurityProvider<TDomainObject>>(securityProviderType, baseProvider, domainIdentityInfo,
             baseDomainIdentityInfo);
     }
 }

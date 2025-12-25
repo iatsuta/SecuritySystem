@@ -127,9 +127,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddPermissionSystem(Func<IServiceProvider, IPermissionSystemFactory> getFactory)
+    public ISecuritySystemSettings AddPermissionSystem(Func<IServiceProxyFactory, IPermissionSystemFactory> getFactory)
     {
-        this.registerActions.Add(sc => sc.AddScoped(getFactory));
+        this.registerActions.Add(sc => sc.AddScopedFrom(getFactory));
 
         return this;
     }
@@ -246,9 +246,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
     public ISecuritySystemSettings AddClientSecurityRuleInfoSource(Type sourceType)
     {
-        this.registerActions.Add(
-            sc => sc.AddKeyedSingleton<IClientSecurityRuleInfoSource>(RootClientSecurityRuleInfoSource.ElementKey,
-                (sp, _) => ActivatorUtilities.CreateInstance<SourceTypeClientSecurityRuleInfoSource>(sp, sourceType)));
+        this.registerActions.Add(sc => sc.AddKeyedSingleton<IClientSecurityRuleInfoSource>(RootClientSecurityRuleInfoSource.ElementKey,
+            (sp, _) => sp.GetRequiredService<IServiceProxyFactory>()
+                .Create<IClientSecurityRuleInfoSource, SourceTypeClientSecurityRuleInfoSource>(sourceType)));
 
         return this;
     }
@@ -269,9 +269,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector)
+    public ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProxyFactory, IRawUserAuthenticationService> selector)
     {
-        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScoped(selector);
+        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScopedFrom(selector);
 
         return this;
     }

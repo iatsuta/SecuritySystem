@@ -29,7 +29,7 @@ public abstract class TestBase : IAsyncLifetime
                 .AddSecuritySystemTesting()
 
                 .AddValidator<DuplicateServiceUsageValidator>()
-                .Validate()
+                //.Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 

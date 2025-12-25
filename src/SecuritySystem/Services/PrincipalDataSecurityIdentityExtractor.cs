@@ -1,12 +1,10 @@
 ﻿using System.Collections.Concurrent;
-
-using Microsoft.Extensions.DependencyInjection;
-
+using CommonFramework.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.Services;
 
-public class PrincipalDataSecurityIdentityExtractor(IServiceProvider serviceProvider) : IPrincipalDataSecurityIdentityExtractor
+public class PrincipalDataSecurityIdentityExtractor(IServiceProxyFactory serviceProxyFactory) : IPrincipalDataSecurityIdentityExtractor
 {
     private readonly ConcurrentDictionary<Type, IPrincipalDataSecurityIdentityExtractor> cache = new();
 
@@ -16,7 +14,7 @@ public class PrincipalDataSecurityIdentityExtractor(IServiceProvider serviceProv
         {
             var serviceType = typeof(PrincipalDataSecurityIdentityExtractor<>).MakeGenericType(principalData.PrincipalType);
 
-            return (IPrincipalDataSecurityIdentityExtractor)ActivatorUtilities.CreateInstance(serviceProvider, serviceType);
+            return serviceProxyFactory.Create<IPrincipalDataSecurityIdentityExtractor>(serviceType);
         }).Extract(principalData);
     }
 }

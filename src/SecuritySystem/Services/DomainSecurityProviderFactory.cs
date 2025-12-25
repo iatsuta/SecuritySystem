@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ namespace SecuritySystem.Services;
 
 public class DomainSecurityProviderFactory<TDomainObject>(
     IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     ISecurityRuleDeepOptimizer deepOptimizer,
     IRoleBaseSecurityProviderFactory<TDomainObject> roleBaseSecurityProviderFactory) : IDomainSecurityProviderFactory<TDomainObject>
@@ -44,7 +46,7 @@ public class DomainSecurityProviderFactory<TDomainObject>(
                     .Select(arg => arg!)
                     .ToArray();
 
-                return ActivatorUtilities.CreateInstance<CurrentUserSecurityProvider<TDomainObject>>(serviceProvider, args);
+                return serviceProxyFactory.Create<ISecurityProvider<TDomainObject>, CurrentUserSecurityProvider<TDomainObject>>(args);
             }
 
             case DomainSecurityRule.ProviderSecurityRule securityRule:
@@ -94,9 +96,7 @@ public class DomainSecurityProviderFactory<TDomainObject>(
                     typeof(TDomainObject),
                     conditionInfo.RelativeDomainObjectType);
 
-                var untypedConditionFactory = ActivatorUtilities.CreateInstance(serviceProvider, factoryType, conditionInfo);
-
-                var conditionFactory = (IFactory<Expression<Func<TDomainObject, bool>>>)untypedConditionFactory;
+                var conditionFactory = serviceProxyFactory.Create<IFactory<Expression<Func<TDomainObject, bool>>>>(factoryType, conditionInfo);
 
                 var condition = conditionFactory.Create();
 

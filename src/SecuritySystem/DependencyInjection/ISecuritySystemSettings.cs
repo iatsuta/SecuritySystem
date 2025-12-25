@@ -1,4 +1,5 @@
-﻿using CommonFramework.GenericRepository;
+﻿using CommonFramework.DependencyInjection;
+using CommonFramework.GenericRepository;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,7 +34,7 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings AddPermissionSystem<TPermissionSystemFactory>()
         where TPermissionSystemFactory : class, IPermissionSystemFactory;
 
-    ISecuritySystemSettings AddPermissionSystem(Func<IServiceProvider, IPermissionSystemFactory> getFactory);
+    ISecuritySystemSettings AddPermissionSystem(Func<IServiceProxyFactory, IPermissionSystemFactory> getFactory);
 
     ISecuritySystemSettings AddRunAsValidator<TValidator>()
         where TValidator : class, IRunAsValidator;
@@ -73,5 +74,5 @@ public interface ISecuritySystemSettings
 	ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService;
 
-    ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector);
+    ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProxyFactory, IRawUserAuthenticationService> selector);
 }

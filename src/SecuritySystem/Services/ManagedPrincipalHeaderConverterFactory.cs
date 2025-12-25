@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.Services;
 
-public class ManagedPrincipalHeaderConverterFactory<TPrincipal>(IServiceProvider serviceProvider) : IManagedPrincipalHeaderConverterFactory<TPrincipal>
+public class ManagedPrincipalHeaderConverterFactory<TPrincipal>(IServiceProxyFactory serviceProxyFactory)
+    : IManagedPrincipalHeaderConverterFactory<TPrincipal>
 {
     public IManagedPrincipalHeaderConverter<TPrincipal> Create(PermissionBindingInfo bindingInfo)
     {
-        return ActivatorUtilities.CreateInstance<ManagedPrincipalHeaderConverter<TPrincipal>>(serviceProvider,
+        return serviceProxyFactory.Create<IManagedPrincipalHeaderConverter<TPrincipal>, ManagedPrincipalHeaderConverter<TPrincipal>>(
             Tuple.Create<PermissionBindingInfo?>(bindingInfo));
     }
 }

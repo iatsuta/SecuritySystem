@@ -2,16 +2,14 @@
 using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>
 {
@@ -26,8 +24,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction>(
             restrictionBindingInfo.SecurityContextTypeType,
             securityContextTypeIdentityInfo.IdentityType);
 
-        return (IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionTypeFilterFactory<TPermissionRestriction>>(
             innerServiceType,
             restrictionBindingInfo,
             securityContextTypeIdentityInfo);

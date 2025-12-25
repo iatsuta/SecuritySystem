@@ -1,11 +1,9 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
 
 using HierarchicalExpand;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
 using SecuritySystem.ExternalSystem;
@@ -13,7 +11,7 @@ using SecuritySystem.ExternalSystem;
 namespace SecuritySystem.Builders.QueryBuilder;
 
 public class SecurityFilterBuilderFactory<TDomainObject>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IEnumerable<IPermissionSystem> permissionSystems) :
     ISecurityFilterFactory<TDomainObject>
 {
@@ -26,8 +24,7 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
                     permissionSystem.PermissionType,
                     typeof(TDomainObject));
 
-                var factory = (ISecurityFilterFactory<TDomainObject>)ActivatorUtilities.CreateInstance(
-                    serviceProvider,
+                var factory = serviceProxyFactory.Create<ISecurityFilterFactory<TDomainObject>>(
                     factoryType,
                     permissionSystem);
 

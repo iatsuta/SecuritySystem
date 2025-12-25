@@ -1,13 +1,11 @@
 ﻿using CommonFramework;
-
+using CommonFramework.DependencyInjection;
 using SecuritySystem.Services;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IPermissionRestrictionSecurityContextTypeResolver<
     TPermissionRestriction>
 {
@@ -19,8 +17,7 @@ public class PermissionRestrictionSecurityContextTypeResolver<TPermissionRestric
             restrictionBindingInfo.PermissionRestrictionType,
             restrictionBindingInfo.SecurityContextTypeType);
 
-        return (IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction>>(
             innerServiceType,
             restrictionBindingInfo);
     });
