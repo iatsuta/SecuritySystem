@@ -1,7 +1,8 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
+
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.DiTests.DomainObjects;
 using SecuritySystem.DiTests.Rules;
@@ -18,7 +19,7 @@ public class SecurityPathTests : TestBase
     protected override IServiceCollection CreateServices(IServiceCollection serviceCollection)
     {
         return base.CreateServices(serviceCollection)
-            .Replace(ServiceDescriptor.Scoped<IQueryableSource>(_ => new TestQueryableSource { BaseQueryableSource = this.BuildQueryableSource() }));
+            .ReplaceScopedFrom<IQueryableSource, IServiceProvider>(_ => new TestQueryableSource { BaseQueryableSource = this.BuildQueryableSource() });
     }
 
     protected override IEnumerable<TestPermission> GetPermissions()

@@ -1,4 +1,6 @@
-﻿using SecuritySystem.Services;
+﻿using CommonFramework.DependencyInjection;
+
+using SecuritySystem.Services;
 
 using System.Collections.Concurrent;
 
@@ -15,7 +17,7 @@ public class SecurityRoleSource : ISecurityRoleSource
 
     private readonly ISecurityIdentityConverter rootIdentityConverter;
 
-    public SecurityRoleSource(IServiceProvider serviceProvider, IEnumerable<FullSecurityRole> securityRoles)
+    public SecurityRoleSource(IServiceProxyFactory serviceProxyFactory, IEnumerable<FullSecurityRole> securityRoles)
     {
         this.SecurityRoles = securityRoles.ToList();
 
@@ -23,7 +25,9 @@ public class SecurityRoleSource : ISecurityRoleSource
 
         this.nameDict = this.SecurityRoles.ToDictionary(v => v.Name);
 
-        this.rootIdentityConverter = new RootSecurityIdentityConverter(serviceProvider, this.SecurityRoles.Select(sr => sr.Identity.IdentType).Distinct());
+        this.rootIdentityConverter =
+            serviceProxyFactory.Create<ISecurityIdentityConverter, RootSecurityIdentityConverter>(
+                this.SecurityRoles.Select(sr => sr.Identity.IdentType).Distinct());
     }
 
     public IReadOnlyList<FullSecurityRole> SecurityRoles { get; }
