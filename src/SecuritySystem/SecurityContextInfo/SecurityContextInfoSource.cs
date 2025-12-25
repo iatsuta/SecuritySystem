@@ -39,9 +39,9 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
         this.typeDict[type];
 
     public SecurityContextInfo GetSecurityContextInfo(string name) =>
-	    this.nameDict[name];
+        this.nameDict[name];
 
-	public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity identity)
+    public SecurityContextInfo GetSecurityContextInfo(SecurityIdentity identity)
     {
         return this.baseIdentityCache.GetOrAdd(identity, _ =>
         {
@@ -53,7 +53,7 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
             }
             else
             {
-                throw new Exception($"SecurityContextType with {nameof(identity)} '{identity}' not found");
+                throw new Exception($"{nameof(SecurityContextInfo)} with {nameof(identity)} '{identity}' not found");
             }
         });
     }
