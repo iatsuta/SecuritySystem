@@ -1,32 +1,27 @@
-﻿using CommonFramework.IdentitySource;
+﻿using CommonFramework.DependencyInjection;
+using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Credential;
 
 namespace SecuritySystem.Services;
 
 public class UserCredentialMatcher<TUser>(
-	IServiceProvider serviceProvider,
-	IIdentityInfoSource identityInfoSource,
-	IVisualIdentityInfoSource visualIdentityInfoSource) : IUserCredentialMatcher<TUser>
+    IServiceProxyFactory serviceProxyFactory,
+    IIdentityInfoSource identityInfoSource,
+    IVisualIdentityInfoSource visualIdentityInfoSource) : IUserCredentialMatcher<TUser>
 {
-	private readonly Lazy<IUserCredentialMatcher<TUser>> lazyInnerService = new(() =>
-	{
-		var identityInfo = identityInfoSource.GetIdentityInfo<TUser>();
+    private readonly Lazy<IUserCredentialMatcher<TUser>> lazyInnerService = new(() =>
+    {
+        var identityInfo = identityInfoSource.GetIdentityInfo<TUser>();
 
-		var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>();
+        var visualIdentityInfo = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>();
 
-		var innerServiceType = typeof(UserCredentialMatcher<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType);
+        var innerServiceType = typeof(UserCredentialMatcher<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType);
 
-		return (IUserCredentialMatcher<TUser>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, innerServiceType, visualIdentityInfo);
-	});
+        return serviceProxyFactory.Create<IUserCredentialMatcher<TUser>>(innerServiceType, innerServiceType, visualIdentityInfo);
+    });
 
-	public bool IsMatch(UserCredential userCredential, TUser user)
-	{
-		return this.lazyInnerService.Value.IsMatch(userCredential, user);
-	}
+    public bool IsMatch(UserCredential userCredential, TUser user) => this.lazyInnerService.Value.IsMatch(userCredential, user);
 }
 
 public class UserCredentialMatcher<TUser, TIdent>(

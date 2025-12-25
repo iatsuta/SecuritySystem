@@ -1,13 +1,14 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
-
-using Microsoft.Extensions.DependencyInjection;
+using CommonFramework.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
-public class SecurityPathRestrictionService(IServiceProvider serviceProvider)
+public class SecurityPathRestrictionService(
+    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory)
     : ISecurityPathRestrictionService
 {
     public SecurityPath<TDomainObject> ApplyRestriction<TDomainObject>(
@@ -63,9 +64,7 @@ public class SecurityPathRestrictionService(IServiceProvider serviceProvider)
             typeof(TDomainObject),
             conditionInfo.RelativeDomainObjectType);
 
-        var untypedConditionFactory = ActivatorUtilities.CreateInstance(serviceProvider, factoryType, conditionInfo);
-
-        var conditionFactory = (IFactory<Expression<Func<TDomainObject, bool>>?>)untypedConditionFactory;
+        var conditionFactory = serviceProxyFactory.Create<IFactory<Expression<Func<TDomainObject, bool>>?>>(factoryType, conditionInfo);
 
         var condition = conditionFactory.Create();
 

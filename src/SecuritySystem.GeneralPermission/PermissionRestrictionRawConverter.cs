@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionRestrictionRawConverter<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IPermissionRestrictionRawConverter<TPermissionRestriction>
 {
@@ -16,8 +16,7 @@ public class PermissionRestrictionRawConverter<TPermissionRestriction>(
             restrictionBindingInfo.SecurityContextTypeType,
             restrictionBindingInfo.SecurityContextObjectIdentType);
 
-        return (IPermissionRestrictionRawConverter<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionRawConverter<TPermissionRestriction>>(
             innerServiceType,
             restrictionBindingInfo);
     });

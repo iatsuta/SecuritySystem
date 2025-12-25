@@ -1,16 +1,19 @@
-﻿using ExampleApp.Application;
-using Microsoft.Extensions.DependencyInjection;
+﻿using CommonFramework.DependencyInjection;
+using ExampleApp.Application;
 
 using SecuritySystem;
 using SecuritySystem.DomainServices;
 
 namespace ExampleApp.Infrastructure.Services;
 
-public class EfRepositoryFactory<TDomainObject>(IServiceProvider serviceProvider, IDomainSecurityService<TDomainObject> domainSecurityService)
-    : IRepositoryFactory<TDomainObject> where TDomainObject : class
+public class EfRepositoryFactory<TDomainObject>(
+    IServiceProxyFactory serviceProxyFactory,
+    IDomainSecurityService<TDomainObject> domainSecurityService)
+    : IRepositoryFactory<TDomainObject>
+    where TDomainObject : class
 {
-    public IRepository<TDomainObject> Create(SecurityRule securityRule)
-    {
-        return ActivatorUtilities.CreateInstance<EfRepository<TDomainObject>>(serviceProvider, domainSecurityService.GetSecurityProvider(securityRule));
-    }
+    public IRepository<TDomainObject> Create(SecurityRule securityRule) =>
+        serviceProxyFactory.Create<
+            IRepository<TDomainObject>, EfRepository<TDomainObject>>(
+            domainSecurityService.GetSecurityProvider(securityRule));
 }

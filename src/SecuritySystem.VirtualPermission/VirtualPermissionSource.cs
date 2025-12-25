@@ -4,19 +4,18 @@ using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
+using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.VirtualPermission;
 
 
 public class VirtualPermissionSource<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
@@ -34,8 +33,7 @@ public class VirtualPermissionSource<TPermission>(
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType);
 
-        return (IPermissionSource<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionSource<TPermission>>(
             innerServiceType,
             bindingInfo,
             virtualBindingInfo,

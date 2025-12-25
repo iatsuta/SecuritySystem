@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.VisualIdentitySource;
 
@@ -15,7 +16,7 @@ using SecuritySystem.UserSource;
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPrincipalManagementService(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IEnumerable<PermissionBindingInfo> bindingInfoList,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource,
@@ -41,8 +42,7 @@ public class GeneralPrincipalManagementService(
                 restrictionBindingInfo.SecurityContextTypeType,
                 restrictionBindingInfo.SecurityContextObjectIdentType);
 
-        return (IPrincipalManagementService)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPrincipalManagementService>(
             innerServiceType,
             bindingInfo,
             generalBindingInfo,

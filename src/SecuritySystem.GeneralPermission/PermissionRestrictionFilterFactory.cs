@@ -1,16 +1,14 @@
 ﻿using CommonFramework;
 using CommonFramework.IdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
+using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 {
     private readonly Lazy<IPermissionRestrictionFilterFactory<TPermissionRestriction>> lazyInnerService = new(() =>
@@ -22,8 +20,7 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
             restrictionBindingInfo.SecurityContextTypeType,
             restrictionBindingInfo.SecurityContextObjectIdentType);
 
-        return (IPermissionRestrictionFilterFactory<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionFilterFactory<TPermissionRestriction>>(
             innerServiceType,
             restrictionBindingInfo);
     });

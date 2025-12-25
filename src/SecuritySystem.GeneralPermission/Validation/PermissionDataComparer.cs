@@ -1,19 +1,18 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
+using CommonFramework.IdentitySource;
 
 using SecuritySystem.ExternalSystem.Management;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Validation;
 
 public class PermissionEqualityComparer<TPermission, TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IPermissionBindingInfoSource bindingInfoSource,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource,
-    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource
-    ) : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
+    IIdentityInfoSource identityInfoSource) : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
 {
     private readonly Lazy<IPermissionEqualityComparer<TPermission, TPermissionRestriction>> lazyInnerService = new(() =>
     {
@@ -23,20 +22,23 @@ public class PermissionEqualityComparer<TPermission, TPermissionRestriction>(
 
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(typeof(TPermission));
 
-        var innerServiceType = typeof(PermissionEqualityComparer<,,,,>)
+        var securityContextTypeIdentityInfo = identityInfoSource.GetIdentityInfo(restrictionBindingInfo.SecurityContextTypeType);
+
+        var innerServiceType = typeof(PermissionEqualityComparer<,,,,,>)
             .MakeGenericType(
                 generalBindingInfo.PermissionType,
                 generalBindingInfo.SecurityRoleType,
                 restrictionBindingInfo.PermissionRestrictionType,
                 restrictionBindingInfo.SecurityContextTypeType,
-                restrictionBindingInfo.SecurityContextObjectIdentType);
+                restrictionBindingInfo.SecurityContextObjectIdentType,
+                securityContextTypeIdentityInfo.IdentityType);
 
-        return (IPermissionEqualityComparer<TPermission, TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionEqualityComparer<TPermission, TPermissionRestriction>>(
             innerServiceType,
             bindingInfo,
             generalBindingInfo,
-            restrictionBindingInfo);
+            restrictionBindingInfo,
+            securityContextTypeIdentityInfo);
     });
 
     public bool Equals(PermissionData<TPermission, TPermissionRestriction>? x, PermissionData<TPermission, TPermissionRestriction>? y) =>
@@ -46,10 +48,11 @@ public class PermissionEqualityComparer<TPermission, TPermissionRestriction>(
         this.lazyInnerService.Value.GetHashCode(obj);
 }
 
-public class PermissionEqualityComparer<TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+public class PermissionEqualityComparer<TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TSecurityContextTypeIdent>(
     PermissionBindingInfo<TPermission> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
-    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo)
+    GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
+    IdentityInfo<TSecurityContextType, TSecurityContextTypeIdent> securityContextTypeIdentityInfo)
     : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
 
     where TPermission : class
@@ -57,6 +60,7 @@ public class PermissionEqualityComparer<TPermission, TSecurityRole, TPermissionR
     where TPermissionRestriction : class
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
+    where TSecurityContextTypeIdent : notnull
 {
     protected virtual IEqualityComparer<IGrouping<TSecurityContextType, TSecurityContextObjectIdent>> RestrictionGroupComparer { get; } =
 
@@ -110,7 +114,7 @@ public class PermissionEqualityComparer<TPermission, TSecurityRole, TPermissionR
 
             into g
 
-            orderby g.Key
+            orderby securityContextTypeIdentityInfo.Id.Getter(g.Key)
 
             select g;
     }

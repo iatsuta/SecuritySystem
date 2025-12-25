@@ -1,17 +1,15 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.ExternalSystem;
+﻿using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class GeneralPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
     Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?> restrictionFilterInfoWrapper)
     : IPermissionRestrictionSource<TPermission, TSecurityContextIdent>
@@ -32,8 +30,7 @@ public class GeneralPermissionRestrictionSource<TPermission, TSecurityContext, T
             typeof(TSecurityContext),
             typeof(TSecurityContextIdent));
 
-        return (IPermissionRestrictionSource<TPermission, TSecurityContextIdent>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionSource<TPermission, TSecurityContextIdent>>(
             innerServiceType,
             restrictionBindingInfo,
             restrictionFilterInfoWrapper);

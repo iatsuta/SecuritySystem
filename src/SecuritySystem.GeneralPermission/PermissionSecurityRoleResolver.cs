@@ -1,11 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
+﻿using CommonFramework.DependencyInjection;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionSecurityRoleResolver<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource) : IPermissionSecurityRoleResolver<TPermission>
 {
     private readonly Lazy<IPermissionSecurityRoleResolver<TPermission>> lazyInnerService = new(() =>
@@ -15,8 +14,7 @@ public class PermissionSecurityRoleResolver<TPermission>(
         var innerServiceType = typeof(PermissionSecurityRoleResolver<,>)
             .MakeGenericType(generalBindingInfo.PermissionType, generalBindingInfo.SecurityRoleType);
 
-        return (IPermissionSecurityRoleResolver<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionSecurityRoleResolver<TPermission>>(
             innerServiceType,
             generalBindingInfo);
     });

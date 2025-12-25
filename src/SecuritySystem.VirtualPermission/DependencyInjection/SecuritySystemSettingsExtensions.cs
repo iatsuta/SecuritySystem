@@ -7,6 +7,8 @@ using SecuritySystem.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
 
 using System.Linq.Expressions;
+using CommonFramework.DependencyInjection;
+using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.VirtualPermission.DependencyInjection;
 
@@ -20,7 +22,8 @@ public static class SecuritySystemSettingsExtensions
         {
             foreach (var virtualBindingInfo in virtualBindingInfoList)
             {
-                securitySystemSettings.AddPermissionSystem(sp => ActivatorUtilities.CreateInstance<VirtualPermissionSystemFactory>(sp, virtualBindingInfo));
+                securitySystemSettings.AddPermissionSystem(serviceProxyFactory =>
+                    serviceProxyFactory.Create<IPermissionSystemFactory, VirtualPermissionSystemFactory>(virtualBindingInfo));
             }
 
             return securitySystemSettings.AddExtensions(services =>
@@ -32,7 +35,8 @@ public static class SecuritySystemSettingsExtensions
                 {
                     var serviceType = typeof(VirtualPrincipalSourceService<>).MakeGenericType(bindingInfo.PermissionType);
 
-                    services.AddScoped(typeof(IPrincipalSourceService), sp => ActivatorUtilities.CreateInstance(sp, serviceType, virtualBindingInfo));
+                    services.AddScopedFrom<IPrincipalSourceService, IServiceProxyFactory>(factory =>
+                        factory.Create<IPrincipalSourceService>(serviceType, virtualBindingInfo));
                 }
             });
         }

@@ -1,22 +1,16 @@
-﻿using CommonFramework.IdentitySource;
-using CommonFramework.VisualIdentitySource;
-
+﻿using CommonFramework.DependencyInjection;
 using GenericQueryable;
 
 using SecuritySystem.Expanders;
 using SecuritySystem.ExternalSystem;
-using SecuritySystem.Services;
 
 namespace SecuritySystem.VirtualPermission;
 
 public class VirtualPermissionSystem<TPermission>(
-    IServiceProvider serviceProvider,
-    IIdentityInfoSource identityInfoSource,
+    IServiceProxyFactory serviceProxyFactory,
     ISecurityRuleExpander securityRuleExpander,
     SecurityRuleCredential securityRuleCredential,
-    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
-    IPermissionBindingInfoSource bindingInfoSource,
-    IVisualIdentityInfoSource visualIdentityInfoSource)
+    VirtualPermissionBindingInfo<TPermission> virtualBindingInfo)
     : IPermissionSystem<TPermission>
 
     where TPermission : class
@@ -28,15 +22,17 @@ public class VirtualPermissionSystem<TPermission>(
         where TSecurityContext : class, ISecurityContext
         where TSecurityContextIdent : notnull
     {
-        return new VirtualPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>(serviceProvider, identityInfoSource,
-            virtualBindingInfo, restrictionFilterInfo);
+        return serviceProxyFactory
+            .Create<
+                IPermissionRestrictionSource<TPermission, TSecurityContextIdent>,
+                VirtualPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(virtualBindingInfo, Tuple.Create(restrictionFilterInfo));
     }
 
     public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
         if (securityRuleExpander.FullRoleExpand(securityRule).SecurityRoles.Contains(virtualBindingInfo.SecurityRole))
         {
-            return new VirtualPermissionSource<TPermission>(serviceProvider, visualIdentityInfoSource, bindingInfoSource, virtualBindingInfo, securityRule,
+            return serviceProxyFactory.Create<IPermissionSource<TPermission>, VirtualPermissionSource<TPermission>>(virtualBindingInfo, securityRule,
                 securityRuleCredential);
         }
         else

@@ -1,13 +1,12 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.Services;
 
-public class SecurityIdentityFilterFactory<TDomainObject>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource)
+public class SecurityIdentityFilterFactory<TDomainObject>(IServiceProxyFactory serviceProxyFactory, IIdentityInfoSource identityInfoSource)
 	: ISecurityIdentityFilterFactory<TDomainObject>
 {
 	private readonly Lazy<ISecurityIdentityFilterFactory<TDomainObject>> lazyInnerService = new(() =>
@@ -16,7 +15,7 @@ public class SecurityIdentityFilterFactory<TDomainObject>(IServiceProvider servi
 
 		var innerServiceType = typeof(SecurityIdentityFilterFactory<,>).MakeGenericType(typeof(TDomainObject), identityInfo.IdentityType);
 
-		return (ISecurityIdentityFilterFactory<TDomainObject>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, identityInfo);
+		return  serviceProxyFactory.Create<ISecurityIdentityFilterFactory<TDomainObject>>(innerServiceType, identityInfo);
 	});
 
 	public Expression<Func<TDomainObject, bool>> CreateFilter(SecurityIdentity securityIdentity) =>

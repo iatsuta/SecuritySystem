@@ -1,11 +1,10 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
-
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using SecuritySystem.Services;
@@ -13,7 +12,7 @@ using SecuritySystem.Services;
 namespace SecuritySystem.GeneralPermission.Initialize;
 
 public class SecurityRoleInitializer<TSecurityRole>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IGeneralPermissionBindingInfoSource bindingInfoSource) : ISecurityRoleInitializer<TSecurityRole>
@@ -31,8 +30,7 @@ public class SecurityRoleInitializer<TSecurityRole>(
             bindingInfo.SecurityRoleType,
             identityInfo.IdentityType);
 
-        return (ISecurityRoleInitializer<TSecurityRole>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<ISecurityRoleInitializer<TSecurityRole>>(
             innerServiceType,
             bindingInfo,
             identityInfo,

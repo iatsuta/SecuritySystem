@@ -1,10 +1,9 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.DictionaryCache;
 using CommonFramework.IdentitySource;
 
 using HierarchicalExpand;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.ExternalSystem.SecurityContextStorage;
 
@@ -12,14 +11,18 @@ public class SecurityContextStorage : ISecurityContextStorage
 {
     private readonly IServiceProvider serviceProvider;
 
+    private readonly IServiceProxyFactory serviceProxyFactory;
+
     private readonly IIdentityInfoSource identityInfoSource;
 
     private readonly IDictionaryCache<Type, ITypedSecurityContextStorage> typedCache;
 
 
-    public SecurityContextStorage(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource)
+    public SecurityContextStorage(IServiceProvider serviceProvider, IServiceProxyFactory serviceProxyFactory,
+        IIdentityInfoSource identityInfoSource)
     {
         this.serviceProvider = serviceProvider;
+        this.serviceProxyFactory = serviceProxyFactory;
         this.identityInfoSource = identityInfoSource;
 
         this.typedCache = new DictionaryCache<Type, ITypedSecurityContextStorage>(this.GetTypedInternal);
@@ -44,15 +47,11 @@ public class SecurityContextStorage : ISecurityContextStorage
     {
         var hierarchicalInfo = this.serviceProvider.GetService(typeof(HierarchicalInfo<>).MakeGenericType(typeof(TSecurityContext)));
 
-        var untypedSecurityContextStorageType =
+        var (serviceType, args) = hierarchicalInfo == null
+            ? (typeof(PlainTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>), Array.Empty<object>())
+            : (typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>), [hierarchicalInfo]);
 
-            hierarchicalInfo == null
-
-                ? ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(PlainTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>))
-
-                : ActivatorUtilities.CreateInstance(this.serviceProvider, typeof(HierarchicalTypedSecurityContextStorage<TSecurityContext, TSecurityContextIdent>), hierarchicalInfo);
-
-        var typedSecurityContextStorage = (ITypedSecurityContextStorage<TSecurityContextIdent>)untypedSecurityContextStorageType;
+        var typedSecurityContextStorage = serviceProxyFactory.Create<ITypedSecurityContextStorage<TSecurityContextIdent>>(serviceType, args);
 
         return typedSecurityContextStorage.WithCache();
     }

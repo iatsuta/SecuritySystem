@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
 using CommonFramework.RelativePath;
@@ -16,6 +17,7 @@ namespace SecuritySystem.UserSource;
 
 public class CurrentUserSecurityProvider<TDomainObject>(
     IServiceProvider serviceProvider,
+	IServiceProxyFactory serviceProxyFactory,
     IEnumerable<UserSourceInfo> userSourceInfoList,
     IIdentityInfoSource identityInfoSource,
     CurrentUserSecurityProviderRelativeKey? key = null) : ISecurityProvider<TDomainObject>
@@ -27,11 +29,9 @@ public class CurrentUserSecurityProvider<TDomainObject>(
 
 	    var identityInfo = identityInfoSource.GetIdentityInfo(actualUserSourceInfo.UserType);
 
-		return (ISecurityProvider<TDomainObject>)
-            ActivatorUtilities.CreateInstance(
-                serviceProvider,
-                typeof(CurrentUserSecurityProvider<,,>).MakeGenericType(typeof(TDomainObject), actualUserSourceInfo.UserType, identityInfo.IdentityType),
-                actualRelativeDomainPathInfo, identityInfo);
+        return serviceProxyFactory.Create<ISecurityProvider<TDomainObject>>(
+            typeof(CurrentUserSecurityProvider<,,>).MakeGenericType(typeof(TDomainObject), actualUserSourceInfo.UserType, identityInfo.IdentityType),
+            actualRelativeDomainPathInfo, identityInfo);
 
 		(UserSourceInfo, object)? TryGetActualUserSourceInfo()
 		{

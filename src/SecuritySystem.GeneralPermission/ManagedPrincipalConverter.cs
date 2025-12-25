@@ -1,13 +1,11 @@
 ﻿using CommonFramework;
-
-using Microsoft.Extensions.DependencyInjection;
-
+using CommonFramework.DependencyInjection;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class ManagedPrincipalConverter<TPrincipal>(IServiceProvider serviceProvider, IPermissionBindingInfoSource bindingInfoSource)
+public class ManagedPrincipalConverter<TPrincipal>(IServiceProxyFactory serviceProxyFactory, IPermissionBindingInfoSource bindingInfoSource)
     : IManagedPrincipalConverter<TPrincipal>
 {
     private readonly Lazy<IManagedPrincipalConverter<TPrincipal>> lazyInnerService = new(() =>
@@ -18,7 +16,7 @@ public class ManagedPrincipalConverter<TPrincipal>(IServiceProvider serviceProvi
             bindingInfo.PrincipalType,
             bindingInfo.PermissionType);
 
-        return (IManagedPrincipalConverter<TPrincipal>)ActivatorUtilities.CreateInstance(serviceProvider, innerServiceType, bindingInfo);
+        return serviceProxyFactory.Create<IManagedPrincipalConverter<TPrincipal>>(innerServiceType, bindingInfo);
     });
 
     public Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken) =>

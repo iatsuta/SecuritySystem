@@ -1,11 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
+﻿using CommonFramework.DependencyInjection;
 using SecuritySystem.Validation;
 
 namespace SecuritySystem.GeneralPermission.Validation.PermissionRestriction;
 
 public class AllowedTypePermissionRestrictionValidator<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IPermissionRestrictionValidator<TPermissionRestriction>
 {
     private readonly Lazy<IPermissionRestrictionValidator<TPermissionRestriction>> lazyInnerService = new(() =>
@@ -19,8 +18,7 @@ public class AllowedTypePermissionRestrictionValidator<TPermissionRestriction>(
                 restrictionBindingInfo.SecurityContextObjectIdentType,
                 restrictionBindingInfo.PermissionType);
 
-        return (IPermissionRestrictionValidator<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionValidator<TPermissionRestriction>>(
             innerServiceType,
             restrictionBindingInfo);
     });

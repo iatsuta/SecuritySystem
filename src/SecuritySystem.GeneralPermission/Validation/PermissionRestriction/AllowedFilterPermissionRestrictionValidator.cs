@@ -1,14 +1,12 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Validation;
 
 namespace SecuritySystem.GeneralPermission.Validation.PermissionRestriction;
 
 public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IPermissionRestrictionValidator<TPermissionRestriction>
 {
     private readonly Lazy<IPermissionRestrictionValidator<TPermissionRestriction>> lazyInnerService = new(() =>
@@ -22,8 +20,7 @@ public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction>
                 restrictionBindingInfo.SecurityContextObjectIdentType,
                 restrictionBindingInfo.PermissionType);
 
-        return (IPermissionRestrictionValidator<TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionValidator<TPermissionRestriction>>(
             innerServiceType,
             restrictionBindingInfo);
     });
@@ -38,7 +35,7 @@ public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction,
     ISecurityContextSource securityContextSource,
     IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction> permissionRestrictionSecurityContextTypeResolver,
     IIdentityInfoSource identityInfoSource) : IPermissionRestrictionValidator<TPermissionRestriction>
-    where TSecurityContextObjectIdent: notnull
+    where TSecurityContextObjectIdent : notnull
 {
     public async Task ValidateAsync(TPermissionRestriction permissionRestriction, CancellationToken cancellationToken)
     {

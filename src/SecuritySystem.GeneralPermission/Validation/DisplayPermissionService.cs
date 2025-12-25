@@ -1,8 +1,6 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.VisualIdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.ExternalSystem.SecurityContextStorage;
 using SecuritySystem.Services;
@@ -10,7 +8,7 @@ using SecuritySystem.Services;
 namespace SecuritySystem.GeneralPermission.Validation;
 
 public class DisplayPermissionService<TPermission, TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IPermissionBindingInfoSource bindingInfoSource,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource) : IDisplayPermissionService<TPermission, TPermissionRestriction>
@@ -28,8 +26,7 @@ public class DisplayPermissionService<TPermission, TPermissionRestriction>(
             generalBindingInfo.SecurityRoleType,
             restrictionBindingInfo.PermissionRestrictionType);
 
-        return (IDisplayPermissionService<TPermission, TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IDisplayPermissionService<TPermission, TPermissionRestriction>>(
             innerServiceType,
             bindingInfo,
             generalBindingInfo);

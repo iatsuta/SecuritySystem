@@ -1,16 +1,14 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.VisualIdentitySource;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.Credential;
 
 namespace SecuritySystem.Services;
 
 public class AvailablePermissionFilterFactory<TPermission>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource) : IAvailablePermissionFilterFactory<TPermission>
 {
@@ -22,8 +20,7 @@ public class AvailablePermissionFilterFactory<TPermission>(
 
         var innerServiceType = typeof(AvailablePermissionFilterFactory<,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType);
 
-        return (IAvailablePermissionFilterFactory<TPermission>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IAvailablePermissionFilterFactory<TPermission>>(
             innerServiceType,
             bindingInfo,
             principalVisualIdentityInfo);

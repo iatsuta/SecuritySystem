@@ -1,14 +1,13 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 
 using GenericQueryable;
 
-using Microsoft.Extensions.DependencyInjection;
-
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionRestrictionLoader<TPermission, TPermissionRestriction>(
-    IServiceProvider serviceProvider,
+    IServiceProxyFactory serviceProxyFactory,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IPermissionRestrictionLoader<TPermission, TPermissionRestriction>
 {
@@ -22,8 +21,7 @@ public class PermissionRestrictionLoader<TPermission, TPermissionRestriction>(
             bindingInfo.SecurityContextTypeType,
             bindingInfo.SecurityContextObjectIdentType);
 
-        return (IPermissionRestrictionLoader<TPermission, TPermissionRestriction>)ActivatorUtilities.CreateInstance(
-            serviceProvider,
+        return serviceProxyFactory.Create<IPermissionRestrictionLoader<TPermission, TPermissionRestriction>>(
             innerServiceType,
             bindingInfo);
     });
