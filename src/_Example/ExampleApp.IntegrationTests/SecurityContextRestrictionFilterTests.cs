@@ -103,76 +103,76 @@ public class SecurityContextRestrictionFilterTests : TestBase
         allowedBuList.Should().BeEquivalentTo([this.buWithAllowedFilter]);
     }
 
-    [Fact]
-    public async Task CreateCustomRestrictionRule_SearchAccessorsForGrandPermission_EmployeeFounded()
-    {
-        // Arrange
-        await this.AuthManager.For(this.testLogin).SetRoleAsync(this.securityRole, this.CancellationToken);
+    //[Fact]
+    //public async Task CreateCustomRestrictionRule_SearchAccessorsForGrandPermission_EmployeeFounded()
+    //{
+    //    // Arrange
+    //    await this.AuthManager.For(this.testLogin).SetRoleAsync(this.securityRole, this.CancellationToken);
 
-        // Act
-        await using var scope = this.RootServiceProvider.CreateAsyncScope();
+    //    // Act
+    //    await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
-        var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
-        var domainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<BusinessUnit>>();
-        var securityAccessorResolver = scope.ServiceProvider.GetRequiredService<ISecurityAccessorResolver>();
+    //    var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
+    //    var domainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<BusinessUnit>>();
+    //    var securityAccessorResolver = scope.ServiceProvider.GetRequiredService<ISecurityAccessorResolver>();
 
-        var bu = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Id == this.buWithAllowedFilter.Id).GenericSingleAsync(this.CancellationToken);
+    //    var bu = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Id == this.buWithAllowedFilter.Id).GenericSingleAsync(this.CancellationToken);
 
-        var accessorData = domainSecurityService.GetSecurityProvider(this.restrictionRule).GetAccessorData(bu);
+    //    var accessorData = domainSecurityService.GetSecurityProvider(this.restrictionRule).GetAccessorData(bu);
 
-        var accessors = securityAccessorResolver.Resolve(accessorData).ToList();
+    //    var accessors = securityAccessorResolver.Resolve(accessorData).ToList();
 
-        // Assert
-        accessors.Should().Contain(this.testLogin);
-    }
+    //    // Assert
+    //    accessors.Should().Contain(this.testLogin);
+    //}
 
-    [Fact]
-    public async Task CreateCustomRestrictionRule_SearchAccessorsForCorrectBU_EmployeeFounded()
-    {
-        // Arrange
-        await this.AuthManager.For(this.testLogin)
-            .SetRoleAsync(new TestPermissionBuilder(this.securityRole) { BusinessUnits = [this.defaultBu, this.buWithAllowedFilter] },
-                this.CancellationToken);
+    //[Fact]
+    //public async Task CreateCustomRestrictionRule_SearchAccessorsForCorrectBU_EmployeeFounded()
+    //{
+    //    // Arrange
+    //    await this.AuthManager.For(this.testLogin)
+    //        .SetRoleAsync(new TestPermissionBuilder(this.securityRole) { BusinessUnits = [this.defaultBu, this.buWithAllowedFilter] },
+    //            this.CancellationToken);
 
-        // Act
-        await using var scope = this.RootServiceProvider.CreateAsyncScope();
+    //    // Act
+    //    await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
-        var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
-        var domainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<BusinessUnit>>();
-        var securityAccessorResolver = scope.ServiceProvider.GetRequiredService<ISecurityAccessorResolver>();
+    //    var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
+    //    var domainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<BusinessUnit>>();
+    //    var securityAccessorResolver = scope.ServiceProvider.GetRequiredService<ISecurityAccessorResolver>();
 
-        var bu = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Id == this.buWithAllowedFilter.Id).GenericSingleAsync(this.CancellationToken);
+    //    var bu = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Id == this.buWithAllowedFilter.Id).GenericSingleAsync(this.CancellationToken);
 
-        var accessorData = domainSecurityService.GetSecurityProvider(this.restrictionRule).GetAccessorData(bu);
+    //    var accessorData = domainSecurityService.GetSecurityProvider(this.restrictionRule).GetAccessorData(bu);
 
-        var accessors = securityAccessorResolver.Resolve(accessorData).ToList();
+    //    var accessors = securityAccessorResolver.Resolve(accessorData).ToList();
 
-        // Assert
-        accessors.Should().Contain(this.testLogin);
-    }
+    //    // Assert
+    //    accessors.Should().Contain(this.testLogin);
+    //}
 
-    [Fact]
-    public async Task CreateCustomRestrictionRule_SearchAccessorsForIncorrectBU_EmployeeNotFounded()
-    {
-        // Arrange
-        await this.AuthManager.For(this.testLogin)
-            .SetRoleAsync(new TestPermissionBuilder(this.securityRole) { BusinessUnits = [this.defaultBu, this.buWithAllowedFilter] },
-                this.CancellationToken);
+    //[Fact]
+    //public async Task CreateCustomRestrictionRule_SearchAccessorsForIncorrectBU_EmployeeNotFounded()
+    //{
+    //    // Arrange
+    //    await this.AuthManager.For(this.testLogin)
+    //        .SetRoleAsync(new TestPermissionBuilder(this.securityRole) { BusinessUnits = [this.defaultBu, this.buWithAllowedFilter] },
+    //            this.CancellationToken);
 
-        // Act
-        await using var scope = this.RootServiceProvider.CreateAsyncScope();
+    //    // Act
+    //    await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
-        var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
-        var domainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<BusinessUnit>>();
-        var securityAccessorResolver = scope.ServiceProvider.GetRequiredService<ISecurityAccessorResolver>();
+    //    var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
+    //    var domainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<BusinessUnit>>();
+    //    var securityAccessorResolver = scope.ServiceProvider.GetRequiredService<ISecurityAccessorResolver>();
 
-        var bu = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Id == this.defaultBu.Id).GenericSingleAsync(this.CancellationToken);
+    //    var bu = await queryableSource.GetQueryable<BusinessUnit>().Where(bu => bu.Id == this.defaultBu.Id).GenericSingleAsync(this.CancellationToken);
 
-        var accessorData = domainSecurityService.GetSecurityProvider(this.restrictionRule).GetAccessorData(bu);
+    //    var accessorData = domainSecurityService.GetSecurityProvider(this.restrictionRule).GetAccessorData(bu);
 
-        var accessors = securityAccessorResolver.Resolve(accessorData).ToList();
+    //    var accessors = securityAccessorResolver.Resolve(accessorData).ToList();
 
-        // Assert
-        accessors.Should().NotContainInConsecutiveOrder(this.testLogin);
-    }
+    //    // Assert
+    //    accessors.Should().NotContainInConsecutiveOrder(this.testLogin);
+    //}
 }

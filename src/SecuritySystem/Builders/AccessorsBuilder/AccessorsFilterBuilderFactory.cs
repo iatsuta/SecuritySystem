@@ -53,7 +53,9 @@ public class AccessorsFilterBuilderFactory<TPermission, TDomainObject>(
                 {
                     var filter = builder.GetAccessorsFilter(domainObject, securityRule.GetSafeExpandType());
 
-                    return permissionSystem.GetPermissionSource(securityRule).GetAccessors(filter);
+                    var permissionSource = permissionSystem.GetPermissionSource(securityRule);
+
+                    return permissionSource.GetAccessors(filter);
                 }));
 
         return new AccessorsFilterInfo<TDomainObject>(v => getAccessorsFunc.Value(v));

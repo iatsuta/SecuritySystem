@@ -42,23 +42,24 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
 
         var filterInfoDict = securityRule.GetSafeSecurityContextRestrictionFilters().ToDictionary(filterInfo => filterInfo.SecurityContextType);
 
-        var request =
+        return securityContextTypes.ToDictionary(
+            securityContextType => securityContextType,
+            securityContextType =>
+            {
+                var securityContextRestrictionFilterInfo = filterInfoDict.GetValueOrDefault(securityContextType);
 
-            from securityContextType in securityContextTypes
+                var baseIdents = rawRestrictions.GetValueOrDefault(securityContextType, Array.Empty<TSecurityContextObjectIdent>());
 
-            let baseIdents = rawRestrictions.GetValueOrDefault(securityContextType)
+                if (securityContextRestrictionFilterInfo == null)
+                {
+                    return baseIdents;
+                }
+                else
+                {
+                    return this.ApplySecurityContextFilter(baseIdents, securityContextRestrictionFilterInfo);
+                }
 
-            where baseIdents != null
-
-            let securityContextRestrictionFilterInfo = filterInfoDict.GetValueOrDefault(securityContextType)
-
-            let resultIdents = securityContextRestrictionFilterInfo == null
-                ? baseIdents
-                : this.ApplySecurityContextFilter(baseIdents, securityContextRestrictionFilterInfo)
-
-            select (securityContextType, resultIdents);
-
-        return request.ToDictionary();
+            });
     }
 
     private TSecurityContextObjectIdent[] ApplySecurityContextFilter(Array securityContextIdents, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
@@ -73,23 +74,18 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
         SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        if (baseSecurityContextIdents.Length == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(baseSecurityContextIdents), "The set of identifiers must not be empty");
-        }
-
         var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextObjectIdent>();
 
         var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path);
 
-        var resultIdents = filteredSecurityContextQueryable.Where(securityContextId => baseSecurityContextIdents.Contains(securityContextId)).ToArray();
-
-        if (resultIdents.Length == 0)
+        if (baseSecurityContextIdents.Any())
         {
-            throw new ArgumentOutOfRangeException(nameof(baseSecurityContextIdents),
-                "Invalid permission identifiers: the permission passed filtering unexpectedly before conversion");
+            return filteredSecurityContextQueryable.Where(securityContextId => baseSecurityContextIdents.Contains(securityContextId))
+                .ToArray();
         }
-
-        return resultIdents;
+        else
+        {
+            return filteredSecurityContextQueryable.ToArray();
+        }
     }
 }

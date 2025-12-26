@@ -37,14 +37,10 @@ public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityCon
 
 		var fullIdPath = securityPath.Expression!.Select(identityInfo.Id.Path);
 
-		return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
+        var expandExpressionQ = getIdents.Select(expandExpression);
+
+        return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
 		{
-			var expandExpressionQ =
-
-				from idents in getIdents
-
-				select ee.Evaluate(expandExpression, idents);
-
 			if (securityPath.Required)
 			{
 				return (domainObject, permission) =>

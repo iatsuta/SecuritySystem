@@ -88,7 +88,7 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
         var permissionRestrictions = queryableSource
             .GetQueryable<TPermissionRestriction>()
             .Where(restrictionBindingInfo.Permission.Path
-            .Select(permissionIdentityInfo.Id.Path).Select(id => permissionIdents.Contains(id)))
+                .Select(permissionIdentityInfo.Id.Path).Select(id => permissionIdents.Contains(id)))
             .ToList();
 
         return permissionIdents.GroupJoin(
@@ -106,6 +106,6 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
     {
         var availableFilter = availablePermissionSource.GetQueryable(securityRule with { CustomCredential = new SecurityRuleCredential.AnyUserCredential() });
 
-        return availableFilter.Select(bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path));
+        return availableFilter.Where(permissionFilter).Select(bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path));
     }
 }
