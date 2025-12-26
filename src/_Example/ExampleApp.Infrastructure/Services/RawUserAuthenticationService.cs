@@ -4,10 +4,8 @@ using SecuritySystem.Services;
 
 namespace ExampleApp.Infrastructure.Services;
 
-public class RawUserAuthenticationService(IHttpContextAccessor httpContextAccessor) : IRawUserAuthenticationService
+public class ExampleRawUserAuthenticationService(IUserCredentialNameResolver userCredentialNameResolver, IHttpContextAccessor httpContextAccessor)
+    : ImpersonateUserAuthenticationService(userCredentialNameResolver)
 {
-    public string GetUserName()
-    {
-        return httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "system";
-    }
+    protected override string GetPureUserName() => httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "system";
 }

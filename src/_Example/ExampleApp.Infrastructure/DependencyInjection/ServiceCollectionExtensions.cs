@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
                     sss
                         .SetQueryableSource<EfQueryableSource>()
                         .SetGenericRepository<EfGenericRepository>()
-                        .SetRawUserAuthenticationService<RawUserAuthenticationService>()
+                        .SetRawUserAuthenticationService<ExampleRawUserAuthenticationService>()
 
                         .AddUserSource<Employee>(usb => usb.SetRunAs(employee => employee.RunAs))
                         .AddUserSource<AuthGeneral.Principal>(usb =>

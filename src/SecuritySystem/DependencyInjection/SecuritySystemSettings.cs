@@ -188,7 +188,9 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 		    sc.AddSingleton<UserSourceInfo>(info);
 		    sc.AddSingleton(info);
 
-		    sc.AddScoped(typeof(IMissedUserService<TUser>), userSourceBuilder.MissedUserServiceType);
+            sc.AddScopedFrom<IUserSource, IUserSource<TUser>>();
+
+            sc.AddScoped(typeof(IMissedUserService<TUser>), userSourceBuilder.MissedUserServiceType);
 	    });
 
 	    if (userSourceBuilder.RunAsPath != null)
@@ -199,8 +201,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 			    {
 				    sc.AddSingleton(new UserSourceRunAsInfo<TUser>(userSourceBuilder.RunAsPath));
 				    sc.AddScoped<IRunAsManager, RunAsManager<TUser>>();
-
-                    sc.AddScopedFrom<IUserSource, IUserSource<TUser>>();
                 };
 		    }
 		    else
@@ -268,24 +268,19 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
+    public ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>(bool withImpersonate = true)
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService
     {
-        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScoped<IRawUserAuthenticationService, TRawUserAuthenticationService>();
+        this.registerRawUserAuthenticationServiceAction = sc =>
+        {
+            sc.AddScoped<TRawUserAuthenticationService>();
+            sc.AddScopedFrom<IRawUserAuthenticationService, TRawUserAuthenticationService>();
 
-        return this;
-    }
-
-    public ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector)
-    {
-        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScopedFrom(selector);
-
-        return this;
-    }
-
-    public ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProxyFactory, IRawUserAuthenticationService> selector)
-    {
-        this.registerRawUserAuthenticationServiceAction = sc => sc.AddScopedFrom(selector);
+            if (withImpersonate && typeof(IImpersonateService).IsAssignableFrom(typeof(TRawUserAuthenticationService)))
+            {
+                sc.AddScopedFrom<IImpersonateService>(sp => (IImpersonateService)sp.GetRequiredService(typeof(TRawUserAuthenticationService)));
+            }
+        };
 
         return this;
     }
