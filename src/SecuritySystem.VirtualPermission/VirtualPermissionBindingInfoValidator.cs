@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+using SecuritySystem.Validation;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -39,7 +40,7 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
 
             if (invalidTypes.Any())
             {
-                throw new Exception($"Invalid restriction types: {invalidTypes.Join(", ", t => t.Name)}");
+                throw new SecuritySystemValidationException($"Invalid restriction types: {invalidTypes.Join(", ", t => t.Name)}");
             }
 
             var missedTypes = securityContextRestrictions
@@ -50,7 +51,7 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
 
             if (missedTypes.Any())
             {
-                throw new Exception($"Missed required restriction types: {missedTypes.Join(", ", t => t.Name)}");
+                throw new SecuritySystemValidationException($"Missed required restriction types: {missedTypes.Join(", ", t => t.Name)}");
             }
         }
     }

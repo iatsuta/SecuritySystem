@@ -169,7 +169,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     {
 	    if (!userSourceTypes.Add(typeof(TUser)))
 	    {
-		    throw new Exception($"{nameof(UserSource<>)} for {typeof(TUser).Name} already initialized");
+		    throw new InvalidOperationException($"{nameof(UserSource<>)} for {typeof(TUser).Name} already initialized");
 	    }
 
 	    var userSourceBuilder = new UserSourceBuilder<TUser>();

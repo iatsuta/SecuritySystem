@@ -13,6 +13,6 @@ public class ClientSecurityRuleExpander(IClientSecurityRuleInfoSource clientSecu
     public DomainSecurityRule Expand(DomainSecurityRule.ClientSecurityRule securityRule)
     {
         return this.dict.GetValueOrDefault(securityRule)
-               ?? throw new Exception($"{nameof(DomainSecurityRule.ClientSecurityRule)} with name \"{securityRule.Name}\" not found");
+               ?? throw new ArgumentOutOfRangeException(nameof(securityRule), $"{nameof(DomainSecurityRule.ClientSecurityRule)} with name \"{securityRule.Name}\" not found");
     }
 }

@@ -30,7 +30,7 @@ public class RootAuthManager(
 
         var filter = visualIdentityInfo.Name.Path.Select(v => v == name);
 
-        return await queryableSourceEvaluator.EvaluateAsync(async queryableSource =>
+        return await queryableSourceEvaluator.EvaluateAsync(TestingScopeMode.Read, async queryableSource =>
         {
             var securityContext = await queryableSource.GetQueryable<TSecurityContext>().Where(filter).GenericSingleAsync(cancellationToken);
 

@@ -17,6 +17,6 @@ public class SecurityRuleHeaderExpander : ISecurityRuleHeaderExpander
     {
         return this.dict.GetValue(
             securityRuleHeader,
-            () => new Exception($"Implementation for {nameof(SecurityRule)} \"{securityRuleHeader}\" not found"));
+            () => new ArgumentOutOfRangeException(nameof(securityRuleHeader), $"Implementation for {nameof(SecurityRule)} \"{securityRuleHeader}\" not found"));
     }
 }

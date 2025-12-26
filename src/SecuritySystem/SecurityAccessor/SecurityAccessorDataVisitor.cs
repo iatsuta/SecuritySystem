@@ -4,26 +4,20 @@ public abstract class SecurityAccessorDataVisitor
 {
     public virtual SecurityAccessorData Visit(SecurityAccessorData baseData)
     {
-        switch (baseData)
+        return baseData switch
         {
-            case SecurityAccessorData.FixedSecurityAccessorData result:
-                return this.Visit(result);
+            SecurityAccessorData.FixedSecurityAccessorData result => this.Visit(result),
 
-            case SecurityAccessorData.AndSecurityAccessorData result:
-                return this.Visit(result);
+            SecurityAccessorData.AndSecurityAccessorData result => this.Visit(result),
 
-            case SecurityAccessorData.OrSecurityAccessorData result:
-                return this.Visit(result);
+            SecurityAccessorData.OrSecurityAccessorData result => this.Visit(result),
 
-            case SecurityAccessorData.InfinitySecurityAccessorData result:
-                return this.Visit(result);
+            SecurityAccessorData.InfinitySecurityAccessorData result => this.Visit(result),
 
-            case SecurityAccessorData.NegateSecurityAccessorData result:
-                return this.Visit(result);
+            SecurityAccessorData.NegateSecurityAccessorData result => this.Visit(result),
 
-            default:
-                throw new ArgumentOutOfRangeException(nameof(baseData));
-        }
+            _ => throw new ArgumentOutOfRangeException(nameof(baseData))
+        };
     }
 
     public virtual SecurityAccessorData Visit(SecurityAccessorData.FixedSecurityAccessorData result)

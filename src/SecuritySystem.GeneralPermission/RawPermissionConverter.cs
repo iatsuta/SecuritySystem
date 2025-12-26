@@ -87,7 +87,7 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
         if (resultIdents.Length == 0)
         {
             throw new ArgumentOutOfRangeException(nameof(baseSecurityContextIdents),
-                "Invalid permission identifiers: the permission passed filtering unexpectedly before conversion.");
+                "Invalid permission identifiers: the permission passed filtering unexpectedly before conversion");
         }
 
         return resultIdents;

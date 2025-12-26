@@ -53,7 +53,7 @@ public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction,
 
                 if (!this.IsAllowed(securityContextId, restrictionFilterInfo))
                 {
-                    throw new SecuritySystemValidationException($"SecurityContext: '{securityContextId}' denied by filter.");
+                    throw new SecuritySystemValidationException($"SecurityContext: '{securityContextId}' denied by filter");
                 }
             }
         }

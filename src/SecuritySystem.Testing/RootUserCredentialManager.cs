@@ -24,7 +24,7 @@ public class RootUserCredentialManager(
 
     public async Task<SecurityIdentity> CreatePrincipalAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ManagerEvaluator.EvaluateAsync(manger => manger.CreatePrincipalAsync(cancellationToken));
+        return await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, manger => manger.CreatePrincipalAsync(cancellationToken));
     }
 
     public SecurityIdentity SetAdminRole()
@@ -41,6 +41,7 @@ public class RootUserCredentialManager(
     {
         return this.SetRoleAsync(permissions).GetAwaiter().GetResult();
     }
+
     public async Task<SecurityIdentity> SetRoleAsync(TestPermission permission, CancellationToken cancellationToken = default)
     {
         return await this.SetRoleAsync([permission], cancellationToken);
@@ -60,8 +61,7 @@ public class RootUserCredentialManager(
         await this.AddRoleAsync([permission], cancellationToken);
 
     public async Task<SecurityIdentity> AddRoleAsync(TestPermission[] permissions, CancellationToken cancellationToken = default) =>
-        await this.ManagerEvaluator.EvaluateAsync(
-            async manger => await manger.AddUserRoleAsync(permissions, cancellationToken));
+        await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, async manger => await manger.AddUserRoleAsync(permissions, cancellationToken));
 
     public void ClearRoles()
     {
@@ -70,7 +70,7 @@ public class RootUserCredentialManager(
 
     public async Task ClearRolesAsync(CancellationToken cancellationToken = default)
     {
-        await this.ManagerEvaluator.EvaluateAsync(async manager => await manager.RemovePermissionsAsync(cancellationToken));
+        await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, async manager => await manager.RemovePermissionsAsync(cancellationToken));
     }
 
     public ManagedPrincipal GetPrincipal()
@@ -80,6 +80,6 @@ public class RootUserCredentialManager(
 
     public async Task<ManagedPrincipal> GetPrincipalAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ManagerEvaluator.EvaluateAsync(async manager => await manager.GetPrincipalAsync(cancellationToken));
+        return await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Read, async manager => await manager.GetPrincipalAsync(cancellationToken));
     }
 }
