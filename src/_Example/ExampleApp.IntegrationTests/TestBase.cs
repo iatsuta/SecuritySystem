@@ -29,20 +29,24 @@ public abstract class TestBase : IAsyncLifetime
                 .AddSecuritySystemTesting()
 
                 .AddValidator<DuplicateServiceUsageValidator>()
-                //.Validate()
+                .Validate()
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 
+    protected CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     protected RootAuthManager AuthManager => this.RootServiceProvider.GetRequiredService<RootAuthManager>();
 
-    public async ValueTask InitializeAsync()
+    protected ITestingUserAuthenticationService AuthenticationService => this.RootServiceProvider.GetRequiredService<ITestingUserAuthenticationService>();
+
+    public virtual async ValueTask InitializeAsync()
     {
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
-        await scope.ServiceProvider.GetRequiredService<InitController>().TestInitialize();
+        await scope.ServiceProvider.GetRequiredService<InitController>().TestInitialize(CancellationToken);
     }
 
-    public async ValueTask DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
     }
 }

@@ -2,6 +2,7 @@
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
+
 using CommonFramework.DependencyInjection;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
@@ -58,7 +59,7 @@ public class GeneralPermissionRestrictionSource<TPermission, TPermissionRestrict
 
     public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr()
     {
-        var restrictionFilter = permissionRestrictionFilterFactory.CreateFilter(this.restrictionFilterInfo);
+        var restrictionFilter = this.restrictionFilterInfo == null ? _ => true : permissionRestrictionFilterFactory.CreateFilter(this.restrictionFilterInfo);
 
         var restrictionQueryable = queryableSource.GetQueryable<TPermissionRestriction>();
 

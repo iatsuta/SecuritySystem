@@ -14,17 +14,16 @@ public class VirtualPermissionTests : TestBase
     public async Task Impersonate_LoadTestObjects_DataCorrected(string runAs, string[] expectedBuList)
     {
         // Arrange
-        var cancellationToken = TestContext.Current.CancellationToken;
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
         var runAsManager = scope.ServiceProvider.GetRequiredService<IRunAsManager>();
-        await runAsManager.StartRunAsUserAsync(runAs, cancellationToken);
+        await runAsManager.StartRunAsUserAsync(runAs, this.CancellationToken);
 
         // Act
-        var currentUserLogin = await testController.GetCurrentUserLogin(cancellationToken);
-        var testObjects = await testController.GetTestObjects(cancellationToken);
+        var currentUserLogin = await testController.GetCurrentUserLogin(this.CancellationToken);
+        var testObjects = await testController.GetTestObjects(this.CancellationToken);
 
         // Assert
         runAs.Should().Be(currentUserLogin);
@@ -45,17 +44,16 @@ public class VirtualPermissionTests : TestBase
     public async Task Impersonate_LoadBuByAncestorView_DataCorrected(string runAs, string[] expectedBuList)
     {
         // Arrange
-        var cancellationToken = TestContext.Current.CancellationToken;
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
         var runAsManager = scope.ServiceProvider.GetRequiredService<IRunAsManager>();
-        await runAsManager.StartRunAsUserAsync(runAs, cancellationToken);
+        await runAsManager.StartRunAsUserAsync(runAs, this.CancellationToken);
 
         // Act
-        var currentUserLogin = await testController.GetCurrentUserLogin(cancellationToken);
-        var buList = await testController.GetBuList(cancellationToken);
+        var currentUserLogin = await testController.GetCurrentUserLogin(this.CancellationToken);
+        var buList = await testController.GetBuList(this.CancellationToken);
 
         // Assert
         runAs.Should().Be(currentUserLogin);

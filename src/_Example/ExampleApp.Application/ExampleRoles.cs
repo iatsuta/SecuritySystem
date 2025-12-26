@@ -8,5 +8,7 @@ public static class ExampleRoles
 
     public static SecurityRole BuManager { get; } = new(nameof(BuManager));
 
-    public static SecurityRole OtherRole { get; } = new(nameof(OtherRole));
+    public static SecurityRole DefaultRole { get; } = new(nameof(DefaultRole));
+
+    public static SecurityRole WithRestrictionFilterRole { get; } = new(nameof(WithRestrictionFilterRole));
 }

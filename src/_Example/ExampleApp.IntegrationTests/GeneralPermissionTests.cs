@@ -8,6 +8,7 @@ using GenericQueryable;
 using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem.AvailableSecurity;
 using SecuritySystem.DomainServices;
+using SecuritySystem.Testing;
 
 namespace ExampleApp.IntegrationTests;
 
@@ -17,25 +18,24 @@ public class GeneralPermissionTests : TestBase
     public async Task AssignGeneralPermission_PermissionResolved()
     {
         // Arrange
-        var cancellationToken = TestContext.Current.CancellationToken;
         var principalName = "TestPrincipal";
 
-        var buIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>("TestRootBu", cancellationToken);
+        var buIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>("TestRootBu", this.CancellationToken);
 
         var testRole = ExampleRoles.BuManager;
 
-        var testPermission = new ExampleTestPermission(testRole) { BusinessUnit = buIdentity };
+        var testPermission = new TestPermissionBuilder(testRole) { BusinessUnit = buIdentity };
 
-        var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(testPermission, cancellationToken);
+        var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(testPermission, this.CancellationToken);
         this.AuthManager.For(principalName).LoginAs();
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
         var availableSecurityRoleSource = scope.ServiceProvider.GetRequiredService<IAvailableSecurityRoleSource>();
 
         // Act
-        var availableSecurityRoles = await availableSecurityRoleSource.GetAvailableSecurityRoles(true, cancellationToken);
+        var availableSecurityRoles = await availableSecurityRoleSource.GetAvailableSecurityRoles(true, this.CancellationToken);
 
-        var managedPrincipal = await this.AuthManager.For(principalName).GetPrincipalAsync(cancellationToken);
+        var managedPrincipal = await this.AuthManager.For(principalName).GetPrincipalAsync(this.CancellationToken);
 
         // Assert
         availableSecurityRoles.Should().BeEquivalentTo([testRole]);
@@ -54,16 +54,15 @@ public class GeneralPermissionTests : TestBase
     public async Task AssignGeneralPermission_WithRootBu_AllTestObjectsResolved()
     {
         // Arrange
-        var cancellationToken = TestContext.Current.CancellationToken;
         var principalName = "TestPrincipal";
 
-        var buIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>("TestRootBu", cancellationToken);
+        var buIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>("TestRootBu", this.CancellationToken);
 
         var testRole = ExampleRoles.BuManager;
 
-        var testPermission = new ExampleTestPermission(testRole) { BusinessUnit = buIdentity };
+        var testPermission = new TestPermissionBuilder(testRole) { BusinessUnit = buIdentity };
 
-        var principalId = await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.OtherRole], cancellationToken);
+        var principalId = await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.DefaultRole], this.CancellationToken);
         this.AuthManager.For(principalId).LoginAs();
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
@@ -76,10 +75,10 @@ public class GeneralPermissionTests : TestBase
         var testObjectRepositoryFactory = scope.ServiceProvider.GetRequiredService<IRepositoryFactory<TestObject>>();
         var testObjectRepository = testObjectRepositoryFactory.Create(testRole);
 
-        var expectedResult = await queryableSource.GetQueryable<TestObject>().GenericToListAsync(cancellationToken);
+        var expectedResult = await queryableSource.GetQueryable<TestObject>().GenericToListAsync(this.CancellationToken);
 
         // Act
-        var result = await testObjectRepository.GetQueryable().GenericToListAsync(cancellationToken);
+        var result = await testObjectRepository.GetQueryable().GenericToListAsync(this.CancellationToken);
 
         // Assert
         result.OrderBy(v => v.Id).Should().BeEquivalentTo(expectedResult.OrderBy(v => v.Id));
