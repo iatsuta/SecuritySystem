@@ -1,8 +1,4 @@
-﻿using CommonFramework.DependencyInjection;
-
-using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.Services;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.Testing.DependencyInjection;
 
@@ -10,19 +6,15 @@ public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddSecuritySystemTesting()
+        public IServiceCollection AddSecuritySystemTesting(Action<ISecuritySystemTestingBuilder>? setup = null)
         {
-            return services
-                .AddSingleton<TestingUserAuthenticationService>()
-                .AddSingletonFrom<ITestingUserAuthenticationService, TestingUserAuthenticationService>()
-                .ReplaceScopedFrom<IRawUserAuthenticationService, TestingUserAuthenticationService>()
+            var builder = new SecuritySystemTestingBuilder();
 
-                .AddScoped(typeof(UserCredentialManager))
+            setup?.Invoke(builder);
 
-                .AddSingleton<RootAuthManager>()
-                .AddSingleton(AdministratorsRoleList.Default)
-                .AddSingleton(TestRootUserInfo.Default)
-                .AddSingleton(typeof(ITestingEvaluator<>), typeof(TestingEvaluator<>));
+            builder.Initialize(services);
+
+            return services;
         }
     }
 }

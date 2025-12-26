@@ -73,10 +73,6 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
 	    where TGenericRepository : class, IGenericRepository;
 
-	ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>()
+	ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>(bool withImpersonate = true)
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService;
-
-    ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProvider, IRawUserAuthenticationService> selector);
-
-    ISecuritySystemSettings SetRawUserAuthenticationService(Func<IServiceProxyFactory, IRawUserAuthenticationService> selector);
 }

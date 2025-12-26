@@ -3,11 +3,9 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.Testing;
 
-public interface ITestingUserAuthenticationService : IRawUserAuthenticationService
+public interface ITestingUserAuthenticationService : IRawUserAuthenticationService, IImpersonateService
 {
     void SetUser(UserCredential? customUserCredential);
 
     void Reset();
-
-    Task<T> WithImpersonateAsync<T>(UserCredential customUserCredential, Func<Task<T>> func);
 }

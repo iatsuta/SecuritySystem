@@ -19,7 +19,7 @@ public class TestingUserAuthenticationService(
 
                 _ => credentialNameResolverEvaluator.EvaluateAsync(async resolver => resolver.GetUserName(userCredential)).GetAwaiter().GetResult()
             };
-        });
+        }).WithLock();
 
     private string DefaultTestUserName => testRootUserInfo.Name;
 
