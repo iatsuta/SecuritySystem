@@ -1,9 +1,10 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 
-using System.Linq.Expressions;
-using CommonFramework.DependencyInjection;
 using SecuritySystem.Services;
+
+using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -36,7 +37,8 @@ public class PermissionFilterFactory<TPermission>(IServiceProxyFactory servicePr
 public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
     IQueryableSource queryableSource,
-    IPermissionRestrictionFilterFactory<TPermissionRestriction> permissionRestrictionFilterFactory) : IPermissionFilterFactory<TPermission>
+    IPermissionRestrictionFilterFactory<TPermissionRestriction> permissionRestrictionFilterFactory,
+    IPermissionRestrictionTypeFilterFactory<TPermissionRestriction> permissionRestrictionTypeFilterFactory) : IPermissionFilterFactory<TPermission>
     where TPermissionRestriction : class
 {
     public Expression<Func<TPermission, bool>> CreateFilter(SecurityContextRestriction securityContextRestriction)
@@ -48,15 +50,37 @@ public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecur
 
     public Expression<Func<TPermission, bool>> CreateFilter<TSecurityContext>(
         SecurityContextRestriction<TSecurityContext> securityContextRestriction)
+        where TSecurityContext : class, ISecurityContext =>
+        this.CreateRequiredFilter(securityContextRestriction).BuildAnd(this.CreateRestrictionFilter(securityContextRestriction));
+
+    public Expression<Func<TPermission, bool>> CreateRestrictionFilter<TSecurityContext>(
+        SecurityContextRestriction<TSecurityContext> securityContextRestriction)
+        where TSecurityContext : class, ISecurityContext
+    {
+        if (securityContextRestriction.Filter != null)
+        {
+            var permissionQueryable = queryableSource
+                .GetQueryable<TPermissionRestriction>()
+                .Where(permissionRestrictionFilterFactory.CreateFilter(securityContextRestriction.Filter))
+                .Select(restrictionBindingInfo.Permission.Path);
+
+            return permission => permissionQueryable.Contains(permission);
+        }
+        else
+        {
+            return _ => true;
+        }
+    }
+
+    public Expression<Func<TPermission, bool>> CreateRequiredFilter<TSecurityContext>(
+        SecurityContextRestriction<TSecurityContext> securityContextRestriction)
         where TSecurityContext : class, ISecurityContext
     {
         if (securityContextRestriction.Required)
         {
-            var typeFilter = permissionRestrictionFilterFactory.CreateFilter(securityContextRestriction.Filter);
-
             var permissionQueryable = queryableSource
                 .GetQueryable<TPermissionRestriction>()
-                .Where(typeFilter)
+                .Where(permissionRestrictionTypeFilterFactory.CreateFilter<TSecurityContext>())
                 .Select(restrictionBindingInfo.Permission.Path);
 
             return permission => permissionQueryable.Contains(permission);
