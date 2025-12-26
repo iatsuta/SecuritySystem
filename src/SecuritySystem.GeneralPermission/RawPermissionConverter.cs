@@ -73,17 +73,23 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
         SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
+        if (baseSecurityContextIdents.Length == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(baseSecurityContextIdents), "The set of identifiers must not be empty");
+        }
+
         var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextObjectIdent>();
 
         var filteredSecurityContextQueryable = securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path);
 
-        if (baseSecurityContextIdents.Any())
+        var resultIdents = filteredSecurityContextQueryable.Where(securityContextId => baseSecurityContextIdents.Contains(securityContextId)).ToArray();
+
+        if (resultIdents.Length == 0)
         {
-            return filteredSecurityContextQueryable.Where(securityContextId => baseSecurityContextIdents.Contains(securityContextId)).ToArray();
+            throw new ArgumentOutOfRangeException(nameof(baseSecurityContextIdents),
+                "Invalid permission identifiers: the permission passed filtering unexpectedly before conversion.");
         }
-        else
-        {
-            return filteredSecurityContextQueryable.ToArray();
-        }
+
+        return resultIdents;
     }
 }

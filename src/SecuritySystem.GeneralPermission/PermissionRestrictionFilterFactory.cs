@@ -1,9 +1,10 @@
 ﻿using CommonFramework;
 using CommonFramework.IdentitySource;
+using CommonFramework.DependencyInjection;
+
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -26,7 +27,7 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction>(
     });
 
     public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>(
-        SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
+        SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
         return this.lazyInnerService.Value.CreateFilter(restrictionFilterInfo);
@@ -37,31 +38,20 @@ public class PermissionRestrictionFilterFactory<TPermissionRestriction, TSecurit
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
     IIdentityInfoSource identityInfoSource,
     ISecurityContextSource securityContextSource,
-    ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentConverter,
-    IPermissionRestrictionTypeFilterFactory<TPermissionRestriction> permissionRestrictionTypeFilterFactory)
+    ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentConverter)
     : IPermissionRestrictionFilterFactory<TPermissionRestriction>
 
     where TSecurityContextObjectIdent : notnull
 {
-    public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>(
-        SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
+    public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>(SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
-        var baseFilter = permissionRestrictionTypeFilterFactory.CreateFilter<TSecurityContext>();
+        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext>();
 
-        if (restrictionFilterInfo == null)
-        {
-            return baseFilter;
-        }
-        else
-        {
-            var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext>();
-
-            return new Func<SecurityContextRestrictionFilterInfo<ISecurityContext>, IdentityInfo<ISecurityContext, Ignore>,
-                    Expression<Func<TPermissionRestriction, bool>>>(this.CreateRestrictionFilter)
-                .CreateGenericMethod(typeof(TSecurityContext), identityInfo.IdentityType)
-                .Invoke<Expression<Func<TPermissionRestriction, bool>>>(this, restrictionFilterInfo, identityInfo);
-        }
+        return new Func<SecurityContextRestrictionFilterInfo<ISecurityContext>, IdentityInfo<ISecurityContext, Ignore>,
+                Expression<Func<TPermissionRestriction, bool>>>(this.CreateRestrictionFilter)
+            .CreateGenericMethod(typeof(TSecurityContext), identityInfo.IdentityType)
+            .Invoke<Expression<Func<TPermissionRestriction, bool>>>(this, restrictionFilterInfo, identityInfo);
     }
 
     public Expression<Func<TPermissionRestriction, bool>> CreateRestrictionFilter<TSecurityContext, TSecurityContextIdent>(
