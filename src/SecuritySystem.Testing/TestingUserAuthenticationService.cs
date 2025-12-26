@@ -17,7 +17,7 @@ public class TestingUserAuthenticationService(
             {
                 UserCredential.NamedUserCredential { Name: var name } => name,
 
-                _ => credentialNameResolverEvaluator.EvaluateAsync(async resolver => resolver.GetUserName(userCredential)).GetAwaiter().GetResult()
+                _ => credentialNameResolverEvaluator.EvaluateAsync(TestingScopeMode.Read, async resolver => resolver.GetUserName(userCredential)).GetAwaiter().GetResult()
             };
         }).WithLock();
 

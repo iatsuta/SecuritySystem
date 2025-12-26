@@ -4,9 +4,9 @@ public static class TestingEvaluatorExtensions
 {
     extension<TService>(ITestingEvaluator<TService> testingEvaluator)
     {
-        public async Task EvaluateAsync(Func<TService, Task> evaluate)
+        public async Task EvaluateAsync(TestingScopeMode mode, Func<TService, Task> evaluate)
         {
-            await testingEvaluator.EvaluateAsync(async service =>
+            await testingEvaluator.EvaluateAsync(mode, async service =>
             {
                 await evaluate(service);
 
@@ -26,11 +26,11 @@ public static class TestingEvaluatorExtensions
     }
 
     private class ChangedTestingEvaluator<TService, TNewService>(ITestingEvaluator<TService> baseEvaluator, Func<TService, Task<TNewService>> selector)
-        : ITestingEvaluator<TNewService>
+        : ITestingEvaluator< TNewService>
     {
-        public async Task<TResult> EvaluateAsync<TResult>(Func<TNewService, Task<TResult>> evaluate)
+        public async Task<TResult> EvaluateAsync<TResult>(TestingScopeMode mode, Func<TNewService, Task<TResult>> evaluate)
         {
-            return await baseEvaluator.EvaluateAsync(async baseService =>
+            return await baseEvaluator.EvaluateAsync(mode, async baseService =>
             {
                 var newService = await selector(baseService);
 

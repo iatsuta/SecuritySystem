@@ -53,7 +53,7 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
             }
             else
             {
-                throw new Exception($"{nameof(SecurityContextInfo)} with {nameof(identity)} '{identity}' not found");
+                throw new ArgumentOutOfRangeException(nameof(identity), $"{nameof(SecurityContextInfo)} with {nameof(identity)} '{identity}' not found");
             }
         });
     }

@@ -6,37 +6,24 @@ public class RawSecurityAccessorResolver(ISecurityAccessorInfinityStorage infini
 
     public virtual IEnumerable<string> Resolve(SecurityAccessorData securityAccessorData)
     {
-        switch (securityAccessorData)
+        return securityAccessorData switch
         {
-            case SecurityAccessorData.FixedSecurityAccessorData fixedResult:
-                return fixedResult.Items;
+            SecurityAccessorData.FixedSecurityAccessorData fixedResult => fixedResult.Items,
 
-            case SecurityAccessorData.AndSecurityAccessorData
-            {
-                Right: SecurityAccessorData.NegateSecurityAccessorData right
-            } andNegateResult:
-                return this.Resolve(andNegateResult.Left).Except(
-                    this.Resolve(right.InnerData),
-                    StringComparer.CurrentCultureIgnoreCase);
+            SecurityAccessorData.AndSecurityAccessorData { Right: SecurityAccessorData.NegateSecurityAccessorData right } andNegateResult =>
+                this.Resolve(andNegateResult.Left).Except(this.Resolve(right.InnerData), StringComparer.CurrentCultureIgnoreCase),
 
-            case SecurityAccessorData.AndSecurityAccessorData andResult:
-                return this.Resolve(andResult.Left).Intersect(
-                    this.Resolve(andResult.Right),
-                    StringComparer.CurrentCultureIgnoreCase);
+            SecurityAccessorData.AndSecurityAccessorData andResult => this.Resolve(andResult.Left)
+                .Intersect(this.Resolve(andResult.Right), StringComparer.CurrentCultureIgnoreCase),
 
-            case SecurityAccessorData.OrSecurityAccessorData orResult:
-                return this.Resolve(orResult.Left).Union(
-                    this.Resolve(orResult.Right),
-                    StringComparer.CurrentCultureIgnoreCase);
+            SecurityAccessorData.OrSecurityAccessorData orResult => this.Resolve(orResult.Left)
+                .Union(this.Resolve(orResult.Right), StringComparer.CurrentCultureIgnoreCase),
 
-            case SecurityAccessorData.InfinitySecurityAccessorData:
-                return infinityStorage.GetInfinityData();
+            SecurityAccessorData.InfinitySecurityAccessorData => infinityStorage.GetInfinityData(),
 
-            case SecurityAccessorData.NegateSecurityAccessorData negateResult:
-                return infinityStorage.GetInfinityData().Except(this.Resolve(negateResult.InnerData));
+            SecurityAccessorData.NegateSecurityAccessorData negateResult => infinityStorage.GetInfinityData().Except(this.Resolve(negateResult.InnerData)),
 
-            default:
-                throw new ArgumentOutOfRangeException(nameof(securityAccessorData));
-        }
+            _ => throw new ArgumentOutOfRangeException(nameof(securityAccessorData))
+        };
     }
 }

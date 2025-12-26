@@ -225,7 +225,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     {
         if (!managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
         {
-            throw new Exception("wrong typed permission");
+            throw new SecuritySystemException("wrong typed permission");
         }
 
         var securityRole = securityRoleSource.GetSecurityRole(managedPermission.SecurityRole);
@@ -280,7 +280,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     {
         if (managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
         {
-            throw new Exception("wrong typed permission");
+            throw new SecuritySystemException("wrong typed permission");
         }
 
         var securityRole = generalBindingInfo

@@ -44,7 +44,7 @@ public class ExistsPermissionRestrictionValidator<TPermissionRestriction, TSecur
 
         if (!typedSecurityContextStorage.IsExists(TypedSecurityIdentity.Create(securityContextObjectId)))
         {
-            throw new SecuritySystemValidationException($"{securityContextType.Name} with id '{securityContextObjectId}' not exists.");
+            throw new SecuritySystemValidationException($"{securityContextType.Name} with id '{securityContextObjectId}' not exists");
         }
     }
 }

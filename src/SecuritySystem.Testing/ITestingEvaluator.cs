@@ -2,5 +2,5 @@
 
 public interface ITestingEvaluator<out TService>
 {
-    Task<TResult> EvaluateAsync<TResult>(Func<TService, Task<TResult>> evaluate);
+    Task<TResult> EvaluateAsync<TResult>(TestingScopeMode mode, Func<TService, Task<TResult>> evaluate);
 }

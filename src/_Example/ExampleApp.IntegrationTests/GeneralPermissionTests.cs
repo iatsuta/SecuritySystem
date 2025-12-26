@@ -6,7 +6,6 @@ using ExampleApp.Domain;
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.AvailableSecurity;
 using SecuritySystem.DomainServices;
 
@@ -64,14 +63,13 @@ public class GeneralPermissionTests : TestBase
 
         var testPermission = new ExampleTestPermission(testRole) { BusinessUnit = buIdentity };
 
-        await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.OtherRole], cancellationToken);
-        this.AuthManager.For(principalName).LoginAs();
+        var principalId = await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.OtherRole], cancellationToken);
+        this.AuthManager.For(principalId).LoginAs();
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
 
         var testObjectDomainSecurityService = scope.ServiceProvider.GetRequiredService<IDomainSecurityService<TestObject>>();
         var securityProvider = testObjectDomainSecurityService.GetSecurityProvider(testRole);
-
 
         var queryableSource = scope.ServiceProvider.GetRequiredService<IQueryableSource>();
 
@@ -91,4 +89,5 @@ public class GeneralPermissionTests : TestBase
             securityProvider.HasAccess(testObject).Should().Be(true);
         }
     }
+
 }

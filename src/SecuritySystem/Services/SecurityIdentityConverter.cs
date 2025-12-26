@@ -43,7 +43,7 @@ public class SecurityIdentityConverter<TIdent>(IFormatProviderSource formatProvi
         }
         else
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
     }
 

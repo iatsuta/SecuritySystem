@@ -4,6 +4,6 @@ public class FakeSecurityAccessorInfinityStorage : ISecurityAccessorInfinityStor
 {
     public IEnumerable<string> GetInfinityData()
     {
-        throw new Exception("Use 'SetSecurityAccessorInfinityStorage' for initialize infinity storage");
+        throw new InvalidOperationException("Use 'SetSecurityAccessorInfinityStorage' for initialize infinity storage");
     }
 }

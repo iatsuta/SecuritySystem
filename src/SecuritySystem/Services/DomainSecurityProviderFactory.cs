@@ -130,7 +130,7 @@ public class DomainSecurityProviderFactory<TDomainObject>(
             case DomainSecurityRule.DomainModeSecurityRule:
             case DomainSecurityRule.SecurityRuleHeader:
             case DomainSecurityRule.ClientSecurityRule:
-                throw new Exception("Must be optimized");
+                throw new SecuritySystemException("Must be optimized");
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(baseSecurityRule));

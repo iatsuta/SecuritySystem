@@ -16,7 +16,7 @@ public class SecurityRoleExpander : ISecurityRoleExpander
                 {
                     if (securityRule.SecurityRoles.Count == 0)
                     {
-                        throw new Exception("The list of security roles cannot be empty.");
+                        throw new ArgumentOutOfRangeException(nameof(securityRule), "The list of security roles cannot be empty");
                     }
 
                     var securityRoles = securityRoleSource.SecurityRoles

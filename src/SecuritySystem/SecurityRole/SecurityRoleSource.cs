@@ -35,7 +35,7 @@ public class SecurityRoleSource : ISecurityRoleSource
     public FullSecurityRole GetSecurityRole(SecurityRole securityRole) => this.GetSecurityRole(securityRole.Name);
 
     public FullSecurityRole GetSecurityRole(string name) =>
-        this.nameDict.GetValueOrDefault(name) ?? throw new Exception($"{nameof(SecurityRole)} with name '{name}' not found");
+        this.nameDict.GetValueOrDefault(name) ?? throw new ArgumentOutOfRangeException(nameof(name), $"{nameof(SecurityRole)} with name '{name}' not found");
 
     public FullSecurityRole GetSecurityRole(SecurityIdentity identity)
     {
@@ -49,7 +49,7 @@ public class SecurityRoleSource : ISecurityRoleSource
             }
             else
             {
-                throw new Exception($"SecurityRole with {nameof(identity)} '{identity}' not found");
+                throw new ArgumentOutOfRangeException(nameof(identity), $"SecurityRole with {nameof(identity)} '{identity}' not found");
             }
         });
     }

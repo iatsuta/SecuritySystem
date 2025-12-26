@@ -5,7 +5,7 @@ namespace SecuritySystem.Testing;
 public class TestingEvaluator<TService>(IServiceProvider rootServiceProvider) : ITestingEvaluator<TService>
     where TService : notnull
 {
-    public async Task<TResult> EvaluateAsync<TResult>(Func<TService, Task<TResult>> evaluate)
+    public async Task<TResult> EvaluateAsync<TResult>(TestingScopeMode mode, Func<TService, Task<TResult>> evaluate)
     {
         await using var scope = rootServiceProvider.CreateAsyncScope();
 

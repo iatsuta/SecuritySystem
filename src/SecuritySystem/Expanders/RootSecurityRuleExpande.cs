@@ -43,32 +43,25 @@ public class RootSecurityRuleExpander(
 
     public DomainSecurityRule.ExpandedRolesSecurityRule FullRoleExpand(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        switch (securityRule)
+        return securityRule switch
         {
-            case DomainSecurityRule.AnyRoleSecurityRule:
+            DomainSecurityRule.AnyRoleSecurityRule => DomainSecurityRule.ExpandedRolesSecurityRule.Create(securityRoleSource.SecurityRoles)
+                .TryApplyCustoms(securityRule),
 
-                return DomainSecurityRule.ExpandedRolesSecurityRule.Create(securityRoleSource.SecurityRoles).TryApplyCustoms(securityRule);
+            DomainSecurityRule.RoleGroupSecurityRule roleGroupSecurityRule => roleGroupSecurityRule.Children.Select(this.FullRoleExpand)
+                .Aggregate(DomainSecurityRule.ExpandedRolesSecurityRule.Empty, (r1, r2) => r1 + r2)
+                .TryApplyCustoms(securityRule),
 
-            case DomainSecurityRule.RoleGroupSecurityRule roleGroupSecurityRule:
-                return roleGroupSecurityRule.Children.Select(this.FullRoleExpand)
-                                            .Aggregate(DomainSecurityRule.ExpandedRolesSecurityRule.Empty, (r1, r2) => r1 + r2)
-                                            .TryApplyCustoms(securityRule);
+            DomainSecurityRule.OperationSecurityRule operationSecurityRule => this.Expand(this.Expand(operationSecurityRule)),
 
-            case DomainSecurityRule.OperationSecurityRule operationSecurityRule:
-                return this.Expand(this.Expand(operationSecurityRule));
+            DomainSecurityRule.NonExpandedRolesSecurityRule nonExpandedRolesSecurityRule => this.Expand(nonExpandedRolesSecurityRule),
 
-            case DomainSecurityRule.NonExpandedRolesSecurityRule nonExpandedRolesSecurityRule:
-                return this.Expand(nonExpandedRolesSecurityRule);
+            DomainSecurityRule.ExpandedRolesSecurityRule expandedRolesSecurityRule => expandedRolesSecurityRule,
 
-            case DomainSecurityRule.ExpandedRolesSecurityRule expandedRolesSecurityRule:
-                return expandedRolesSecurityRule;
+            DomainSecurityRule.RoleFactorySecurityRule dynamicRoleSecurityRule => this.FullRoleExpand(this.Expand(dynamicRoleSecurityRule)),
 
-            case DomainSecurityRule.RoleFactorySecurityRule dynamicRoleSecurityRule:
-                return this.FullRoleExpand(this.Expand(dynamicRoleSecurityRule));
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(securityRule));
-        }
+            _ => throw new ArgumentOutOfRangeException(nameof(securityRule))
+        };
     }
 
     public DomainSecurityRule FullDomainExpand(DomainSecurityRule securityRule)

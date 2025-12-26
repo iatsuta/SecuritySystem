@@ -19,7 +19,7 @@ public class SecurityOperationExpander(ISecurityRoleSource securityRoleSource, I
 
                 if (securityRoles.Length == 0)
                 {
-                    throw new Exception($"No security roles found for operation \"{securityRule.SecurityOperation}\"");
+                    throw new ArgumentOutOfRangeException(nameof(securityRule), $"No security roles found for operation \"{securityRule.SecurityOperation}\"");
                 }
 
                 return securityRoles.ToSecurityRule(

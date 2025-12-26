@@ -13,22 +13,21 @@ public class UserNameResolver<TUser>(
 
 	public string? Resolve(SecurityRuleCredential credential)
     {
-        switch (credential)
+        return credential switch
         {
-            case SecurityRuleCredential.CustomUserSecurityRuleCredential customUserSecurityRuleCredential:
-	            return simpleUserSource.TryGetUserAsync(customUserSecurityRuleCredential.UserCredential).GetAwaiter().GetResult()?.Name;
+            SecurityRuleCredential.CustomUserSecurityRuleCredential customUserSecurityRuleCredential => simpleUserSource
+                .TryGetUserAsync(customUserSecurityRuleCredential.UserCredential)
+                .GetAwaiter()
+                .GetResult()
+                ?.Name,
 
-            case SecurityRuleCredential.CurrentUserWithRunAsCredential:
-                return currentUser.Name;
+            SecurityRuleCredential.CurrentUserWithRunAsCredential => currentUser.Name,
 
-            case SecurityRuleCredential.CurrentUserWithoutRunAsCredential:
-                return rawUserAuthenticationService.GetUserName();
+            SecurityRuleCredential.CurrentUserWithoutRunAsCredential => rawUserAuthenticationService.GetUserName(),
 
-            case SecurityRuleCredential.AnyUserCredential:
-                return null;
+            SecurityRuleCredential.AnyUserCredential => null,
 
-            default:
-                throw new ArgumentOutOfRangeException(nameof(credential));
-        }
+            _ => throw new ArgumentOutOfRangeException(nameof(credential))
+        };
     }
 }
