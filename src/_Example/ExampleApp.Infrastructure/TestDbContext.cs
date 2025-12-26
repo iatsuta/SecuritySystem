@@ -59,7 +59,9 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 
 		    entity.Property(e => e.Name).IsRequired().HasMaxLength(DefaultMaxLength);
 		    entity.HasOne(e => e.Parent).WithMany().HasForeignKey($"{nameof(BusinessUnit.Parent)}{DefaultIdPostfix}").IsRequired(false);
-	    }
+
+            entity.Property(e => e.AllowedForFilterRole).IsRequired();
+        }
 	}
 
     private void InitAncestors(ModelBuilder modelBuilder)

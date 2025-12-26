@@ -7,7 +7,7 @@ using SecuritySystem.Services;
 
 namespace ExampleApp.IntegrationTests;
 
-public class VirtualPermissionTests : TestBase
+public class VirtualPermissionTests : TestBase  
 {
     [Theory]
     [MemberData(nameof(Impersonate_LoadTestObjects_DataCorrected_Cases))]
