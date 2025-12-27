@@ -50,44 +50,45 @@ public class PermissionFilterFactory<TPermission, TPermissionRestriction, TSecur
 
     public Expression<Func<TPermission, bool>> CreateFilter<TSecurityContext>(
         SecurityContextRestriction<TSecurityContext> securityContextRestriction)
-        where TSecurityContext : class, ISecurityContext =>
-        this.CreateRequiredFilter(securityContextRestriction).BuildAnd(this.CreateRestrictionFilter(securityContextRestriction));
-
-    public Expression<Func<TPermission, bool>> CreateRestrictionFilter<TSecurityContext>(
-        SecurityContextRestriction<TSecurityContext> securityContextRestriction)
         where TSecurityContext : class, ISecurityContext
     {
         if (securityContextRestriction.Filter != null)
         {
-            var permissionQueryable = queryableSource
-                .GetQueryable<TPermissionRestriction>()
-                .Where(permissionRestrictionFilterFactory.CreateFilter(securityContextRestriction.Filter))
-                .Select(restrictionBindingInfo.Permission.Path);
+            var restrictionFilter = this.CreateFilter(permissionRestrictionFilterFactory.CreateFilter(securityContextRestriction.Filter));
 
-            return permission => permissionQueryable.Contains(permission);
+            if (securityContextRestriction.Required)
+            {
+                return restrictionFilter;
+            }
+            else
+            {
+                return this.CreateFilter<TSecurityContext>().Not().BuildOr(restrictionFilter);
+            }
         }
         else
         {
-            return _ => true;
+            if (securityContextRestriction.Required)
+            {
+                return this.CreateFilter<TSecurityContext>();
+            }
+            else
+            {
+                return _ => true;
+            }
         }
     }
 
-    public Expression<Func<TPermission, bool>> CreateRequiredFilter<TSecurityContext>(
-        SecurityContextRestriction<TSecurityContext> securityContextRestriction)
-        where TSecurityContext : class, ISecurityContext
-    {
-        if (securityContextRestriction.Required)
-        {
-            var permissionQueryable = queryableSource
-                .GetQueryable<TPermissionRestriction>()
-                .Where(permissionRestrictionTypeFilterFactory.CreateFilter<TSecurityContext>())
-                .Select(restrictionBindingInfo.Permission.Path);
+    private Expression<Func<TPermission, bool>> CreateFilter<TSecurityContext>()
+        where TSecurityContext : class, ISecurityContext =>
+        this.CreateFilter(permissionRestrictionTypeFilterFactory.CreateFilter<TSecurityContext>());
 
-            return permission => permissionQueryable.Contains(permission);
-        }
-        else
-        {
-            return _ => true;
-        }
+    private Expression<Func<TPermission, bool>> CreateFilter(Expression<Func<TPermissionRestriction, bool>> permissionRestrictionFilter)
+    {
+        var permissionRestrictionQueryable = queryableSource
+            .GetQueryable<TPermissionRestriction>()
+            .Where(permissionRestrictionFilter)
+            .Select(restrictionBindingInfo.Permission.Path);
+
+        return permission => permissionRestrictionQueryable.Contains(permission);
     }
 }

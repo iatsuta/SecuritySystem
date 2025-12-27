@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+
 using ExampleApp.Application;
 using ExampleApp.Domain;
 using ExampleApp.Domain.Auth.Virtual;
@@ -16,7 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem;
 using SecuritySystem.DependencyInjection;
-
 using SecuritySystem.GeneralPermission.DependencyInjection;
 using SecuritySystem.UserSource;
 using SecuritySystem.VirtualPermission.DependencyInjection;
@@ -93,8 +93,14 @@ public static class ServiceCollectionExtensions
                             new SecurityRoleInfo(new Guid("{72D24BB5-F661-446A-A458-53D301805971}"))
                                 { Restriction = SecurityPathRestriction.Create<BusinessUnit>(true) })
 
-                        .AddSecurityRole(ExampleRoles.OtherRole,
+                        .AddSecurityRole(ExampleRoles.DefaultRole,
                             new SecurityRoleInfo(new Guid("{C6BE7D52-7F34-430C-9EEF-9CE6FD4D1FE5}")))
+
+                        .AddSecurityRole(ExampleRoles.WithRestrictionFilterRole,
+                            new SecurityRoleInfo(new Guid("{00645BD7-2D47-40E4-B542-E9A33EC06CB4}"))
+                            {
+                                Restriction = SecurityPathRestriction.Create<BusinessUnit>(required: true, filter: bu => bu.AllowedForFilterRole)
+                            })
 
                         .AddVirtualPermission<Employee, TestManager>(
                             domainObject => domainObject.Employee,

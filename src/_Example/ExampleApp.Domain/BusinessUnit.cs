@@ -7,4 +7,6 @@ public class BusinessUnit : SecuritySystem.ISecurityContext
     public virtual BusinessUnit? Parent { get; set; }
 
     public required string Name { get; set; }
+
+    public bool AllowedForFilterRole { get; set; }
 }

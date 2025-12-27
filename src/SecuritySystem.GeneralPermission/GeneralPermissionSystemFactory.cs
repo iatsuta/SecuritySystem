@@ -1,4 +1,5 @@
 ﻿using CommonFramework.DependencyInjection;
+
 using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.GeneralPermission;

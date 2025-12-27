@@ -35,15 +35,10 @@ public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityConte
 
         var expandExpression = expander.GetExpandExpression(expandType);
 
+        var expandExpressionQ = getIdents.Select(expandExpression);
+
         return ExpressionEvaluateHelper.InlineEvaluate<Func<TDomainObject, TPermission, bool>>(ee =>
         {
-            var expandExpressionQ =
-
-                from idents in getIdents
-
-                select ee.Evaluate(expandExpression, idents);
-
-
             if (securityPath.SecurityPathQ != null)
             {
                 if (securityPath.Required)
