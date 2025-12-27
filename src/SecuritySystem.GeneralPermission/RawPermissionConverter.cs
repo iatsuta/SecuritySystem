@@ -23,7 +23,7 @@ public class RawPermissionConverter<TPermissionRestriction>(
 
     public Dictionary<Type, Array> ConvertPermission(
         DomainSecurityRule.RoleBaseSecurityRule securityRule,
-        IReadOnlyList<TPermissionRestriction> restrictions,
+        IEnumerable<TPermissionRestriction> restrictions,
         IEnumerable<Type> securityContextTypes) => lazyInnerService.Value.ConvertPermission(securityRule, restrictions, securityContextTypes);
 }
 
@@ -35,7 +35,7 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
     where TPermissionRestriction : class
     where TSecurityContextObjectIdent : notnull
 {
-    public Dictionary<Type, Array> ConvertPermission(DomainSecurityRule.RoleBaseSecurityRule securityRule, IReadOnlyList<TPermissionRestriction> restrictions,
+    public Dictionary<Type, Array> ConvertPermission(DomainSecurityRule.RoleBaseSecurityRule securityRule, IEnumerable<TPermissionRestriction> restrictions,
         IEnumerable<Type> securityContextTypes)
     {
         var rawRestrictions = permissionRestrictionRawConverter.Convert(restrictions);
@@ -64,13 +64,13 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
 
     private TSecurityContextObjectIdent[] ApplySecurityContextFilter(Array securityContextIdents, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
     {
-        return new Func<TSecurityContextObjectIdent[], SecurityContextRestrictionFilterInfo<ISecurityContext>, TSecurityContextObjectIdent[]>(
+        return new Func<TSecurityContextObjectIdent[], SecurityContextRestrictionFilterInfo<ISecurityContext>, IReadOnlyList<TSecurityContextObjectIdent>>(
                 this.ApplySecurityContextFilter)
             .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
             .Invoke<TSecurityContextObjectIdent[]>(this, securityContextIdents, restrictionFilterInfo);
     }
 
-    private TSecurityContextObjectIdent[] ApplySecurityContextFilter<TSecurityContext>(TSecurityContextObjectIdent[] baseSecurityContextIdents,
+    private TSecurityContextObjectIdent[] ApplySecurityContextFilter<TSecurityContext>(IReadOnlyList<TSecurityContextObjectIdent> baseSecurityContextIdents,
         SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
     {
@@ -80,8 +80,7 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
 
         if (baseSecurityContextIdents.Any())
         {
-            return filteredSecurityContextQueryable.Where(securityContextId => baseSecurityContextIdents.Contains(securityContextId))
-                .ToArray();
+            return filteredSecurityContextQueryable.Where(securityContextId => baseSecurityContextIdents.Contains(securityContextId)).ToArray();
         }
         else
         {

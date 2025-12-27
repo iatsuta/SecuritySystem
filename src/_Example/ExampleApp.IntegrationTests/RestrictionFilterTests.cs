@@ -1,21 +1,12 @@
-﻿using CommonFramework.GenericRepository;
-
-using ExampleApp.Application;
+﻿using ExampleApp.Application;
 using ExampleApp.Domain;
-
-using GenericQueryable;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem;
-using SecuritySystem.DomainServices;
-using SecuritySystem.SecurityAccessor;
 using SecuritySystem.Testing;
 using SecuritySystem.Validation;
 
 namespace ExampleApp.IntegrationTests;
 
-public class SecurityContextRestrictionFilterTests : TestBase
+public class RestrictionFilterTests : TestBase
 {
     private readonly SecurityRole securityRole = ExampleRoles.DefaultRole;
 

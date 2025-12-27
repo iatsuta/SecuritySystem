@@ -85,15 +85,16 @@ public class GeneralPermissionSource<TPrincipal, TPermission, TPermissionRestric
     {
         var permissionIdents = availablePermissionSource.GetQueryable(securityRule).Select(permissionIdentityInfo.Id.Path).ToList();
 
+        var containsPermissionFilter = permissionIdentityInfo.CreateContainsFilter(permissionIdents);
+
         var permissionRestrictions = queryableSource
             .GetQueryable<TPermissionRestriction>()
-            .Where(restrictionBindingInfo.Permission.Path
-                .Select(permissionIdentityInfo.Id.Path).Select(id => permissionIdents.Contains(id)))
+            .Where(restrictionBindingInfo.Permission.Path.Select(containsPermissionFilter))
             .ToList();
 
         return permissionIdents.GroupJoin(
                 permissionRestrictions, id => id, restrictionBindingInfo.Permission.Getter.Composite(permissionIdentityInfo.Id.Getter),
-                (_, restrictions) => rawPermissionConverter.ConvertPermission(securityRule, restrictions.ToList(), securityContextTypes))
+                (_, restrictions) => rawPermissionConverter.ConvertPermission(securityRule, restrictions, securityContextTypes))
             .ToList();
     }
 
