@@ -34,7 +34,7 @@ public class PermissionSecurityRoleFilterFactory<TPermission>(
         this.lazyInnerService.Value.CreateFilter(identType, idents);
 }
 
-public class PermissionSecurityRoleFilterFactory< TPermission, TSecurityRole, TSecurityRoleIdent>(
+public class PermissionSecurityRoleFilterFactory<TPermission, TSecurityRole, TSecurityRoleIdent>(
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> bindingInfo,
     ISecurityIdentityConverter<TSecurityRoleIdent> securityIdentityConverter,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> identityInfo) : IPermissionSecurityRoleFilterFactory<TPermission>
@@ -52,6 +52,8 @@ public class PermissionSecurityRoleFilterFactory< TPermission, TSecurityRole, TS
     {
         var convertedIdents = idents.Select(ident => securityIdentityConverter.Convert(TypedSecurityIdentity.Create(ident)).Id).ToList();
 
-        return bindingInfo.SecurityRole.Path.Select(identityInfo.Id.Path).Select(srId => convertedIdents.Contains(srId));
+        var containsFilter = identityInfo.CreateContainsFilter(convertedIdents);
+
+        return bindingInfo.SecurityRole.Path.Select(containsFilter);
     }
 }
