@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.DomainServices;
 
-
-
-namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+namespace SecuritySystem.DependencyInjection.Domain;
 
 public interface IDomainSecurityServiceBuilder<TDomainObject>
 {

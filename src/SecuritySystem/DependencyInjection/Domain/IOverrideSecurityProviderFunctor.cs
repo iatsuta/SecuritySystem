@@ -1,7 +1,6 @@
 ﻿using SecuritySystem.Providers;
 
-
-namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+namespace SecuritySystem.DependencyInjection.Domain;
 
 public interface IOverrideSecurityProviderFunctor<TDomainObject>
 {

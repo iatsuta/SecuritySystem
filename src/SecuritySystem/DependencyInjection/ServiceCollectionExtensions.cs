@@ -14,7 +14,6 @@ using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders.AccessorsBuilder;
 using SecuritySystem.Builders.MaterializedBuilder;
 using SecuritySystem.Credential;
-using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
 using SecuritySystem.DomainServices;
 using SecuritySystem.Expanders;
 using SecuritySystem.ExternalSystem;
@@ -47,17 +46,6 @@ public static class ServiceCollectionExtensions
             services.AddVisualIdentitySource(s => settings.VisualIdentitySetupActions.ForEach(action => action(s)));
 
             settings.Initialize(services);
-
-            return services;
-        }
-
-        public IServiceCollection RegisterDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setupAction)
-        {
-            var builder = new DomainSecurityServiceRootBuilder();
-
-            setupAction(builder);
-
-            builder.Register(services);
 
             return services;
         }

@@ -1,4 +1,4 @@
-﻿namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+﻿namespace SecuritySystem.DependencyInjection.Domain;
 
 public interface IDomainSecurityServiceMetadata<TDomainObject> : IDomainSecurityServiceMetadata, IOverrideSecurityProviderFunctor<TDomainObject>
 {

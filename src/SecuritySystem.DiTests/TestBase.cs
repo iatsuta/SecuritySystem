@@ -45,12 +45,10 @@ public abstract class TestBase
 
                            .AddPermissionSystem<ExamplePermissionSystemFactory>()
 
-                           .AddDomainSecurityServices(
-                               rb =>
-                                   rb.Add<Employee>(
-                                       b => b.SetView(ExampleSecurityOperation.EmployeeView)
-                                             .SetEdit(ExampleSecurityOperation.EmployeeEdit)
-                                             .SetPath(SecurityPath<Employee>.Create(v => v.BusinessUnit))))
+                           .AddDomainSecurity<Employee>(
+                               b => b.SetView(ExampleSecurityOperation.EmployeeView)
+                                   .SetEdit(ExampleSecurityOperation.EmployeeEdit)
+                                   .SetPath(SecurityPath<Employee>.Create(v => v.BusinessUnit)))
 
                            .AddSecurityContext<BusinessUnit>(Guid
                                    .NewGuid(),

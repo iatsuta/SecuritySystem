@@ -11,7 +11,6 @@ using GenericQueryable.EntityFramework;
 using HierarchicalExpand;
 
 using Microsoft.EntityFrameworkCore;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -76,15 +75,16 @@ public static class ServiceCollectionExtensions
                             new Guid("{9756440C-6643-4AAD-AB57-A901F3917BA4}"),
                             scb => scb.SetIdentityPath(loc => loc.MyId))
 
-                        .AddDomainSecurityServices(rb =>
-                            rb.Add<TestObject>(b => b
-                                    .SetView(new[] { ExampleRoles.TestManager, ExampleRoles.BuManager})
-                                    .SetPath(SecurityPath<TestObject>.Create(testObj => testObj.BusinessUnit).And(testObj => testObj.Location)))
-                                .Add<Employee>(b => b
-                                    .SetView(DomainSecurityRule.CurrentUser))
-                                .Add<BusinessUnit>(b => b
-                                    .SetView(ExampleRoles.TestManager.ToSecurityRule(HierarchicalExpandType.All))
-                                    .SetPath(SecurityPath<BusinessUnit>.Create(v => v))))
+                        .AddDomainSecurity<TestObject>(b => b
+                            .SetView(new[] { ExampleRoles.TestManager, ExampleRoles.BuManager })
+                            .SetPath(SecurityPath<TestObject>.Create(testObj => testObj.BusinessUnit).And(testObj => testObj.Location)))
+
+                        .AddDomainSecurity<Employee>(b => b
+                            .SetView(DomainSecurityRule.CurrentUser))
+
+                        .AddDomainSecurity<BusinessUnit>(b => b
+                            .SetView(ExampleRoles.TestManager.ToSecurityRule(HierarchicalExpandType.All))
+                            .SetPath(SecurityPath<BusinessUnit>.Create(v => v)))
 
                         .AddSecurityRole(SecurityRole.Administrator,
                             new SecurityRoleInfo(new Guid("{2573CFDC-91CD-4729-AE97-82AB2F235E23}")))

@@ -2,8 +2,7 @@
 using SecuritySystem.Expanders;
 using SecuritySystem.Providers;
 
-
-namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+namespace SecuritySystem.DependencyInjection.Domain;
 
 public class DomainSecurityServiceWithFunctor<TOriginalDomainSecurityService, TDomainObject>(
     ISecurityRuleExpander securityRuleExpander,
