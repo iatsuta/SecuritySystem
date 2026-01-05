@@ -1,6 +1,7 @@
 ﻿using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+
 using SecuritySystem.Credential;
 
 namespace SecuritySystem.Services;
@@ -18,7 +19,7 @@ public class UserCredentialMatcher<TUser>(
 
         var innerServiceType = typeof(UserCredentialMatcher<,>).MakeGenericType(typeof(TUser), identityInfo.IdentityType);
 
-        return serviceProxyFactory.Create<IUserCredentialMatcher<TUser>>(innerServiceType, innerServiceType, visualIdentityInfo);
+        return serviceProxyFactory.Create<IUserCredentialMatcher<TUser>>(innerServiceType, identityInfo, visualIdentityInfo);
     });
 
     public bool IsMatch(UserCredential userCredential, TUser user) => this.lazyInnerService.Value.IsMatch(userCredential, user);
