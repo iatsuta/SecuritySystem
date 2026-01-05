@@ -51,11 +51,11 @@ public class InitController(
 			var testChildBu = new BusinessUnit { Name = $"Test{nameof(BusinessUnit)}{index}-Child", Parent = testBu };
 			dbContext.Add(testChildBu);
 
-			var testEmployee = new Employee { Login = $"Test{nameof(Employee)}{index}" };
-			dbContext.Add(testEmployee);
+            var testObj = new TestObject { BusinessUnit = testChildBu, Location = testLocation };
+            dbContext.Add(testObj);
 
-			var testObj = new TestObject { BusinessUnit = testChildBu, Location = testLocation };
-			dbContext.Add(testObj);
+            var testEmployee = new Employee { Login = $"Test{nameof(Employee)}{index}" };
+			dbContext.Add(testEmployee);
 
 			var testPermission = new TestManager { BusinessUnit = testBu, Employee = testEmployee, Location = testLocation };
 			dbContext.Add(testPermission);

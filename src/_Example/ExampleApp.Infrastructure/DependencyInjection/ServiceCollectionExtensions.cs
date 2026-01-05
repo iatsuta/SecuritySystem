@@ -56,10 +56,13 @@ public static class ServiceCollectionExtensions
                         .SetGenericRepository<EfGenericRepository>()
                         .SetRawUserAuthenticationService<ExampleRawUserAuthenticationService>()
 
-                        .AddUserSource<Employee>(usb => usb.SetRunAs(employee => employee.RunAs))
-                        .AddUserSource<AuthGeneral.Principal>(usb =>
-                            usb.SetMissedService<CreateVirtualMissedUserService<AuthGeneral.Principal>>())
-                        .AddRunAsValidator<ExistUserRunAsValidator<AuthGeneral.Principal>>()
+                        .AddUserSource<Employee>()
+
+                        .AddUserSource<AuthGeneral.Principal>(usb => usb
+                                .SetRunAs(principal => principal.RunAs)
+                                .SetMissedService<CreateVirtualMissedUserService<AuthGeneral.Principal>>())
+
+                        .AddRunAsValidator<ExistsOtherwiseUsersRunAsValidator<AuthGeneral.Principal>>()
 
                         .AddSecurityContext<BusinessUnit>(
                             new Guid("{E4AE968E-7B6B-4236-B381-9886C8E0FA34}"),

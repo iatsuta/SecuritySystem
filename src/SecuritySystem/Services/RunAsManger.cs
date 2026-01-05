@@ -16,14 +16,14 @@ public class RunAsManager<TUser>(
 	IGenericRepository genericRepository,
 	IUserCredentialMatcher<TUser> userCredentialMatcher,
 	IDefaultUserConverter<TUser> toDefaultUserConverter,
-    ErrorMissedUserService<TUser> missedUserService) : IRunAsManager
+    IMissedUserErrorSource missedUserErrorSource) : IRunAsManager
 	where TUser : class
 {
 	private readonly Lazy<TUser?> lazyNativeTryCurrentUser = new(() => userSource.TryGetUser(rawUserAuthenticationService.GetUserName()));
 
 	private TUser? NativeTryCurrentUser => this.lazyNativeTryCurrentUser.Value;
 
-    private TUser NativeCurrentUser => this.NativeTryCurrentUser ?? missedUserService.GetUser(rawUserAuthenticationService.GetUserName());
+    private TUser NativeCurrentUser => this.NativeTryCurrentUser ?? throw missedUserErrorSource.GetNotFoundException(typeof(TUser), rawUserAuthenticationService.GetUserName());
 
     private TUser? NativeRunAsUser => this.NativeTryCurrentUser == null ? null : userSourceRunAsInfo.RunAs.Getter(this.NativeTryCurrentUser);
 

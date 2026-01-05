@@ -58,7 +58,6 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
                 {
                     return this.ApplySecurityContextFilter(baseIdents, securityContextRestrictionFilterInfo);
                 }
-
             });
     }
 

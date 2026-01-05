@@ -5,13 +5,15 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.UserSource;
 
-public class CreateVirtualMissedUserService<TUser>(IVisualIdentityInfoSource visualIdentityInfoSource, IDefaultUserConverter<TUser> defaultUserConverter)
-    : ErrorMissedUserService<TUser>
+public class CreateVirtualMissedUserService<TUser>(
+    IMissedUserErrorSource missedUserErrorSource,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
+    IDefaultUserConverter<TUser> defaultUserConverter) : IMissedUserService<TUser>
     where TUser : class, new()
 {
     private readonly Action<TUser, string> nameSetter = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Setter;
 
-    public override TUser GetUser(UserCredential userCredential)
+    public TUser GetUser(UserCredential userCredential)
     {
         if (userCredential is UserCredential.NamedUserCredential namedUserCredential)
         {
@@ -21,11 +23,11 @@ public class CreateVirtualMissedUserService<TUser>(IVisualIdentityInfoSource vis
         }
         else
         {
-            return base.GetUser(userCredential);
+            throw missedUserErrorSource.GetNotFoundException(typeof(TUser), userCredential);
         }
     }
 
-    public override IMissedUserService<User> ToSimple()
+    public IMissedUserService<User> ToSimple()
     {
         return new SimpleCreateVirtualMissedUserService(uc => defaultUserConverter.ConvertFunc(this.GetUser(uc)));
     }

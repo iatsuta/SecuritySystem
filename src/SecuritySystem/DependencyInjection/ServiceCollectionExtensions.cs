@@ -81,7 +81,7 @@ public static class ServiceCollectionExtensions
                 .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
                 .AddSingleton<IPrincipalDataSecurityIdentityExtractor, PrincipalDataSecurityIdentityExtractor>()
 
-                .AddSingleton(typeof(ErrorMissedUserService<>))
+                .AddSingleton<IMissedUserErrorSource, MissedUserErrorSource>()
 
                 .AddSingleton<IFormatProviderSource>(new FormatProviderSource(CultureInfo.CurrentCulture))
                 .AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
