@@ -1,14 +1,13 @@
-﻿using CommonFramework.DependencyInjection;
+﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource.DependencyInjection;
+using CommonFramework.RelativePath;
 using CommonFramework.VisualIdentitySource.DependencyInjection;
-
 using HierarchicalExpand.DependencyInjection;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using SecuritySystem.AccessDenied;
-using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+using SecuritySystem.DependencyInjection.Domain;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.ApplicationSecurity;
 using SecuritySystem.ExternalSystem.Management;
@@ -16,12 +15,15 @@ using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
+using System.Reflection;
 
 namespace SecuritySystem.DependencyInjection;
 
 public class SecuritySystemSettings : ISecuritySystemSettings
 {
-	private readonly HashSet<Type> userSourceTypes = new();
+    private readonly List<DomainSecurityServiceBuilder> domainBuilders = [];
+
+    private readonly HashSet<Type> userSourceTypes = new();
 
     private DomainSecurityRule.RoleBaseSecurityRule securityAdministratorRule = SecurityRole.Administrator;
 
@@ -46,8 +48,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     private Type principalManagementServiceType = typeof(FakePrincipalManagementService);
 
 
-
-
     public readonly List<Action<IIdentitySourceSettings>> IdentitySetupActions = new();
 
     public readonly List<Action<IVisualIdentitySourceSettings>> VisualIdentitySetupActions = new();
@@ -56,6 +56,8 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
 
 	public bool InitializeDefaultRoles { get; set; } = true;
+
+    public bool AutoAddSelfRelativePath { get; set; } = true;
 
     public ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule)
     {
@@ -91,12 +93,32 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setup)
+    public ISecuritySystemSettings AddDomainSecurity<TDomainObject>(Action<IDomainSecurityServiceBuilder<TDomainObject>> setup)
     {
-        this.registerActions.Add(sc => sc.RegisterDomainSecurityServices(setup));
+        var builder = new DomainSecurityServiceBuilder<TDomainObject>();
+
+        setup(builder);
+
+        this.domainBuilders.Add(builder);
 
         return this;
     }
+
+    public ISecuritySystemSettings AddDomainSecurityMetadata<TMetadata>()
+        where TMetadata : IDomainSecurityServiceMetadata
+    {
+        return this.GetType().GetMethod(nameof(this.AddDomainSecurityMetadataInternal), BindingFlags.Instance | BindingFlags.NonPublic)!
+            .MakeGenericMethod(typeof(TMetadata), TMetadata.DomainType)
+            .Invoke<ISecuritySystemSettings>(this);
+    }
+
+    private ISecuritySystemSettings AddDomainSecurityMetadataInternal<TMetadata, TDomainObject>()
+        where TMetadata : IDomainSecurityServiceMetadata<TDomainObject>
+    {
+        return this.AddDomainSecurity<TDomainObject>(b => b.Override<TMetadata>().Pipe(TMetadata.Setup));
+    }
+
+
 
     public ISecuritySystemSettings AddSecurityRole(SecurityRole securityRole, SecurityRoleInfo info)
     {
@@ -325,6 +347,18 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         services.AddSingleton(this.defaultSecurityRuleCredential);
 
         services.AddSingleton(typeof(IClientDomainModeSecurityRuleSource), this.clientDomainModeSecurityRuleSource);
+
+        foreach (var domainBuilder in this.domainBuilders)
+        {
+            domainBuilder.Register(services);
+
+            if (this.AutoAddSelfRelativePath)
+            {
+                services.AddSingleton(
+                    typeof(IRelativeDomainPathInfo<,>).MakeGenericType(domainBuilder.DomainType, domainBuilder.DomainType),
+                    typeof(SelfRelativeDomainPathInfo<>).MakeGenericType(domainBuilder.DomainType));
+            }
+        }
     }
 
     private void AddSecurityRole(IServiceCollection serviceCollection, FullSecurityRole fullSecurityRole)

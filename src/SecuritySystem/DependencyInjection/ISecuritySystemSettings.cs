@@ -4,7 +4,7 @@ using CommonFramework.GenericRepository;
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.AccessDenied;
-using SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+using SecuritySystem.DependencyInjection.Domain;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.SecurityAccessor;
@@ -16,6 +16,11 @@ namespace SecuritySystem.DependencyInjection;
 
 public interface ISecuritySystemSettings
 {
+    /// <summary>
+    /// Автоматическое добавление относительных путей на самих себя (v => v)
+    /// </summary>
+    bool AutoAddSelfRelativePath { get; set; }
+
     bool InitializeDefaultRoles { get; set; }
 
     ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule);
@@ -23,7 +28,37 @@ public interface ISecuritySystemSettings
     ISecuritySystemSettings AddSecurityContext<TSecurityContext>(TypedSecurityIdentity identity, Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
         where TSecurityContext : class, ISecurityContext;
 
-    ISecuritySystemSettings AddDomainSecurityServices(Action<IDomainSecurityServiceRootBuilder> setup);
+    ISecuritySystemSettings AddDomainSecurity<TDomainObject>(Action<IDomainSecurityServiceBuilder<TDomainObject>> setup);
+
+    ISecuritySystemSettings AddDomainSecurity<TDomainObject>(DomainSecurityRule viewSecurityRule,
+        SecurityPath<TDomainObject> securityPath)
+    {
+        return this.AddDomainSecurity(viewSecurityRule, null, securityPath);
+    }
+
+    ISecuritySystemSettings AddDomainSecurity<TDomainObject>(DomainSecurityRule viewSecurityRule,
+        DomainSecurityRule? editSecurityRule = null,
+        SecurityPath<TDomainObject>? securityPath = null)
+    {
+        return this.AddDomainSecurity<TDomainObject>(
+            b =>
+            {
+                b.SetView(viewSecurityRule);
+
+                if (editSecurityRule != null)
+                {
+                    b.SetEdit(editSecurityRule);
+                }
+
+                if (securityPath != null)
+                {
+                    b.SetPath(securityPath);
+                }
+            });
+    }
+
+    ISecuritySystemSettings AddDomainSecurityMetadata<TMetadata>()
+        where TMetadata : IDomainSecurityServiceMetadata;
 
     ISecuritySystemSettings AddSecurityRole(SecurityRole securityRole, SecurityRoleInfo info);
 

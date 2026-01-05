@@ -9,7 +9,7 @@ using SecuritySystem.DomainServices;
 using SecuritySystem.DomainServices.DependencySecurity;
 using SecuritySystem.SecurityRuleInfo;
 
-namespace SecuritySystem.DependencyInjection.DomainSecurityServiceBuilder;
+namespace SecuritySystem.DependencyInjection.Domain;
 
 public abstract class DomainSecurityServiceBuilder : IDomainSecurityServiceBuilder
 {
@@ -18,7 +18,7 @@ public abstract class DomainSecurityServiceBuilder : IDomainSecurityServiceBuild
     public abstract void Register(IServiceCollection services);
 }
 
-internal class DomainSecurityServiceBuilder<TDomainObject> : DomainSecurityServiceBuilder, IDomainSecurityServiceBuilder<TDomainObject>
+public class DomainSecurityServiceBuilder<TDomainObject> : DomainSecurityServiceBuilder, IDomainSecurityServiceBuilder<TDomainObject>
 {
     private readonly List<Type> functorTypes = [];
 
