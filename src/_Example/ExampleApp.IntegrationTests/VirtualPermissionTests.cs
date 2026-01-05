@@ -3,11 +3,9 @@ using ExampleApp.Domain;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using SecuritySystem.Services;
-
 namespace ExampleApp.IntegrationTests;
 
-public class VirtualPermissionTests : TestBase  
+public class VirtualPermissionTests : TestBase
 {
     [Theory]
     [MemberData(nameof(Impersonate_LoadTestObjects_DataCorrected_Cases))]
@@ -18,8 +16,7 @@ public class VirtualPermissionTests : TestBase
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
-        var runAsManager = scope.ServiceProvider.GetRequiredService<IRunAsManager>();
-        await runAsManager.StartRunAsUserAsync(runAs, this.CancellationToken);
+        this.AuthManager.For(runAs).LoginAs();
 
         // Act
         var currentUserLogin = await testController.GetCurrentUserLogin(this.CancellationToken);
@@ -48,8 +45,7 @@ public class VirtualPermissionTests : TestBase
 
         var testController = scope.ServiceProvider.GetRequiredService<TestController>();
 
-        var runAsManager = scope.ServiceProvider.GetRequiredService<IRunAsManager>();
-        await runAsManager.StartRunAsUserAsync(runAs, this.CancellationToken);
+        this.AuthManager.For(runAs).LoginAs();
 
         // Act
         var currentUserLogin = await testController.GetCurrentUserLogin(this.CancellationToken);

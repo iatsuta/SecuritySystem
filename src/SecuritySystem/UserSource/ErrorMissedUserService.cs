@@ -2,33 +2,28 @@
 
 namespace SecuritySystem.UserSource;
 
-public class ErrorMissedUserService<TUser> : IMissedUserService<TUser>
+public class ErrorMissedUserService<TUser>(IMissedUserErrorSource missedUserErrorSource) : IMissedUserService<TUser>
 {
-	public virtual TUser GetUser(UserCredential userCredential)
-	{
-		throw this.GetNotFoundException(userCredential);
-	}
+    public virtual TUser GetUser(UserCredential userCredential)
+    {
+        throw missedUserErrorSource.GetNotFoundException(typeof(TUser), userCredential);
+    }
 
-	public virtual IMissedUserService<User> ToSimple()
-	{
-		return new SimpleErrorMissedUserService(this.GetNotFoundException);
-	}
+    public virtual IMissedUserService<User> ToSimple()
+    {
+        return new SimpleErrorMissedUserService(missedUserErrorSource);
+    }
 
-	private Exception GetNotFoundException(UserCredential userCredential)
-	{
-		return new UserSourceException($"{typeof(TUser).Name} \"{userCredential}\" not found");
-	}
+    private class SimpleErrorMissedUserService(IMissedUserErrorSource missedUserErrorSource) : IMissedUserService<User>
+    {
+        public User GetUser(UserCredential userCredential)
+        {
+            throw missedUserErrorSource.GetNotFoundException(typeof(TUser), userCredential);
+        }
 
-	private class SimpleErrorMissedUserService(Func<UserCredential, Exception> getError) : IMissedUserService<User>
-	{
-		public User GetUser(UserCredential userCredential)
-		{
-			throw getError(userCredential);
-		}
-
-		public IMissedUserService<User> ToSimple()
-		{
-			return this;
-		}
-	}
+        public IMissedUserService<User> ToSimple()
+        {
+            return this;
+        }
+    }
 }
