@@ -34,8 +34,8 @@ public class InitController(
 			var currentEmployee = new Employee { Login = rawUserAuthenticationService.GetUserName() };
 			dbContext.Add(currentEmployee);
 
-			var currentEmployeePermission = new Administrator { Employee = currentEmployee };
-			dbContext.Add(currentEmployeePermission);
+			var currentEmployeeAdminVirtualPermission = new Administrator { Employee = currentEmployee };
+			dbContext.Add(currentEmployeeAdminVirtualPermission);
 		}
 
 		var testRootBu = new BusinessUnit() { Name = "TestRootBu" };
@@ -57,8 +57,8 @@ public class InitController(
             var testEmployee = new Employee { Login = $"Test{nameof(Employee)}{index}" };
 			dbContext.Add(testEmployee);
 
-			var testPermission = new TestManager { BusinessUnit = testBu, Employee = testEmployee, Location = testLocation };
-			dbContext.Add(testPermission);
+			var testVirtualPermission = new TestManager { BusinessUnit = testBu, Employee = testEmployee, Location = testLocation };
+			dbContext.Add(testVirtualPermission);
 		}
 
 		await dbContext.SaveChangesAsync(cancellationToken);
