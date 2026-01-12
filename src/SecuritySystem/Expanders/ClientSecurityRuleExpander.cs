@@ -1,5 +1,4 @@
-﻿
-using SecuritySystem.SecurityRuleInfo;
+﻿using SecuritySystem.SecurityRuleInfo;
 
 namespace SecuritySystem.Expanders;
 

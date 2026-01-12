@@ -27,6 +27,8 @@ public abstract record SecurityRule
 
     public static implicit operator SecurityRule(SecurityRole[] securityRoles) => securityRoles.ToSecurityRule();
 
+    public static implicit operator SecurityRule(DomainSecurityRule.RoleBaseSecurityRule[] securityRules) => securityRules.ToSecurityRule();
+
     public record ModeSecurityRule(string Name) : SecurityRule
     {
         public override string ToString() => this.Name;

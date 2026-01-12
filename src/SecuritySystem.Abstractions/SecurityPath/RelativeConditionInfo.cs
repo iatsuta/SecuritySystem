@@ -21,11 +21,3 @@ public record RelativeConditionInfo<TRelativeDomainObject>(Expression<Func<TRela
 
     public override int GetHashCode() => 0;
 }
-
-public static class RelativeConditionInfoExtensions
-{
-    public static RelativeConditionInfo<TRelativeDomainObject> ToInfo<TRelativeDomainObject>(this Expression<Func<TRelativeDomainObject, bool>> condition)
-    {
-        return new RelativeConditionInfo<TRelativeDomainObject>(condition);
-    }
-}

@@ -1,6 +1,6 @@
 ﻿using CommonFramework.DictionaryCache;
-using SecuritySystem.Expanders;
 
+using SecuritySystem.Expanders;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.SecurityRuleInfo;

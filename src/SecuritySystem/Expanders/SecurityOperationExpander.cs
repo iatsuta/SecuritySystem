@@ -1,8 +1,5 @@
 ﻿using CommonFramework.DictionaryCache;
 
-
-
-
 namespace SecuritySystem.Expanders;
 
 public class SecurityOperationExpander(ISecurityRoleSource securityRoleSource, ISecurityOperationInfoSource securityOperationInfoSource)
@@ -14,7 +11,6 @@ public class SecurityOperationExpander(ISecurityRoleSource securityRoleSource, I
             {
                 var securityRoles = securityRoleSource.SecurityRoles
                                                       .Where(sr => sr.Information.Operations.Contains(securityRule.SecurityOperation))
-                                                      .Distinct()
                                                       .ToArray();
 
                 if (securityRoles.Length == 0)
@@ -29,7 +25,6 @@ public class SecurityOperationExpander(ISecurityRoleSource securityRoleSource, I
                     securityRule.CustomRestriction);
 
             }).WithLock();
-
 
     public DomainSecurityRule.NonExpandedRolesSecurityRule Expand(DomainSecurityRule.OperationSecurityRule securityRule)
     {
