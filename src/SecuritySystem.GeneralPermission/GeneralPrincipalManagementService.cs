@@ -179,7 +179,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
         CancellationToken cancellationToken)
     {
         var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityExtractor.Extract,
-            p => p.Identity.IsDefault ? new object() : permissionIdentityExtractor.Converter.TryConvert(p.Identity));
+            p => p.Identity.IsDefault ? new object() : permissionIdentityExtractor.Converter.Convert(p.Identity));
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
 

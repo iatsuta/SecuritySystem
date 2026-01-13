@@ -1,6 +1,4 @@
-﻿
-
-using SecuritySystem.Services;
+﻿using SecuritySystem.Services;
 
 namespace SecuritySystem.Expanders;
 
