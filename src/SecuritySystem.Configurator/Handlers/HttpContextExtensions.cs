@@ -18,7 +18,7 @@ internal static class HttpContextExtensions
 
         public string ExtractSearchToken()
         {
-            return (string)httpContent.Request.RouteValues["searchToken"]!;
+            return httpContent.Request.Query["searchToken"]!;
         }
     }
 }

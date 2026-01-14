@@ -4,6 +4,7 @@ using ExampleApp.Infrastructure.DependencyInjection;
 
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Connections;
 
 using SecuritySystem.Configurator;
 
@@ -37,20 +38,15 @@ public static class Program
         builder.Services.AddSwaggerGen();
 
         builder.Services.AddAuthorization(options =>
-        {
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+            options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
         builder.Services.AddControllers(x => x.EnableEndpointRouting = false);
 
         builder.Services
-            .AddValidator(new DuplicateServiceUsageValidator([typeof(ILoggerFactory)]))
+            .AddValidator(new DuplicateServiceUsageValidator([typeof(ILoggerFactory), typeof(IMemoryPoolFactory<byte>)]))
             .Validate();
 
         var app = builder.Build();
-
 
         app
             .UseHttpsRedirection()
