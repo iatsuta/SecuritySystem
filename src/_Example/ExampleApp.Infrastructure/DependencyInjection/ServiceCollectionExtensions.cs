@@ -1,5 +1,5 @@
 ﻿using CommonFramework;
-
+using CommonFramework.DependencyInjection;
 using ExampleApp.Application;
 using ExampleApp.Domain;
 using ExampleApp.Domain.Auth.Virtual;
@@ -7,7 +7,7 @@ using ExampleApp.Infrastructure.Services;
 using AuthGeneral = ExampleApp.Domain.Auth.General;
 
 using GenericQueryable.EntityFramework;
-
+using GenericQueryable.Fetching;
 using HierarchicalExpand;
 
 using Microsoft.EntityFrameworkCore;

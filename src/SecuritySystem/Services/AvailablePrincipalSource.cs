@@ -8,7 +8,7 @@ public class AvailablePrincipalSource<TPrincipal>(
 {
     private readonly Lazy<IAvailablePrincipalSource<TPrincipal>> lazyInnerService = new(() =>
     {
-        var bindingInfo = bindingInfoSource.GetForPermission(typeof(TPrincipal));
+        var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
         var innerServiceType = typeof(AvailablePrincipalSource<,>).MakeGenericType(bindingInfo.PrincipalType, bindingInfo.PermissionType);
 
