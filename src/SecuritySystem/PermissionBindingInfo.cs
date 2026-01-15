@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+
 using System.Linq.Expressions;
 
 namespace SecuritySystem;

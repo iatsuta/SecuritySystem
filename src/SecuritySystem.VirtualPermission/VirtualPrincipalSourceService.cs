@@ -88,8 +88,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
                     : principalVisualIdentityInfo.Name.Path.Select(principalName => principalName.Contains(nameFilter)))
             .OrderBy(principalVisualIdentityInfo.Name.Path)
             .Take(limit)
-            .Distinct()
             .Select(managedPrincipalHeaderConverter.ConvertExpression)
+            .Distinct()
             .GenericToListAsync(cancellationToken);
     }
 
