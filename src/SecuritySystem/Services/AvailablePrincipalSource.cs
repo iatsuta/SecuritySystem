@@ -27,6 +27,6 @@ public class AvailablePrincipalSource<TPrincipal, TPermission>(
 {
     public IQueryable<TPrincipal> GetAvailablePrincipalsQueryable(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        return availablePermissionSource.GetQueryable(securityRule).Select(bindingInfo.Principal.Path).Distinct();
+        return availablePermissionSource.GetQueryable(securityRule).Select(bindingInfo.Principal.Path);
     }
 }

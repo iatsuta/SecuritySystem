@@ -58,6 +58,7 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 					CustomCredential = new SecurityRuleCredential.AnyUserCredential()
 				})
 			.Select(this.nameAccessors.Path)
-			.GenericToListAsync(cancellationToken);
+            .Distinct()
+            .GenericToListAsync(cancellationToken);
 	}
 }
