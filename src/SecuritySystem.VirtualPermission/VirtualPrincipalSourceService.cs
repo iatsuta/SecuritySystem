@@ -3,8 +3,10 @@ using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+using CommonFramework.DependencyInjection;
 
 using GenericQueryable;
+
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.UserSource;
 using SecuritySystem.Credential;
@@ -12,7 +14,6 @@ using SecuritySystem.Services;
 
 using System.Linq.Expressions;
 using System.Reflection;
-using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.VirtualPermission;
 

@@ -6,12 +6,12 @@ using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public class ConditionFilterBuilder<TPermission, TDomainObject>(
+public class ConditionFilterBuilder<TDomainObject, TPermission>(
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     SecurityPath<TDomainObject>.ConditionPath securityPath)
-    : AccessorsFilterBuilder<TPermission, TDomainObject>
+    : AccessorsFilterBuilder<TDomainObject, TPermission>
 {
-    private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(ConditionFilterBuilder<TPermission, TDomainObject>));
+    private readonly IExpressionEvaluator expressionEvaluator = expressionEvaluatorStorage.GetForType(typeof(ConditionFilterBuilder<TDomainObject, TPermission>));
 
     public override Expression<Func<TPermission, bool>> GetAccessorsFilter(TDomainObject domainObject, HierarchicalExpandType expandType)
     {

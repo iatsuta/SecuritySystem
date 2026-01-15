@@ -9,12 +9,12 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public abstract class ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
+public abstract class ByIdentsFilterBuilder<TDomainObject, TPermission, TSecurityContext, TSecurityContextIdent>(
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     IContextSecurityPath contextSecurityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
-    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo) : AccessorsFilterBuilder<TPermission, TDomainObject>
+    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo) : AccessorsFilterBuilder<TDomainObject, TPermission>
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {

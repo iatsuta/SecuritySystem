@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+
 using SecuritySystem.Validation;
 
 namespace SecuritySystem.VirtualPermission;

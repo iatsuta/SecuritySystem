@@ -10,10 +10,9 @@ using HierarchicalExpand;
 using HierarchicalExpand.AncestorDenormalization;
 
 using SecuritySystem.Credential;
+using SecuritySystem.DomainServices;
 
 using Microsoft.Extensions.DependencyInjection;
-
-using SecuritySystem.DomainServices;
 
 namespace SecuritySystem.Testing;
 

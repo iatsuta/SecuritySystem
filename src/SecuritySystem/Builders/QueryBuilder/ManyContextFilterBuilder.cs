@@ -8,13 +8,13 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class ManyContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
+public class ManyContextFilterBuilder<TDomainObject, TPermission, TSecurityContext, TSecurityContextIdent>(
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.ManySecurityPath<TSecurityContext> securityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
     IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
-    : SecurityFilterBuilder<TPermission, TDomainObject>
+    : SecurityFilterBuilder<TDomainObject, TPermission>
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {

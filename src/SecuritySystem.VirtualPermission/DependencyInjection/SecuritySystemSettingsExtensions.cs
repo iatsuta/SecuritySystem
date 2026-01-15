@@ -1,14 +1,14 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.DependencyInjection;
+using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.Management;
 
 using System.Linq.Expressions;
-using CommonFramework.DependencyInjection;
-using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.VirtualPermission.DependencyInjection;
 

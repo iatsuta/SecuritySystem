@@ -1,8 +1,6 @@
 ﻿using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
 
-
-
 namespace SecuritySystem.Builders.MixedBuilder;
 
 public class SecurityFilterFactory<TDomainObject>(

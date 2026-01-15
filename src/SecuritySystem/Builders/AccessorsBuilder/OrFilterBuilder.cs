@@ -4,11 +4,11 @@ using CommonFramework;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public class OrFilterBuilder<TPermission, TDomainObject>(
-    AccessorsFilterBuilderFactory<TPermission, TDomainObject> builderFactory,
+public class OrFilterBuilder<TDomainObject, TPermission>(
+    AccessorsFilterBuilderFactory<TDomainObject, TPermission> builderFactory,
     SecurityPath<TDomainObject>.OrSecurityPath securityPath,
     IReadOnlyList<SecurityContextRestriction> securityContextRestrictions)
-    : BinaryFilterBuilder<TPermission, TDomainObject, SecurityPath<TDomainObject>.OrSecurityPath>(
+    : BinaryFilterBuilder<TDomainObject, TPermission, SecurityPath<TDomainObject>.OrSecurityPath>(
         builderFactory,
         securityPath,
         securityContextRestrictions)

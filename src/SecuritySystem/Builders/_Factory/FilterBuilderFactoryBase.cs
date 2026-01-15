@@ -41,7 +41,7 @@ public abstract class FilterBuilderFactoryBase<TDomainObject, TBuilder>(IIdentit
 
 			return new Func<SecurityPath<TDomainObject>, SecurityContextRestriction<ISecurityContext>?, IdentityInfo<ISecurityContext, Ignore>, TBuilder>(
 					this.CreateSecurityContextBuilder)
-				.CreateGenericMethod([securityContextType, identityInfo.IdentityType])
+				.CreateGenericMethod(securityContextType, identityInfo.IdentityType)
 				.Invoke<TBuilder>(this, baseSecurityPath, restrictionFilterInfo, identityInfo);
 		}
 		else

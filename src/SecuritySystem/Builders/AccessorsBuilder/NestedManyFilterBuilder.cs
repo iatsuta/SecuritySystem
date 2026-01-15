@@ -7,16 +7,16 @@ using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public class NestedManyFilterBuilder<TPermission, TDomainObject, TNestedObject>(
+public class NestedManyFilterBuilder<TDomainObject, TPermission, TNestedObject>(
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
-    AccessorsFilterBuilderFactory<TPermission, TNestedObject> nestedBuilderFactory,
+    AccessorsFilterBuilderFactory<TNestedObject, TPermission> nestedBuilderFactory,
     SecurityPath<TDomainObject>.NestedManySecurityPath<TNestedObject> securityPath,
-    IReadOnlyList<SecurityContextRestriction> securityContextRestrictions) : AccessorsFilterBuilder<TPermission, TDomainObject>
+    IReadOnlyList<SecurityContextRestriction> securityContextRestrictions) : AccessorsFilterBuilder<TDomainObject, TPermission>
 {
     private readonly IExpressionEvaluator expressionEvaluator =
-        expressionEvaluatorStorage.GetForType(typeof(NestedManyFilterBuilder<TPermission, TDomainObject, TNestedObject>));
+        expressionEvaluatorStorage.GetForType(typeof(NestedManyFilterBuilder<TDomainObject, TPermission, TNestedObject>));
 
-    private AccessorsFilterBuilder<TPermission, TNestedObject> NestedBuilder { get; } =
+    private AccessorsFilterBuilder<TNestedObject, TPermission> NestedBuilder { get; } =
         nestedBuilderFactory.CreateBuilder(securityPath.NestedSecurityPath, securityContextRestrictions);
 
     public override Expression<Func<TPermission, bool>> GetAccessorsFilter(TDomainObject domainObject, HierarchicalExpandType expandType) =>

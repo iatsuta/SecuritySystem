@@ -6,9 +6,9 @@ using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class ConditionFilterBuilder<TPermission, TDomainObject>(
+public class ConditionFilterBuilder<TDomainObject, TPermission>(
     SecurityPath<TDomainObject>.ConditionPath securityPath)
-    : SecurityFilterBuilder<TPermission, TDomainObject>
+    : SecurityFilterBuilder<TDomainObject, TPermission>
 {
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(
         HierarchicalExpandType expandType)

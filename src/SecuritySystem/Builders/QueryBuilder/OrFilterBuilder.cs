@@ -4,11 +4,11 @@ using CommonFramework;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class OrFilterBuilder<TPermission, TDomainObject>(
-    SecurityFilterBuilderFactory<TPermission, TDomainObject> builderFactory,
+public class OrFilterBuilder<TDomainObject, TPermission>(
+    SecurityFilterBuilderFactory<TDomainObject, TPermission> builderFactory,
     SecurityPath<TDomainObject>.OrSecurityPath securityPath,
     IReadOnlyList<SecurityContextRestriction> securityContextRestrictions)
-    : BinaryFilterBuilder<TPermission, TDomainObject, SecurityPath<TDomainObject>.OrSecurityPath>(builderFactory, securityPath, securityContextRestrictions)
+    : BinaryFilterBuilder<TDomainObject, TPermission, SecurityPath<TDomainObject>.OrSecurityPath>(builderFactory, securityPath, securityContextRestrictions)
 {
     protected override Expression<Func<TArg1, TArg2, bool>> BuildOperation<TArg1, TArg2>(
         Expression<Func<TArg1, TArg2, bool>> arg1,

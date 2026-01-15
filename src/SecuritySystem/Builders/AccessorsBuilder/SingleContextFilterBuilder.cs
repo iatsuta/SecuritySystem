@@ -7,20 +7,20 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.Builders.AccessorsBuilder;
 
-public class SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(
+public class SingleContextFilterBuilder<TDomainObject, TPermission, TSecurityContext, TSecurityContextIdent>(
     IExpressionEvaluatorStorage expressionEvaluatorStorage,
     IPermissionSystem<TPermission> permissionSystem,
     IHierarchicalObjectExpanderFactory hierarchicalObjectExpanderFactory,
     SecurityPath<TDomainObject>.SingleSecurityPath<TSecurityContext> securityPath,
     SecurityContextRestriction<TSecurityContext>? securityContextRestriction,
     IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
-    : ByIdentsFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>(permissionSystem, hierarchicalObjectExpanderFactory, securityPath,
+    : ByIdentsFilterBuilder<TDomainObject, TPermission, TSecurityContext, TSecurityContextIdent>(permissionSystem, hierarchicalObjectExpanderFactory, securityPath,
         securityContextRestriction, identityInfo)
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {
     private readonly IExpressionEvaluator expressionEvaluator =
-        expressionEvaluatorStorage.GetForType(typeof(SingleContextFilterBuilder<TPermission, TDomainObject, TSecurityContext, TSecurityContextIdent>));
+        expressionEvaluatorStorage.GetForType(typeof(SingleContextFilterBuilder<TDomainObject, TPermission, TSecurityContext, TSecurityContextIdent>));
 
     protected override IEnumerable<TSecurityContext> GetSecurityObjects(TDomainObject domainObject)
     {
