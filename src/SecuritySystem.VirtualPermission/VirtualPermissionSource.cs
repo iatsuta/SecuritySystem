@@ -3,13 +3,13 @@ using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+using CommonFramework.DependencyInjection;
 
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.VirtualPermission;
 

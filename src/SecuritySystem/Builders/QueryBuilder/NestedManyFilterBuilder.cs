@@ -6,12 +6,12 @@ using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public class NestedManyFilterBuilder<TPermission, TDomainObject, TNestedObject>(
-    SecurityFilterBuilderFactory<TPermission, TNestedObject> nestedBuilderFactory,
+public class NestedManyFilterBuilder<TDomainObject, TPermission, TNestedObject>(
+    SecurityFilterBuilderFactory<TNestedObject, TPermission> nestedBuilderFactory,
     SecurityPath<TDomainObject>.NestedManySecurityPath<TNestedObject> securityPath,
-    IReadOnlyList<SecurityContextRestriction> securityContextRestrictions) : SecurityFilterBuilder<TPermission, TDomainObject>
+    IReadOnlyList<SecurityContextRestriction> securityContextRestrictions) : SecurityFilterBuilder<TDomainObject, TPermission>
 {
-    private SecurityFilterBuilder<TPermission, TNestedObject> NestedBuilder { get; } =
+    private SecurityFilterBuilder<TNestedObject, TPermission> NestedBuilder { get; } =
         nestedBuilderFactory.CreateBuilder(securityPath.NestedSecurityPath, securityContextRestrictions);
 
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(HierarchicalExpandType expandType)

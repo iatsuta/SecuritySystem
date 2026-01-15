@@ -4,16 +4,16 @@ using HierarchicalExpand;
 
 namespace SecuritySystem.Builders.QueryBuilder;
 
-public abstract class BinaryFilterBuilder<TPermission, TDomainObject, TSecurityPath>(
-    SecurityFilterBuilderFactory<TPermission, TDomainObject> builderFactory,
+public abstract class BinaryFilterBuilder<TDomainObject, TPermission, TSecurityPath>(
+    SecurityFilterBuilderFactory<TDomainObject, TPermission> builderFactory,
     TSecurityPath securityPath,
     IReadOnlyList<SecurityContextRestriction> securityContextRestrictions)
-    : SecurityFilterBuilder<TPermission, TDomainObject>
+    : SecurityFilterBuilder<TDomainObject, TPermission>
     where TSecurityPath : SecurityPath<TDomainObject>.BinarySecurityPath
 {
-    private SecurityFilterBuilder<TPermission, TDomainObject> LeftBuilder { get; } = builderFactory.CreateBuilder(securityPath.Left, securityContextRestrictions);
+    private SecurityFilterBuilder<TDomainObject, TPermission> LeftBuilder { get; } = builderFactory.CreateBuilder(securityPath.Left, securityContextRestrictions);
 
-    private SecurityFilterBuilder<TPermission, TDomainObject> RightBuilder { get; } = builderFactory.CreateBuilder(securityPath.Right, securityContextRestrictions);
+    private SecurityFilterBuilder<TDomainObject, TPermission> RightBuilder { get; } = builderFactory.CreateBuilder(securityPath.Right, securityContextRestrictions);
 
     protected abstract Expression<Func<TArg1, TArg2, bool>> BuildOperation<TArg1, TArg2>(
         Expression<Func<TArg1, TArg2, bool>> arg1,

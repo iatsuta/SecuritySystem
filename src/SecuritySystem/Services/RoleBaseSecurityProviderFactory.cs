@@ -2,7 +2,6 @@
 using SecuritySystem.Expanders;
 using SecuritySystem.Providers;
 
-
 namespace SecuritySystem.Services;
 
 public class RoleBaseSecurityProviderFactory<TDomainObject>(

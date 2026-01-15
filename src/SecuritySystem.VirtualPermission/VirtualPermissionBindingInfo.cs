@@ -1,9 +1,8 @@
 ﻿using CommonFramework;
-
-using System.Linq.Expressions;
-
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
+
+using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission;
 

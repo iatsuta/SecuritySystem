@@ -1,9 +1,8 @@
 ﻿using CommonFramework;
+
 using SecuritySystem.Builders._Factory;
 using SecuritySystem.Builders._Filter;
 using SecuritySystem.SecurityAccessor;
-
-
 
 namespace SecuritySystem.Providers;
 
