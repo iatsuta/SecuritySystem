@@ -31,10 +31,10 @@ public class VirtualPermissionSystem<TPermission>(
 
     public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        if (securityRuleExpander.FullRoleExpand(securityRule).SecurityRoles.Contains(virtualBindingInfo.SecurityRole))
+        if (securityRuleExpander.FullRoleExpand(securityRule).Children.SelectMany(c => c.SecurityRoles).Contains(virtualBindingInfo.SecurityRole))
         {
-            return serviceProxyFactory.Create<IPermissionSource<TPermission>, VirtualPermissionSource<TPermission>>(virtualBindingInfo, securityRule,
-                securityRuleCredential);
+            return serviceProxyFactory.Create<IPermissionSource<TPermission>, VirtualPermissionSource<TPermission>>(virtualBindingInfo,
+                securityRule with { CustomCredential = securityRuleCredential });
         }
         else
         {

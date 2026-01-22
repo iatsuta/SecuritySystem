@@ -13,14 +13,12 @@ using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission;
 
-
 public class VirtualPermissionSource<TPermission>(
     IServiceProxyFactory serviceProxyFactory,
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
-    DomainSecurityRule.RoleBaseSecurityRule securityRule,
-    SecurityRuleCredential defaultSecurityRuleCredential) : IPermissionSource<TPermission>
+    DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
     where TPermission : class
 {
     private readonly Lazy<IPermissionSource<TPermission>> lazyInnerService = new(() =>
@@ -38,8 +36,7 @@ public class VirtualPermissionSource<TPermission>(
             bindingInfo,
             virtualBindingInfo,
             principalVisualIdentityInfo,
-            securityRule,
-            defaultSecurityRuleCredential);
+            securityRule);
     });
 
     private IPermissionSource<TPermission> InnerService => this.lazyInnerService.Value;

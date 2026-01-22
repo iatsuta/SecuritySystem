@@ -1,7 +1,6 @@
 ﻿using SecuritySystem.Expanders;
 using SecuritySystem.Providers;
 
-
 namespace SecuritySystem.DomainServices;
 
 public abstract class DomainSecurityService<TDomainObject>(ISecurityRuleExpander securityRuleExpander) : DomainSecurityServiceBase<TDomainObject>

@@ -1,10 +1,10 @@
 ﻿using CommonFramework;
 using CommonFramework.IdentitySource;
+using CommonFramework.DependencyInjection;
 
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 

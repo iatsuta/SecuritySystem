@@ -31,9 +31,9 @@ public abstract class FilterBuilderFactoryBase<TDomainObject, TBuilder>(IIdentit
 				.CreateGenericMethod(securityPathType.GetGenericArguments().Skip(1).ToArray())
 				.Invoke<TBuilder>(this, baseSecurityPath, securityContextRestrictions);
 		}
-		else if (securityPathType.BaseType.Maybe(baseType => baseType.IsGenericTypeImplementation(typeof(SecurityPath<>))))
+		else if (baseSecurityPath is IContextSecurityPath contextSecurityPath)
 		{
-			var securityContextType = securityPathType.GetGenericArguments().Skip(1).Single();
+			var securityContextType = contextSecurityPath.SecurityContextType;
 
 			var restrictionFilterInfo = securityContextRestrictions.SingleOrDefault(v => v.SecurityContextType == securityContextType);
 

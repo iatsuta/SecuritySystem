@@ -1,6 +1,4 @@
-﻿
-
-namespace SecuritySystem.Services;
+﻿namespace SecuritySystem.Services;
 
 public interface ISecurityRuleBasicOptimizer
 {

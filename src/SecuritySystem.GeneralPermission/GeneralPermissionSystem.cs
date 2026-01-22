@@ -3,17 +3,17 @@ using CommonFramework.DependencyInjection;
 using CommonFramework.IdentitySource;
 
 using GenericQueryable;
+
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
-
 public class GeneralPermissionSystem<TPermission>(
     IServiceProxyFactory serviceProxyFactory,
     IIdentityInfoSource identityInfoSource,
     IGeneralPermissionBindingInfoSource bindingInfoSource,
-    SecurityRuleCredential securityRuleCredential) : IPermissionSystem<TPermission>
+    SecurityRuleCredential defaultSecurityRuleCredential) : IPermissionSystem<TPermission>
 {
     private readonly Lazy<IPermissionSystem<TPermission>> lazyInnerService = new(() =>
     {
@@ -30,7 +30,7 @@ public class GeneralPermissionSystem<TPermission>(
             innerServiceType,
             generalBindingInfo,
             securityRoleIdentityInfo,
-            securityRuleCredential);
+            defaultSecurityRuleCredential);
     });
 
     private IPermissionSystem<TPermission> InnerService => this.lazyInnerService.Value;
@@ -58,7 +58,7 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     IAvailablePermissionSource<TPermission> availablePermissionSource,
     ISecurityRoleSource securityRoleSource,
-    SecurityRuleCredential securityRuleCredential,
+    SecurityRuleCredential defaultSecurityRuleCredential,
     IdentityInfo<TSecurityRole, TSecurityRoleIdent> securityRoleIdentityInfo)
     : IPermissionSystem<TPermission>
 
@@ -71,24 +71,23 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
     public IPermissionRestrictionSource<TPermission, TSecurityContextIdent> GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(
         SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
-        where TSecurityContextIdent : notnull
-    {
-        return serviceProxyFactory
+        where TSecurityContextIdent : notnull =>
+
+        serviceProxyFactory
             .Create<IPermissionRestrictionSource<TPermission, TSecurityContextIdent>,
                 GeneralPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(
                 new Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?>(restrictionFilterInfo));
-    }
 
-    public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
-    {
-        return serviceProxyFactory.Create<IPermissionSource<TPermission>, GeneralPermissionSource<TPermission>>(
-            securityRule.TryApplyCredential(securityRuleCredential));
-    }
+
+    public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
+
+        serviceProxyFactory.Create<IPermissionSource<TPermission>, GeneralPermissionSource<TPermission>>(
+            securityRule.TryApply(defaultSecurityRuleCredential));
 
     public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
     {
         var dbRolesIdents = await availablePermissionSource
-            .GetQueryable(DomainSecurityRule.AnyRole with { CustomCredential = securityRuleCredential })
+            .GetQueryable(DomainSecurityRule.AnyRole with { CustomCredential = defaultSecurityRuleCredential })
             .Select(generalBindingInfo.SecurityRole.Path.Select(securityRoleIdentityInfo.Id.Path))
             .Distinct()
             .GenericToListAsync(cancellationToken);

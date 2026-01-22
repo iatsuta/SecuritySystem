@@ -31,7 +31,7 @@ public abstract record DomainSecurityRule : SecurityRule
 
     public static implicit operator DomainSecurityRule(SecurityRole[] securityRoles) => securityRoles.ToSecurityRule();
 
-    public static implicit operator DomainSecurityRule(RoleBaseSecurityRule[] securityRules) => securityRules.ToSecurityRule();
+    public static implicit operator DomainSecurityRule(NonExpandedRolesSecurityRule[] securityRules) => securityRules.ToSecurityRule();
 
     public record SecurityRuleHeader(string Name) : DomainSecurityRule
     {
@@ -78,8 +78,6 @@ public abstract record DomainSecurityRule : SecurityRule
         /// </summary>
         public HierarchicalExpandType? CustomExpandType { get; init; } = null;
 
-        public SecurityRuleCredential? CustomCredential { get; init; } = null;
-
         public SecurityPathRestriction? CustomRestriction { get; init; } = null;
 
         public HierarchicalExpandType GetSafeExpandType () => this.CustomExpandType ?? HierarchicalExpandType.Children;
@@ -99,13 +97,18 @@ public abstract record DomainSecurityRule : SecurityRule
                    && this.CustomRestriction == other.CustomRestriction;
         }
 
+        public bool HasDefaultCustoms()
+        {
+            return this.CustomExpandType is null && this.CustomCredential is null && this.CustomRestriction is null;
+        }
+
         public static implicit operator RoleBaseSecurityRule(SecurityOperation securityOperation) => securityOperation.ToSecurityRule();
 
         public static implicit operator RoleBaseSecurityRule(SecurityRole securityRole) => securityRole.ToSecurityRule();
 
         public static implicit operator RoleBaseSecurityRule(SecurityRole[] securityRoles) => securityRoles.ToSecurityRule();
 
-        public static implicit operator RoleBaseSecurityRule(RoleBaseSecurityRule[] securityRules) => securityRules.ToSecurityRule();
+        public static implicit operator RoleBaseSecurityRule(NonExpandedRolesSecurityRule[] securityRules) => securityRules.ToSecurityRule();
     }
 
     public interface IRoleBaseSecurityRuleCustomData
@@ -117,11 +120,28 @@ public abstract record DomainSecurityRule : SecurityRule
         public SecurityPathRestriction? CustomRestriction { get; }
     }
 
-    public record RoleGroupSecurityRule(DeepEqualsCollection<RoleBaseSecurityRule> Children) : RoleBaseSecurityRule;
-
     public record AnyRoleSecurityRule : RoleBaseSecurityRule;
 
     public record RoleFactorySecurityRule(Type RoleFactoryType) : RoleBaseSecurityRule;
+
+    public record NonExpandedRoleGroupSecurityRule(DeepEqualsCollection<NonExpandedRolesSecurityRule> Children) : RoleBaseSecurityRule
+    {
+        public NonExpandedRoleGroupSecurityRule(IEnumerable<NonExpandedRolesSecurityRule> children)
+            : this(children.ToArray())
+        {
+        }
+    }
+
+    public record ExpandedRoleGroupSecurityRule(DeepEqualsCollection<ExpandedRolesSecurityRule> Children) : RoleBaseSecurityRule
+    {
+        public ExpandedRoleGroupSecurityRule(IEnumerable<ExpandedRolesSecurityRule> children)
+            : this(children.ToArray())
+        {
+        }
+
+        public IEnumerable<ExpandedRolesSecurityRule> GetActualChildren() =>
+            this.Children.Select(c => c.ApplyCustoms(this));
+    }
 
     public record OperationSecurityRule(SecurityOperation SecurityOperation) : RoleBaseSecurityRule
     {
@@ -144,11 +164,11 @@ public abstract record DomainSecurityRule : SecurityRule
 
         public static implicit operator NonExpandedRolesSecurityRule(SecurityRole[] securityRoles) => securityRoles.ToSecurityRule();
 
-        public static NonExpandedRolesSecurityRule operator +(NonExpandedRolesSecurityRule rule1, NonExpandedRolesSecurityRule rule2)
+        public static RoleBaseSecurityRule operator +(NonExpandedRolesSecurityRule rule1, NonExpandedRolesSecurityRule rule2)
         {
             if (!rule1.EqualsCustoms(rule2))
             {
-                throw new InvalidOperationException("Diff customs");
+                return new NonExpandedRoleGroupSecurityRule([rule1, rule2]);
             }
             else
             {
@@ -163,22 +183,22 @@ public abstract record DomainSecurityRule : SecurityRule
     /// <param name="SecurityRoles">Список развёрнутых ролей</param>
     public record ExpandedRolesSecurityRule(DeepEqualsCollection<SecurityRole> SecurityRoles) : RoleBaseSecurityRule
     {
-        public static ExpandedRolesSecurityRule Empty { get; } = Create([]);
+        public ExpandedRolesSecurityRule(IEnumerable<SecurityRole> securityRoles)
+            :this(securityRoles.ToArray())
+        {
+        }
+
+        public static ExpandedRolesSecurityRule Empty { get; } = new([]);
 
         public override string ToString() => this.SecurityRoles.Count == 1
                                                  ? this.SecurityRoles.Single().Name
                                                  : $"[{this.SecurityRoles.Join(", ", sr => sr.Name)}]";
 
-        public static ExpandedRolesSecurityRule Create(IEnumerable<SecurityRole> securityRoles)
-        {
-            return new ExpandedRolesSecurityRule(securityRoles.ToArray());
-        }
-
-        public static ExpandedRolesSecurityRule operator +(ExpandedRolesSecurityRule rule1, ExpandedRolesSecurityRule rule2)
+        public static RoleBaseSecurityRule operator +(ExpandedRolesSecurityRule rule1, ExpandedRolesSecurityRule rule2)
         {
             if (!rule1.EqualsCustoms(rule2))
             {
-                throw new InvalidOperationException("Diff customs");
+                return new ExpandedRoleGroupSecurityRule([rule1, rule2]);
             }
             else
             {

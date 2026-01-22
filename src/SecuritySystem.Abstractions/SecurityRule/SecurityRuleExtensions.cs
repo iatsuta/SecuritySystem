@@ -59,9 +59,8 @@ public static class SecurityRuleExtensions
 
         public NonExpandedRolesSecurityRule ToSecurityRule(
             HierarchicalExpandType? customExpandType = null,
-            SecurityRuleCredential? customCredential = null,
             SecurityPathRestriction? customRestriction = null) =>
-            new[] { securityRole }.ToSecurityRule(customExpandType, customCredential, customRestriction);
+            new[] { securityRole }.ToSecurityRule(customExpandType, customRestriction);
     }
 
     extension(SecurityOperation securityOperation)
@@ -124,13 +123,11 @@ public static class SecurityRuleExtensions
 
         public NonExpandedRolesSecurityRule ToSecurityRule(
             HierarchicalExpandType? customExpandType = null,
-            SecurityRuleCredential? customCredential = null,
             SecurityPathRestriction? customRestriction = null) =>
             new(
                 securityRoles.OrderBy(sr => sr.Name).ToArray())
             {
                 CustomExpandType = customExpandType,
-                CustomCredential = customCredential,
                 CustomRestriction = customRestriction
             };
     }
@@ -138,44 +135,71 @@ public static class SecurityRuleExtensions
     extension<TSecurityRule>(TSecurityRule securityRule)
         where TSecurityRule : RoleBaseSecurityRule
     {
-        public TSecurityRule TryApplyCredential(SecurityRuleCredential credential) =>
-            securityRule.CustomCredential == null ? securityRule with { CustomCredential = credential } : securityRule;
-
         public TSecurityRule WithoutRunAs() =>
             securityRule with { CustomCredential = new SecurityRuleCredential.CurrentUserWithoutRunAsCredential() };
 
-        public TSecurityRule TryApplyCustoms(HierarchicalExpandType? customExpandType = null,
+        public TSecurityRule ApplyCustoms(IRoleBaseSecurityRuleCustomData customData) =>
+
+            securityRule.ApplyCustoms(customData.CustomCredential, customData.CustomExpandType, customData.CustomRestriction);
+
+        public TSecurityRule ApplyCustoms(
             SecurityRuleCredential? customCredential = null,
+            HierarchicalExpandType? customExpandType = null,
             SecurityPathRestriction? customRestriction = null) =>
 
-            customExpandType is null && customCredential is null && customRestriction is null
-                ? securityRule
-                : securityRule with
-                {
-                    CustomExpandType = securityRule.CustomExpandType ?? customExpandType,
-                    CustomCredential = securityRule.CustomCredential ?? customCredential,
-                    CustomRestriction = securityRule.CustomRestriction ?? customRestriction,
-                };
+            securityRule
+                .ForceApply(customCredential)
+                .TryApply(customExpandType)
+                .TryApply(customRestriction);
 
-        public TSecurityRule TryApplyCustoms(IRoleBaseSecurityRuleCustomData customSource) =>
-            securityRule.TryApplyCustoms(customSource.CustomExpandType, customSource.CustomCredential, customSource.CustomRestriction);
+        public TSecurityRule TryApply(SecurityPathRestriction? customRestriction) =>
+            customRestriction == null || securityRule.CustomRestriction != null
+                ? securityRule
+                : securityRule with { CustomRestriction = customRestriction };
+
+        public TSecurityRule TryApply(HierarchicalExpandType? customExpandType) =>
+            customExpandType == null || securityRule.CustomExpandType != null
+                ? securityRule
+                : securityRule with { CustomExpandType = customExpandType };
+    }
+
+
+    extension<TSecurityRule>(TSecurityRule securityRule)
+        where TSecurityRule : SecurityRule
+    {
+        public TSecurityRule TryApply(SecurityRuleCredential? customCredential) =>
+            customCredential == null || securityRule.CustomCredential != null
+                ? securityRule
+                : securityRule with { CustomCredential = customCredential };
+
+        public TSecurityRule ForceApply(SecurityRuleCredential? customCredential) =>
+            customCredential == null || customCredential == securityRule.CustomCredential
+                ? securityRule
+                : securityRule with { CustomCredential = customCredential };
+
+        public TSecurityRule WithDefaultCredential() =>
+            securityRule with { CustomCredential = null };
+
+        public TResult WithDefaultCredential<TResult>(Func<TSecurityRule, TResult> selector)
+            where TResult : SecurityRule =>
+            selector(securityRule.WithDefaultCredential()).ForceApply(securityRule.CustomCredential);
     }
 
     public static RoleBaseSecurityRule ToSecurityRule(
-        this IEnumerable<RoleBaseSecurityRule> securityRules,
-        HierarchicalExpandType? customExpandType = null,
+        this IEnumerable<NonExpandedRolesSecurityRule> securityRules,
         SecurityRuleCredential? customCredential = null,
+        HierarchicalExpandType? customExpandType = null,
         SecurityPathRestriction? customRestriction = null)
     {
         var cache = securityRules.ToList();
 
         if (cache.Count == 1)
         {
-            return cache.Single().TryApplyCustoms(customExpandType, customCredential, customRestriction);
+            return cache.Single().ApplyCustoms(customCredential, customExpandType, customRestriction);
         }
         else
         {
-            return new RoleGroupSecurityRule(cache.ToArray())
+            return new NonExpandedRoleGroupSecurityRule(cache)
             {
                 CustomExpandType = customExpandType,
                 CustomCredential = customCredential,

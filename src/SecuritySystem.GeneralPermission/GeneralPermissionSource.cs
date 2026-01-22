@@ -2,12 +2,12 @@
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+using CommonFramework.DependencyInjection;
 
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.Services;
 
 using System.Linq.Expressions;
-using CommonFramework.DependencyInjection;
 
 namespace SecuritySystem.GeneralPermission;
 

@@ -1,7 +1,5 @@
 ﻿using SecuritySystem.Expanders;
 using SecuritySystem.Providers;
-
-
 using SecuritySystem.Services;
 
 namespace SecuritySystem.DomainServices;
