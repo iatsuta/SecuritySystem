@@ -18,16 +18,13 @@ public class DomainSecurityProviderFactory<TDomainObject>(
     ISecurityRuleDeepOptimizer deepOptimizer,
     IRoleBaseSecurityProviderFactory<TDomainObject> roleBaseSecurityProviderFactory) : IDomainSecurityProviderFactory<TDomainObject>
 {
-    public virtual ISecurityProvider<TDomainObject> Create(DomainSecurityRule baseSecurityRule, SecurityPath<TDomainObject> securityPath)
+    public virtual ISecurityProvider<TDomainObject> Create(DomainSecurityRule securityRule, SecurityPath<TDomainObject> securityPath)
     {
-        var securityRule = deepOptimizer.Optimize(baseSecurityRule);
-
-        return this.CreateInternal(deepOptimizer.Optimize(securityRule), securityRule.CustomCredential, securityPath);
+        return this.CreateInternal(deepOptimizer.Optimize(securityRule), securityPath);
     }
 
     protected virtual ISecurityProvider<TDomainObject> CreateInternal(
         DomainSecurityRule baseSecurityRule,
-        SecurityRuleCredential? securityRuleCredential,
         SecurityPath<TDomainObject> securityPath)
     {
         switch (baseSecurityRule)
@@ -40,7 +37,7 @@ public class DomainSecurityProviderFactory<TDomainObject>(
                 var args = new object?[]
                     {
                         securityRule.RelativePathKey.Maybe(v => new CurrentUserSecurityProviderRelativeKey(v)),
-                        securityRuleCredential
+                        securityRule.CustomCredential
                     }
                     .Where(arg => arg != null)
                     .Select(arg => arg!)
@@ -111,25 +108,25 @@ public class DomainSecurityProviderFactory<TDomainObject>(
 
                 var dynamicRole = dynamicRoleFactory.Create();
 
-                return this.CreateInternal(dynamicRole, securityRuleCredential ?? dynamicRole.CustomCredential, securityPath);
+                return this.CreateInternal(dynamicRole.ForceApply(securityRule.CustomCredential), securityPath);
             }
 
             case DomainSecurityRule.OverrideAccessDeniedMessageSecurityRule securityRule:
             {
-                return this.CreateInternal(securityRule.BaseSecurityRule, securityRuleCredential ?? securityRule.BaseSecurityRule.CustomCredential, securityPath)
+                return this.CreateInternal(securityRule.BaseSecurityRule.ForceApply(securityRule.CustomCredential), securityPath)
                     .OverrideAccessDeniedResult(accessDeniedResult => accessDeniedResult with { CustomMessage = securityRule.CustomMessage });
             }
 
             case DomainSecurityRule.OrSecurityRule securityRule:
-                return this.CreateInternal(securityRule.Left, securityRuleCredential ?? securityRule.Left.CustomCredential, securityPath)
-                    .Or(this.CreateInternal(securityRule.Right, securityRuleCredential ?? securityRule.Right.CustomCredential, securityPath));
+                return this.CreateInternal(securityRule.Left.ForceApply(securityRule.CustomCredential), securityPath)
+                    .Or(this.CreateInternal(securityRule.Right.ForceApply(securityRule.CustomCredential), securityPath));
 
             case DomainSecurityRule.AndSecurityRule securityRule:
-                return this.CreateInternal(securityRule.Left, securityRuleCredential ?? securityRule.Left.CustomCredential, securityPath)
-                    .And(this.CreateInternal(securityRule.Right, securityRuleCredential ?? securityRule.Right.CustomCredential, securityPath));
+                return this.CreateInternal(securityRule.Left.ForceApply(securityRule.CustomCredential), securityPath)
+                    .And(this.CreateInternal(securityRule.Right.ForceApply(securityRule.CustomCredential), securityPath));
 
             case DomainSecurityRule.NegateSecurityRule securityRule:
-                return this.CreateInternal(securityRule.InnerRule, securityRuleCredential ?? securityRule.InnerRule.CustomCredential, securityPath).Negate();
+                return this.CreateInternal(securityRule.InnerRule.ForceApply(securityRule.CustomCredential), securityPath).Negate();
 
             case DomainSecurityRule.DomainModeSecurityRule:
             case DomainSecurityRule.SecurityRuleHeader:
