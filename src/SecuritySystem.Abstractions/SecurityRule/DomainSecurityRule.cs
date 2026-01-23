@@ -140,7 +140,7 @@ public abstract record DomainSecurityRule : SecurityRule
         }
 
         public IEnumerable<ExpandedRolesSecurityRule> GetActualChildren() =>
-            this.Children.Select(c => c.ApplyCustoms(this));
+            this.HasDefaultCustoms() ? this.Children : this.Children.Select(c => c.ApplyCustoms(this));
     }
 
     public record OperationSecurityRule(SecurityOperation SecurityOperation) : RoleBaseSecurityRule
