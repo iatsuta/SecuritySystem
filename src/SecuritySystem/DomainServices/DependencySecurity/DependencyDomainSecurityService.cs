@@ -13,16 +13,11 @@ public class DependencyDomainSecurityService<TDomainObject, TBaseDomainObject>(
     IDomainSecurityService<TBaseDomainObject> baseDomainSecurityService,
     IQueryableSource queryableSource,
     IRelativeDomainPathInfo<TDomainObject, TBaseDomainObject> relativeDomainPathInfo)
-    : DependencyDomainSecurityServiceBase<TDomainObject, TBaseDomainObject>(
-        securityRuleExpander,
-        baseDomainSecurityService)
+    : DependencyDomainSecurityServiceBase<TDomainObject, TBaseDomainObject>(securityRuleExpander, baseDomainSecurityService)
     where TBaseDomainObject : class
 {
     protected override ISecurityProvider<TDomainObject> CreateDependencySecurityProvider(ISecurityProvider<TBaseDomainObject> baseProvider)
     {
-        return new DependencySecurityProvider<TDomainObject, TBaseDomainObject>(
-            baseProvider,
-            relativeDomainPathInfo,
-            queryableSource);
+        return new DependencySecurityProvider<TDomainObject, TBaseDomainObject>(baseProvider, relativeDomainPathInfo, queryableSource);
     }
 }

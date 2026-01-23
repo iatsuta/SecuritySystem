@@ -5,6 +5,9 @@ namespace SecuritySystem;
 
 public abstract record SecurityRule
 {
+    public SecurityRuleCredential? CustomCredential { get; init; }
+
+
     /// <summary>
     /// Правило доступа для просмотра объекта
     /// </summary>
@@ -27,7 +30,7 @@ public abstract record SecurityRule
 
     public static implicit operator SecurityRule(SecurityRole[] securityRoles) => securityRoles.ToSecurityRule();
 
-    public static implicit operator SecurityRule(DomainSecurityRule.RoleBaseSecurityRule[] securityRules) => securityRules.ToSecurityRule();
+    public static implicit operator SecurityRule(DomainSecurityRule.NonExpandedRolesSecurityRule[] securityRules) => securityRules.ToSecurityRule();
 
     public record ModeSecurityRule(string Name) : SecurityRule
     {
@@ -35,6 +38,6 @@ public abstract record SecurityRule
 
         public DomainSecurityRule.DomainModeSecurityRule ToDomain<TDomainObject>() => this.ToDomain(typeof(TDomainObject));
 
-        public DomainSecurityRule.DomainModeSecurityRule ToDomain(Type domainType) => new(domainType, this);
+        public DomainSecurityRule.DomainModeSecurityRule ToDomain(Type domainType) => new(domainType, this) { CustomCredential = this.CustomCredential };
     }
 }

@@ -1,4 +1,6 @@
-﻿using SecuritySystem.SecurityRuleInfo;
+﻿using CommonFramework;
+
+using SecuritySystem.SecurityRuleInfo;
 
 namespace SecuritySystem.Expanders;
 
@@ -9,6 +11,6 @@ public class SecurityModeExpander(IEnumerable<DomainModeSecurityRuleInfo> infoLi
 
     public DomainSecurityRule? TryExpand(DomainSecurityRule.DomainModeSecurityRule securityRule)
     {
-        return this.dict.GetValueOrDefault(securityRule);
+        return this.dict.GetValueOrDefault(securityRule.WithDefaultCredential()).Maybe(v => v with { CustomCredential = securityRule.CustomCredential });
     }
 }

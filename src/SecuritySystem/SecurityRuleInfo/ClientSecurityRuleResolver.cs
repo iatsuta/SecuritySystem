@@ -1,4 +1,4 @@
-﻿using CommonFramework.DictionaryCache;
+﻿using System.Collections.Concurrent;
 
 namespace SecuritySystem.SecurityRuleInfo;
 
@@ -6,20 +6,19 @@ public class ClientSecurityRuleResolver(
     IDomainSecurityRoleExtractor domainSecurityRoleExtractor,
     IClientSecurityRuleInfoSource clientSecurityRuleInfoSource) : IClientSecurityRuleResolver
 {
-    private readonly IDictionaryCache<SecurityRole, List<DomainSecurityRule.ClientSecurityRule>> cache =
-        new DictionaryCache<SecurityRole, List<DomainSecurityRule.ClientSecurityRule>>(
-            securityRole =>
-            {
-                var request = from clientSecurityRuleInfo in clientSecurityRuleInfoSource.GetInfos()
+    private readonly ConcurrentDictionary<SecurityRole, DomainSecurityRule.ClientSecurityRule[]> cache = new();
 
-                              let roles = domainSecurityRoleExtractor.ExtractSecurityRoles(clientSecurityRuleInfo.Implementation)
+    public IEnumerable<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole) =>
+        this.cache.GetOrAdd(securityRole, _ =>
+        {
+            var request = from clientSecurityRuleInfo in clientSecurityRuleInfoSource.GetInfos()
 
-                              where roles.Contains(securityRole)
+                let roles = domainSecurityRoleExtractor.ExtractSecurityRoles(clientSecurityRuleInfo.Implementation)
 
-                              select clientSecurityRuleInfo.Rule;
+                where roles.Contains(securityRole)
 
-                return request.ToList();
-            }).WithLock();
+                select clientSecurityRuleInfo.Rule;
 
-    public IEnumerable<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole) => this.cache[securityRole];
+            return request.ToArray();
+        });
 }

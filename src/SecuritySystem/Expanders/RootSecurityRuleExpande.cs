@@ -5,13 +5,17 @@ namespace SecuritySystem.Expanders;
 public class RootSecurityRuleExpander(
     ISecurityModeExpander securityModeExpander,
     ISecurityOperationExpander securityOperationExpander,
-    ISecurityRoleExpander securityRoleExpander,
+    ISecurityRoleGroupExpander securityRoleGroupExpander,
     IRoleFactorySecurityRuleExpander roleFactorySecurityRuleExpander,
     ISecurityRoleSource securityRoleSource,
     IClientSecurityRuleExpander clientSecurityRuleExpander,
     ISecurityRuleHeaderExpander securityRuleHeaderExpander)
     : ISecurityRuleExpander
 {
+    private readonly Lazy<DomainSecurityRule.ExpandedRoleGroupSecurityRule> anyRoleExpandedSecurityRule = new(() =>
+
+        new ([new(securityRoleSource.SecurityRoles)]));
+
     public DomainSecurityRule? TryExpand(DomainSecurityRule.DomainModeSecurityRule securityRule)
     {
         return securityModeExpander.TryExpand(securityRule);
@@ -19,42 +23,38 @@ public class RootSecurityRuleExpander(
 
     public DomainSecurityRule Expand(DomainSecurityRule.SecurityRuleHeader securityRuleHeader) => securityRuleHeaderExpander.Expand(securityRuleHeader);
 
-    public DomainSecurityRule Expand(DomainSecurityRule.ClientSecurityRule securityRule)
-    {
-        return clientSecurityRuleExpander.Expand(securityRule);
-    }
+    public DomainSecurityRule Expand(DomainSecurityRule.ClientSecurityRule securityRule) =>
+        clientSecurityRuleExpander.Expand(securityRule);
 
-    public DomainSecurityRule.NonExpandedRolesSecurityRule Expand(DomainSecurityRule.OperationSecurityRule securityRule)
-    {
-        return securityOperationExpander.Expand(securityRule);
-    }
+    public DomainSecurityRule.NonExpandedRolesSecurityRule Expand(DomainSecurityRule.OperationSecurityRule securityRule) =>
+        securityOperationExpander.Expand(securityRule);
 
-    public DomainSecurityRule.ExpandedRolesSecurityRule Expand(DomainSecurityRule.NonExpandedRolesSecurityRule securityRule)
-    {
-        return securityRoleExpander.Expand(securityRule);
-    }
+    public DomainSecurityRule.ExpandedRoleGroupSecurityRule Expand(DomainSecurityRule.NonExpandedRoleGroupSecurityRule securityRule) =>
+        securityRoleGroupExpander.Expand(securityRule);
+
+    public DomainSecurityRule.ExpandedRoleGroupSecurityRule Expand(DomainSecurityRule.NonExpandedRolesSecurityRule securityRule) =>
+        securityRoleGroupExpander.Expand(securityRule);
 
     public DomainSecurityRule.RoleBaseSecurityRule Expand(DomainSecurityRule.RoleFactorySecurityRule securityRule)
     {
         return roleFactorySecurityRuleExpander.Expand(securityRule);
     }
 
-    public DomainSecurityRule.ExpandedRolesSecurityRule FullRoleExpand(DomainSecurityRule.RoleBaseSecurityRule securityRule)
+    public DomainSecurityRule.ExpandedRoleGroupSecurityRule FullRoleExpand(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
         return securityRule switch
         {
-            DomainSecurityRule.AnyRoleSecurityRule => DomainSecurityRule.ExpandedRolesSecurityRule.Create(securityRoleSource.SecurityRoles)
-                .TryApplyCustoms(securityRule),
+            DomainSecurityRule.AnyRoleSecurityRule => this.anyRoleExpandedSecurityRule.Value.ApplyCustoms(securityRule),
 
-            DomainSecurityRule.RoleGroupSecurityRule roleGroupSecurityRule => roleGroupSecurityRule.Children.Select(this.FullRoleExpand)
-                .Aggregate(DomainSecurityRule.ExpandedRolesSecurityRule.Empty, (r1, r2) => r1 + r2)
-                .TryApplyCustoms(securityRule),
+            DomainSecurityRule.ExpandedRoleGroupSecurityRule expandedRoleGroupSecurityRule => expandedRoleGroupSecurityRule,
+
+            DomainSecurityRule.NonExpandedRoleGroupSecurityRule roleGroupSecurityRule => this.Expand(roleGroupSecurityRule),
 
             DomainSecurityRule.OperationSecurityRule operationSecurityRule => this.Expand(this.Expand(operationSecurityRule)),
 
             DomainSecurityRule.NonExpandedRolesSecurityRule nonExpandedRolesSecurityRule => this.Expand(nonExpandedRolesSecurityRule),
 
-            DomainSecurityRule.ExpandedRolesSecurityRule expandedRolesSecurityRule => expandedRolesSecurityRule,
+            DomainSecurityRule.ExpandedRolesSecurityRule expandedRolesSecurityRule => new([expandedRolesSecurityRule]),
 
             DomainSecurityRule.RoleFactorySecurityRule dynamicRoleSecurityRule => this.FullRoleExpand(this.Expand(dynamicRoleSecurityRule)),
 

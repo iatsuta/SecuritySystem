@@ -1,4 +1,5 @@
 ﻿using HierarchicalExpand;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using SecuritySystem.DiTests.Rules;
@@ -25,16 +26,21 @@ public class SecurityRoleTests : TestBase
     public void SecurityRoleExpander_ExpandDeepChild_AllRolesExpanded()
     {
         // Arrange
-        var expander = this.RootServiceProvider.GetRequiredService<ISecurityRoleExpander>();
+        var expander = this.RootServiceProvider.GetRequiredService<ISecurityRoleGroupExpander>();
+
+        var expectedResult = new DomainSecurityRule.ExpandedRoleGroupSecurityRule(
+        [
+            new DomainSecurityRule.ExpandedRolesSecurityRule([ExampleSecurityRole.TestRole, ExampleSecurityRole.TestRole2, ExampleSecurityRole.TestRole3])
+                { CustomRestriction = SecurityPathRestriction.Default },
+
+            new DomainSecurityRule.ExpandedRolesSecurityRule([SecurityRole.Administrator]) { CustomRestriction = SecurityPathRestriction.Ignored },
+        ]);
 
         // Act
         var expandResult = expander.Expand(ExampleSecurityRole.TestRole3);
 
         // Assert
-        expandResult.SecurityRoles.Should().BeEquivalentTo(
-        [
-            SecurityRole.Administrator, ExampleSecurityRole.TestRole, ExampleSecurityRole.TestRole2, ExampleSecurityRole.TestRole3
-        ]);
+        expandResult.Should().BeEquivalentTo(expectedResult);
     }
 
     [Fact]
@@ -69,15 +75,22 @@ public class SecurityRoleTests : TestBase
         // Arrange
         var expander = this.RootServiceProvider.GetRequiredService<ISecurityRuleExpander>();
 
+        var customExpandType = HierarchicalExpandType.All;
+
+        var expectedResult = new DomainSecurityRule.ExpandedRoleGroupSecurityRule(
+        [
+            new DomainSecurityRule.ExpandedRolesSecurityRule([ExampleSecurityRole.TestRole])
+                { CustomRestriction = SecurityPathRestriction.Default, CustomExpandType = customExpandType },
+
+            new DomainSecurityRule.ExpandedRolesSecurityRule([SecurityRole.Administrator])
+                { CustomRestriction = SecurityPathRestriction.Ignored }
+        ]);
+
         // Act
-        var expandResult = expander.FullRoleExpand(ExampleSecurityOperation.EmployeeView.ToSecurityRule(HierarchicalExpandType.All));
+        var expandResult = expander.FullRoleExpand(ExampleSecurityOperation.EmployeeView.ToSecurityRule(customExpandType));
 
         // Assert
-        expandResult.Should()
-                    .Subject
-                    .Should()
-                    .BeEquivalentTo(
-                        new[] { SecurityRole.Administrator, ExampleSecurityRole.TestRole }.ToSecurityRule(HierarchicalExpandType.All));
+        expandResult.Should().BeEquivalentTo(expectedResult);
     }
 
     [Fact]
@@ -86,14 +99,21 @@ public class SecurityRoleTests : TestBase
         // Arrange
         var expander = this.RootServiceProvider.GetRequiredService<ISecurityRuleExpander>();
 
+        var customExpandType = HierarchicalExpandType.None;
+
         // Act
         var expandResult = expander.FullRoleExpand(ExampleSecurityOperation.BusinessUnitView);
 
+        var expectedResult = new DomainSecurityRule.ExpandedRoleGroupSecurityRule(
+        [
+            new DomainSecurityRule.ExpandedRolesSecurityRule([ExampleSecurityRole.TestRole4])
+                { CustomRestriction = SecurityPathRestriction.Default, CustomExpandType = customExpandType },
+
+            new DomainSecurityRule.ExpandedRolesSecurityRule([SecurityRole.Administrator])
+                { CustomRestriction = SecurityPathRestriction.Ignored }
+        ]);
+
         // Assert
-        expandResult.Should()
-                    .Subject
-                    .Should()
-                    .BeEquivalentTo(
-                        new[] { SecurityRole.Administrator, ExampleSecurityRole.TestRole4 }.ToSecurityRule(HierarchicalExpandType.None));
+        expandResult.Should().BeEquivalentTo(expectedResult);
     }
 }

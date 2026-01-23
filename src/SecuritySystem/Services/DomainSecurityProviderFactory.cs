@@ -18,12 +18,8 @@ public class DomainSecurityProviderFactory<TDomainObject>(
     ISecurityRuleDeepOptimizer deepOptimizer,
     IRoleBaseSecurityProviderFactory<TDomainObject> roleBaseSecurityProviderFactory) : IDomainSecurityProviderFactory<TDomainObject>
 {
-    public virtual ISecurityProvider<TDomainObject> Create(
-        DomainSecurityRule securityRule,
-        SecurityPath<TDomainObject> securityPath)
-    {
-        return this.CreateInternal(deepOptimizer.Optimize(securityRule), securityPath);
-    }
+    public virtual ISecurityProvider<TDomainObject> Create(DomainSecurityRule securityRule, SecurityPath<TDomainObject> securityPath) =>
+        this.CreateInternal(deepOptimizer.Optimize(securityRule), securityPath);
 
     protected virtual ISecurityProvider<TDomainObject> CreateInternal(
         DomainSecurityRule baseSecurityRule,

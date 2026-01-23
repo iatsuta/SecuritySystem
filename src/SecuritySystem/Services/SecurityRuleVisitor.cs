@@ -2,6 +2,11 @@
 
 public abstract class SecurityRuleVisitor
 {
+    protected virtual DomainSecurityRule Visit(DomainSecurityRule.ExpandedRoleGroupSecurityRule securityRule)
+    {
+        return securityRule;
+    }
+
     protected virtual DomainSecurityRule Visit(DomainSecurityRule.ExpandedRolesSecurityRule securityRule)
     {
         return securityRule;
@@ -80,6 +85,7 @@ public abstract class SecurityRuleVisitor
 
     protected virtual DomainSecurityRule Visit(DomainSecurityRule.RoleBaseSecurityRule baseSecurityRule) => baseSecurityRule switch
     {
+        DomainSecurityRule.ExpandedRoleGroupSecurityRule securityRule => this.Visit(securityRule),
         DomainSecurityRule.ExpandedRolesSecurityRule securityRule => this.Visit(securityRule),
         DomainSecurityRule.NonExpandedRolesSecurityRule securityRule => this.Visit(securityRule),
         DomainSecurityRule.OperationSecurityRule securityRule => this.Visit(securityRule),

@@ -103,11 +103,13 @@ public static class ServiceCollectionExtensions
                 .AddSingleton<IDomainModeSecurityRuleResolver, DomainModeSecurityRuleResolver>()
                 .AddSingleton<IDomainSecurityRoleExtractor, DomainSecurityRoleExtractor>()
 
+                .AddSingleton<IExpandedRoleGroupSecurityRuleSetOptimizer, ExpandedRoleGroupSecurityRuleSetOptimizer>()
+
                 .AddSingleton<ISecurityRuleHeaderExpander, SecurityRuleHeaderExpander>()
                 .AddSingleton<IClientSecurityRuleExpander, ClientSecurityRuleExpander>()
                 .AddSingleton<ISecurityModeExpander, SecurityModeExpander>()
                 .AddSingleton<ISecurityOperationExpander, SecurityOperationExpander>()
-                .AddSingleton<ISecurityRoleExpander, SecurityRoleExpander>()
+                .AddSingleton<ISecurityRoleGroupExpander, SecurityRoleGroupExpander>()
                 .AddSingleton<IRoleFactorySecurityRuleExpander, RoleFactorySecurityRuleExpander>()
                 .AddSingleton<ISecurityRuleExpander, RootSecurityRuleExpander>()
                 .AddSingleton<ISecurityRoleSource, SecurityRoleSource>()
