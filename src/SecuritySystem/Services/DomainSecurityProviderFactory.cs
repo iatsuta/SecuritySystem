@@ -18,8 +18,10 @@ public class DomainSecurityProviderFactory<TDomainObject>(
     ISecurityRuleDeepOptimizer deepOptimizer,
     IRoleBaseSecurityProviderFactory<TDomainObject> roleBaseSecurityProviderFactory) : IDomainSecurityProviderFactory<TDomainObject>
 {
-    public virtual ISecurityProvider<TDomainObject> Create(DomainSecurityRule securityRule, SecurityPath<TDomainObject> securityPath) =>
-        this.CreateInternal(deepOptimizer.Optimize(securityRule), securityPath);
+    public virtual ISecurityProvider<TDomainObject> Create(DomainSecurityRule securityRule, SecurityPath<TDomainObject> securityPath)
+    {
+        return this.CreateInternal(deepOptimizer.Optimize(securityRule), securityPath);
+    }
 
     protected virtual ISecurityProvider<TDomainObject> CreateInternal(
         DomainSecurityRule baseSecurityRule,
@@ -34,9 +36,8 @@ public class DomainSecurityProviderFactory<TDomainObject>(
             {
                 var args = new object?[]
                     {
-                        securityRule.RelativePathKey == null
-                            ? null
-                            : new CurrentUserSecurityProviderRelativeKey(securityRule.RelativePathKey)
+                        securityRule.RelativePathKey.Maybe(v => new CurrentUserSecurityProviderRelativeKey(v)),
+                        securityRule.CustomCredential
                     }
                     .Where(arg => arg != null)
                     .Select(arg => arg!)
@@ -105,23 +106,27 @@ public class DomainSecurityProviderFactory<TDomainObject>(
 
                 var dynamicRoleFactory = (IFactory<DomainSecurityRule>)dynamicRoleFactoryUntyped;
 
-                return this.CreateInternal(dynamicRoleFactory.Create(), securityPath);
+                var dynamicRole = dynamicRoleFactory.Create();
+
+                return this.CreateInternal(dynamicRole.ForceApply(securityRule.CustomCredential), securityPath);
             }
 
             case DomainSecurityRule.OverrideAccessDeniedMessageSecurityRule securityRule:
             {
-                return this.CreateInternal(securityRule.BaseSecurityRule, securityPath)
+                return this.CreateInternal(securityRule.BaseSecurityRule.ForceApply(securityRule.CustomCredential), securityPath)
                     .OverrideAccessDeniedResult(accessDeniedResult => accessDeniedResult with { CustomMessage = securityRule.CustomMessage });
             }
 
             case DomainSecurityRule.OrSecurityRule securityRule:
-                return this.CreateInternal(securityRule.Left, securityPath).Or(this.CreateInternal(securityRule.Right, securityPath));
+                return this.CreateInternal(securityRule.Left.ForceApply(securityRule.CustomCredential), securityPath)
+                    .Or(this.CreateInternal(securityRule.Right.ForceApply(securityRule.CustomCredential), securityPath));
 
             case DomainSecurityRule.AndSecurityRule securityRule:
-                return this.CreateInternal(securityRule.Left, securityPath).And(this.CreateInternal(securityRule.Right, securityPath));
+                return this.CreateInternal(securityRule.Left.ForceApply(securityRule.CustomCredential), securityPath)
+                    .And(this.CreateInternal(securityRule.Right.ForceApply(securityRule.CustomCredential), securityPath));
 
             case DomainSecurityRule.NegateSecurityRule securityRule:
-                return this.CreateInternal(securityRule.InnerRule, securityPath).Negate();
+                return this.CreateInternal(securityRule.InnerRule.ForceApply(securityRule.CustomCredential), securityPath).Negate();
 
             case DomainSecurityRule.DomainModeSecurityRule:
             case DomainSecurityRule.SecurityRuleHeader:

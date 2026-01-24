@@ -9,6 +9,7 @@ using CommonFramework.VisualIdentitySource;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using SecuritySystem.Credential;
 using SecuritySystem.Providers;
 using SecuritySystem.SecurityAccessor;
 using SecuritySystem.Services;
@@ -20,18 +21,29 @@ public class CurrentUserSecurityProvider<TDomainObject>(
 	IServiceProxyFactory serviceProxyFactory,
     IEnumerable<UserSourceInfo> userSourceInfoList,
     IIdentityInfoSource identityInfoSource,
+    SecurityRuleCredential? securityRuleCredential = null,
     CurrentUserSecurityProviderRelativeKey? key = null) : ISecurityProvider<TDomainObject>
 {
-    private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerProvider = new(() =>
+    private readonly Lazy<ISecurityProvider<TDomainObject>> lazyInnerService = new(() =>
     {
 	    var (actualUserSourceInfo, actualRelativeDomainPathInfo) =
 		    TryGetActualUserSourceInfo() ?? throw new SecuritySystemException($"Can't found RelativePath for {typeof(TDomainObject)}");
 
 	    var identityInfo = identityInfoSource.GetIdentityInfo(actualUserSourceInfo.UserType);
 
-        return serviceProxyFactory.Create<ISecurityProvider<TDomainObject>>(
-            typeof(CurrentUserSecurityProvider<,,>).MakeGenericType(typeof(TDomainObject), actualUserSourceInfo.UserType, identityInfo.IdentityType),
-            actualRelativeDomainPathInfo, identityInfo);
+        var innerServiceType =
+            typeof(CurrentUserSecurityProvider<,,>).MakeGenericType(typeof(TDomainObject), actualUserSourceInfo.UserType, identityInfo.IdentityType);
+
+        var innerServiceArgs = new[]
+            {
+                actualRelativeDomainPathInfo,
+                identityInfo,
+                securityRuleCredential
+            }.Where(arg => arg != null)
+            .Select(arg => arg!)
+            .ToArray();
+
+        return serviceProxyFactory.Create<ISecurityProvider<TDomainObject>>(innerServiceType, innerServiceArgs);
 
 		(UserSourceInfo, object)? TryGetActualUserSourceInfo()
 		{
@@ -55,40 +67,55 @@ public class CurrentUserSecurityProvider<TDomainObject>(
 		}
 	});
 
+	private ISecurityProvider<TDomainObject> InnerService => this.lazyInnerService.Value;
 
-	private ISecurityProvider<TDomainObject> InnerProvider => this.lazyInnerProvider.Value;
+    public IQueryable<TDomainObject> InjectFilter(IQueryable<TDomainObject> queryable) => this.InnerService.InjectFilter(queryable);
 
-    public IQueryable<TDomainObject> InjectFilter(IQueryable<TDomainObject> queryable) => this.InnerProvider.InjectFilter(queryable);
+    public AccessResult GetAccessResult(TDomainObject domainObject) => this.InnerService.GetAccessResult(domainObject);
 
-    public AccessResult GetAccessResult(TDomainObject domainObject) => this.InnerProvider.GetAccessResult(domainObject);
+    public bool HasAccess(TDomainObject domainObject) => this.InnerService.HasAccess(domainObject);
 
-    public bool HasAccess(TDomainObject domainObject) => this.InnerProvider.HasAccess(domainObject);
-
-    public SecurityAccessorData GetAccessorData(TDomainObject domainObject) => this.InnerProvider.GetAccessorData(domainObject);
+    public SecurityAccessorData GetAccessorData(TDomainObject domainObject) => this.InnerService.GetAccessorData(domainObject);
 }
 
 public class CurrentUserSecurityProvider<TDomainObject, TUser, TIdent>(
-	IExpressionEvaluatorStorage expressionEvaluatorStorage,
-	IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
-	IdentityInfo<TUser, TIdent> identityInfo,
-	IVisualIdentityInfoSource visualIdentityInfoSource,
-	ISecurityIdentityConverter<TIdent> securityIdentityConverter,
-	ICurrentUserSource<TUser> currentUserSource) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
-	where TUser : class
-	where TIdent : notnull
+    IExpressionEvaluatorStorage expressionEvaluatorStorage,
+    IRelativeDomainPathInfo<TDomainObject, TUser> relativeDomainPathInfo,
+    IdentityInfo<TUser, TIdent> identityInfo,
+    IVisualIdentityInfoSource visualIdentityInfoSource,
+    ISecurityIdentityConverter<TIdent> securityIdentityConverter,
+    IUserNameResolver<TUser> userNameResolver,
+    IUserSource<TUser> userSource,
+    SecurityRuleCredential? baseSecurityRuleCredential = null) : SecurityProvider<TDomainObject>(expressionEvaluatorStorage)
+    where TUser : class
+    where TIdent : notnull
 {
-	private readonly Func<TUser, string> nameSelector = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Getter;
+    private readonly Func<TUser, string> nameSelector = visualIdentityInfoSource.GetVisualIdentityInfo<TUser>().Name.Getter;
 
-	public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
+    public override Expression<Func<TDomainObject, bool>> SecurityFilter { get; } =
 
-		relativeDomainPathInfo.CreateCondition(
-			identityInfo.Id.Path.Select(
-				ExpressionHelper.GetEqualityWithExpr(securityIdentityConverter.Convert(currentUserSource.ToSimple().CurrentUser.Identity).Id)));
+        (baseSecurityRuleCredential ?? new SecurityRuleCredential.CurrentUserWithRunAsCredential())
+        .Pipe(securityRuleCredential =>
+        {
+            var userName = userNameResolver.Resolve(securityRuleCredential);
 
-	public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
-	{
-		var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
+            if (userName == null)
+            {
+                return _ => true;
+            }
+            else
+            {
+                var userId = securityIdentityConverter.Convert(userSource.ToSimple().GetUser(userName).Identity).Id;
 
-		return SecurityAccessorData.Return(users.Select(nameSelector));
-	}
+                return identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(userId));
+            }
+        })
+        .Pipe(relativeDomainPathInfo.CreateCondition);
+
+    public override SecurityAccessorData GetAccessorData(TDomainObject domainObject)
+    {
+        var users = relativeDomainPathInfo.GetRelativeObjects(domainObject);
+
+        return SecurityAccessorData.Return(users.Select(nameSelector));
+    }
 }
