@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>IvAt.SecuritySystem.Runtime</PackageId>
+    <RootNamespace>SecuritySystem</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IvAt.CommonFramework.GenericRepository" />
+    <PackageReference Include="IvAt.CommonFramework.RelativePath" />
+
+    <PackageReference Include="IvAt.CommonFramework.IdentitySource.Abstractions" />
+    <PackageReference Include="IvAt.CommonFramework.VisualIdentitySource.Abstractions" />
+    <PackageReference Include="IvAt.GenericQueryable.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem.Abstractions\SecuritySystem.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

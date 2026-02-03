@@ -1,4 +1,5 @@
-﻿using CommonFramework.DependencyInjection;
+﻿using CommonFramework;
+
 using ExampleApp.Application;
 
 using SecuritySystem;

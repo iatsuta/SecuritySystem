@@ -130,6 +130,10 @@ public abstract record DomainSecurityRule : SecurityRule
             : this(children.ToArray())
         {
         }
+
+        public override string ToString() => this.Children.Count == 1
+            ? this.Children.Single().ToString()
+            : $"[{this.Children.Join(", ", sr => sr.ToString())}]";
     }
 
     public record ExpandedRoleGroupSecurityRule(DeepEqualsCollection<ExpandedRolesSecurityRule> Children) : RoleBaseSecurityRule
@@ -141,6 +145,10 @@ public abstract record DomainSecurityRule : SecurityRule
 
         public IEnumerable<ExpandedRolesSecurityRule> GetActualChildren() =>
             this.HasDefaultCustoms() ? this.Children : this.Children.Select(c => c.ApplyCustoms(this));
+
+        public override string ToString() => this.Children.Count == 1
+            ? this.Children.Single().ToString()
+            : $"[{this.Children.Join(", ", sr => sr.ToString())}]";
     }
 
     public record OperationSecurityRule(SecurityOperation SecurityOperation) : RoleBaseSecurityRule

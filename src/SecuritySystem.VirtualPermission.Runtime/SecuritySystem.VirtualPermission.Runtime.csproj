@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>IvAt.SecuritySystem.VirtualPermission.Runtime</PackageId>
+    <RootNamespace>SecuritySystem.VirtualPermission</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem.Runtime\SecuritySystem.Runtime.csproj" />
+  </ItemGroup>
+
+</Project>

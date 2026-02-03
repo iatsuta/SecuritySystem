@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem.VirtualPermission.Runtime\SecuritySystem.VirtualPermission.Runtime.csproj" />
     <ProjectReference Include="..\SecuritySystem\SecuritySystem.csproj" />
   </ItemGroup>
 

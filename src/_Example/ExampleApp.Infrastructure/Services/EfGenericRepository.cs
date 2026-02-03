@@ -1,4 +1,5 @@
 ﻿using CommonFramework.GenericRepository;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace ExampleApp.Infrastructure.Services;

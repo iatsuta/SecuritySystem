@@ -42,12 +42,12 @@ public static class SecuritySystemSettingsExtensions
         }
 
         public ISecuritySystemSettings AddVirtualPermission<TPrincipal, TPermission>(
-            Expression<Func<TPermission, TPrincipal>> principalPath,
+            PropertyAccessors<TPermission, TPrincipal> principalAccessors,
             Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> initAction)
             where TPrincipal : class
             where TPermission : class
         {
-            var bindingInfo = new PermissionBindingInfo<TPermission, TPrincipal> { IsReadonly = true, Principal = principalPath.ToPropertyAccessors() };
+            var bindingInfo = new PermissionBindingInfo<TPermission, TPrincipal> { IsReadonly = true, Principal = principalAccessors };
 
             var builder = new VirtualBindingInfoRootSettingsBuilder<TPermission>();
 
@@ -55,5 +55,12 @@ public static class SecuritySystemSettingsExtensions
 
             return securitySystemSettings.AddVirtualPermission(bindingInfo, builder.VirtualPermissionBindingInfoList.ToArray());
         }
+
+        public ISecuritySystemSettings AddVirtualPermission<TPrincipal, TPermission>(
+            Expression<Func<TPermission, TPrincipal>> principalPath,
+            Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> initAction)
+            where TPrincipal : class
+            where TPermission : class =>
+            securitySystemSettings.AddVirtualPermission(principalPath.ToPropertyAccessors(), initAction);
     }
 }
