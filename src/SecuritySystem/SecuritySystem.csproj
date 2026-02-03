@@ -5,13 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IvAt.CommonFramework.RelativePath" />
     <PackageReference Include="IvAt.CommonFramework.VisualIdentitySource" />
+
     <PackageReference Include="IvAt.HierarchicalExpand" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SecuritySystem.Abstractions\SecuritySystem.Abstractions.csproj" />
+    <ProjectReference Include="..\SecuritySystem.Runtime\SecuritySystem.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

@@ -6,6 +6,7 @@ using ExampleApp.Infrastructure;
 using HierarchicalExpand.AncestorDenormalization;
 
 using Microsoft.AspNetCore.Mvc;
+
 using SecuritySystem.GeneralPermission.Initialize;
 using SecuritySystem.Services;
 

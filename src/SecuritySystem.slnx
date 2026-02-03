@@ -20,9 +20,13 @@
   <Project Path="SecuritySystem.Configurator/SecuritySystem.Configurator.csproj" />
   
   <Project Path="SecuritySystem.DiTests/SecuritySystem.DiTests.csproj" />
+  <Project Path="SecuritySystem.Domain/SecuritySystem.Domain.csproj" />
+  <Project Path="SecuritySystem.GeneralPermission.Runtime/SecuritySystem.GeneralPermission.Runtime.csproj" />
   
   <Project Path="SecuritySystem.GeneralPermission/SecuritySystem.GeneralPermission.csproj" />
+  <Project Path="SecuritySystem.Runtime/SecuritySystem.Runtime.csproj" />
   <Project Path="SecuritySystem.Testing/SecuritySystem.Testing.csproj" />
+  <Project Path="SecuritySystem.VirtualPermission.Runtime/SecuritySystem.VirtualPermission.Runtime.csproj" />
   
   <Project Path="SecuritySystem.VirtualPermission/SecuritySystem.VirtualPermission.csproj" />
   

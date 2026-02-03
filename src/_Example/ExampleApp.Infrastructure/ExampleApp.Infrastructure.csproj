@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="IvAt.GenericQueryable.EntityFramework" />
+
     <PackageReference Include="Microsoft.AspNetCore.Http" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
 
