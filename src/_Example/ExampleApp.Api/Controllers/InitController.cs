@@ -1,5 +1,4 @@
 ﻿using ExampleApp.Domain;
-using ExampleApp.Domain.Auth.General;
 using ExampleApp.Domain.Auth.Virtual;
 using ExampleApp.Infrastructure;
 
@@ -17,8 +16,8 @@ namespace ExampleApp.Api.Controllers;
 public class InitController(
 	IRawUserAuthenticationService rawUserAuthenticationService,
 	IDenormalizedAncestorsService<BusinessUnit> denormalizedAncestorsService,
-	ISecurityRoleInitializer<SecurityRole> securityRoleInitializer,
-    ISecurityContextInitializer<SecurityContextType> securityContextInitializer,
+	ISecurityRoleInitializer securityRoleInitializer,
+    ISecurityContextInitializer securityContextInitializer,
     TestDbContext dbContext) : ControllerBase
 {
 	[HttpPost]

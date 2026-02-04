@@ -4,11 +4,28 @@ using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.Initialize;
+
+public class SecurityRoleInitializer(IServiceProvider serviceProvider, IEnumerable<GeneralPermissionBindingInfo> bindings)
+    : ISecurityRoleInitializer
+{
+    public async Task Init(CancellationToken cancellationToken)
+    {
+        foreach (var binding in bindings)
+        {
+            var initializer =
+                (ISecurityRoleInitializer)serviceProvider.GetRequiredService(
+                    typeof(ISecurityRoleInitializer<>).MakeGenericType(binding.SecurityRoleType));
+
+            await initializer.Init(cancellationToken);
+        }
+    }
+}
 
 public class SecurityRoleInitializer<TSecurityRole>(
     IServiceProxyFactory serviceProxyFactory,
