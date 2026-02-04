@@ -1,5 +1,4 @@
 ﻿using CommonFramework;
-using CommonFramework.DependencyInjection;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;

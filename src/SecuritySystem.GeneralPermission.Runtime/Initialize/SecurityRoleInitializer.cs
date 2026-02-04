@@ -4,6 +4,7 @@ using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
 
 using GenericQueryable;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +15,7 @@ namespace SecuritySystem.GeneralPermission.Initialize;
 public class SecurityRoleInitializer(IServiceProvider serviceProvider, IEnumerable<GeneralPermissionBindingInfo> bindings)
     : ISecurityRoleInitializer
 {
-    public async Task Init(CancellationToken cancellationToken)
+    public async Task Initialize(CancellationToken cancellationToken)
     {
         foreach (var binding in bindings)
         {
@@ -22,7 +23,7 @@ public class SecurityRoleInitializer(IServiceProvider serviceProvider, IEnumerab
                 (ISecurityRoleInitializer)serviceProvider.GetRequiredService(
                     typeof(ISecurityRoleInitializer<>).MakeGenericType(binding.SecurityRoleType));
 
-            await initializer.Init(cancellationToken);
+            await initializer.Initialize(cancellationToken);
         }
     }
 }
@@ -53,14 +54,14 @@ public class SecurityRoleInitializer<TSecurityRole>(
             visualIdentityInfo);
     });
 
-    public Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken) =>
-        this.lazyInnerService.Value.Init(securityRoles, cancellationToken);
+    public Task<MergeResult<TSecurityRole, FullSecurityRole>> Initialize(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken) =>
+        this.lazyInnerService.Value.Initialize(securityRoles, cancellationToken);
 
-    public Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(CancellationToken cancellationToken) =>
-        this.lazyInnerService.Value.Init(cancellationToken);
+    public Task<MergeResult<TSecurityRole, FullSecurityRole>> Initialize(CancellationToken cancellationToken) =>
+        this.lazyInnerService.Value.Initialize(cancellationToken);
 
-    Task ISecurityInitializer.Init(CancellationToken cancellationToken) =>
-        ((ISecurityInitializer)this.lazyInnerService.Value).Init(cancellationToken);
+    Task IInitializer.Initialize(CancellationToken cancellationToken) =>
+        ((IInitializer)this.lazyInnerService.Value).Initialize(cancellationToken);
 }
 
 public class SecurityRoleInitializer<TPermission, TSecurityRole, TSecurityRoleIdent>(
@@ -77,12 +78,12 @@ public class SecurityRoleInitializer<TPermission, TSecurityRole, TSecurityRoleId
     where TSecurityRole : class, new()
     where TSecurityRoleIdent : notnull
 {
-    public async Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(CancellationToken cancellationToken)
+    public async Task<MergeResult<TSecurityRole, FullSecurityRole>> Initialize(CancellationToken cancellationToken)
     {
-        return await this.Init(securityRoleSource.GetRealRoles(), cancellationToken);
+        return await this.Initialize(securityRoleSource.GetRealRoles(), cancellationToken);
     }
 
-    public async Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(
+    public async Task<MergeResult<TSecurityRole, FullSecurityRole>> Initialize(
         IEnumerable<FullSecurityRole> securityRoles,
         CancellationToken cancellationToken)
     {
@@ -145,5 +146,5 @@ public class SecurityRoleInitializer<TPermission, TSecurityRole, TSecurityRoleId
         return mergeResult;
     }
 
-    async Task ISecurityInitializer.Init(CancellationToken cancellationToken) => await this.Init(cancellationToken);
+    async Task IInitializer.Initialize(CancellationToken cancellationToken) => await this.Initialize(cancellationToken);
 }

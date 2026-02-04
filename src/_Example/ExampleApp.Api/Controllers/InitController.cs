@@ -5,7 +5,6 @@ using ExampleApp.Infrastructure;
 using HierarchicalExpand.AncestorDenormalization;
 
 using Microsoft.AspNetCore.Mvc;
-
 using SecuritySystem.GeneralPermission.Initialize;
 using SecuritySystem.Services;
 
@@ -15,7 +14,7 @@ namespace ExampleApp.Api.Controllers;
 [ApiController]
 public class InitController(
 	IRawUserAuthenticationService rawUserAuthenticationService,
-	IDenormalizedAncestorsService<BusinessUnit> denormalizedAncestorsService,
+	IDenormalizedAncestorsService denormalizedAncestorsService,
 	ISecurityRoleInitializer securityRoleInitializer,
     ISecurityContextInitializer securityContextInitializer,
     TestDbContext dbContext) : ControllerBase
@@ -63,12 +62,12 @@ public class InitController(
 
 		await dbContext.SaveChangesAsync(cancellationToken);
 
-		await denormalizedAncestorsService.SyncAllAsync(cancellationToken);
+		await denormalizedAncestorsService.Initialize(cancellationToken);
 
 		await dbContext.SaveChangesAsync(cancellationToken);
 
-        await securityRoleInitializer.Init(cancellationToken);
-        await securityContextInitializer.Init(cancellationToken);
+        await securityRoleInitializer.Initialize(cancellationToken);
+        await securityContextInitializer.Initialize(cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
