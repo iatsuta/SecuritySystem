@@ -4,9 +4,9 @@ namespace SecuritySystem.GeneralPermission.Initialize;
 
 public interface ISecurityRoleInitializer<TSecurityRole> : ISecurityRoleInitializer
 {
-    Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken);
+    Task<MergeResult<TSecurityRole, FullSecurityRole>> Initialize(IEnumerable<FullSecurityRole> securityRoles, CancellationToken cancellationToken);
 
-    new Task<MergeResult<TSecurityRole, FullSecurityRole>> Init(CancellationToken cancellationToken);
+    new Task<MergeResult<TSecurityRole, FullSecurityRole>> Initialize(CancellationToken cancellationToken);
 }
 
-public interface ISecurityRoleInitializer : ISecurityInitializer;
+public interface ISecurityRoleInitializer : IInitializer;
