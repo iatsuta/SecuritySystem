@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem.GeneralPermission.Abstractions\SecuritySystem.GeneralPermission.Abstractions.csproj" />
     <ProjectReference Include="..\SecuritySystem.Runtime\SecuritySystem.Runtime.csproj" />
   </ItemGroup>
 

@@ -61,6 +61,11 @@ public static class SecuritySystemSettingsExtensions
             Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> initAction)
             where TPrincipal : class
             where TPermission : class =>
-            securitySystemSettings.AddVirtualPermission(principalPath.ToPropertyAccessors(), initAction);
+            securitySystemSettings.AddVirtualPermission(
+                new PropertyAccessors<TPermission, TPrincipal>(
+                    principalPath,
+                    principalPath.Compile(),
+                    (_, __) => throw new NotImplementedException("ReadOnly")),
+                initAction);
     }
 }

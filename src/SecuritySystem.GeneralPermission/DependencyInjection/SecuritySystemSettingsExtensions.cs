@@ -38,7 +38,11 @@ public static class SecuritySystemSettingsExtensions
                     .AddSingleton(typeof(IPermissionSecurityRoleFilterFactory<>), typeof(PermissionSecurityRoleFilterFactory<>))
                     .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
 
+
+                    .AddScoped<ISecurityRoleInitializer, SecurityRoleInitializer>()
                     .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
+
+                    .AddScoped<ISecurityContextInitializer, SecurityContextInitializer>()
                     .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
 
                     .AddScoped(typeof(IManagedPrincipalConverter<>), typeof(ManagedPrincipalConverter<>))

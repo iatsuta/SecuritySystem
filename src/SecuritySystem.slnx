@@ -21,6 +21,7 @@
   
   <Project Path="SecuritySystem.DiTests/SecuritySystem.DiTests.csproj" />
   <Project Path="SecuritySystem.Domain/SecuritySystem.Domain.csproj" />
+  <Project Path="SecuritySystem.GeneralPermission.Abstractions/SecuritySystem.GeneralPermission.Abstractions.csproj" />
   <Project Path="SecuritySystem.GeneralPermission.Runtime/SecuritySystem.GeneralPermission.Runtime.csproj" />
   
   <Project Path="SecuritySystem.GeneralPermission/SecuritySystem.GeneralPermission.csproj" />
