@@ -8,9 +8,9 @@
   <ItemGroup>
     <PackageReference Include="IvAt.CommonFramework.GenericRepository" />
     <PackageReference Include="IvAt.CommonFramework.RelativePath" />
-
     <PackageReference Include="IvAt.CommonFramework.IdentitySource.Abstractions" />
     <PackageReference Include="IvAt.CommonFramework.VisualIdentitySource.Abstractions" />
+
     <PackageReference Include="IvAt.GenericQueryable.Abstractions" />
   </ItemGroup>
 
