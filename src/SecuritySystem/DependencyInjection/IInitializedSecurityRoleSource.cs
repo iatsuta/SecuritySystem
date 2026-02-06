@@ -1,6 +1,4 @@
-﻿
-
-namespace SecuritySystem.DependencyInjection;
+﻿namespace SecuritySystem.DependencyInjection;
 
 public interface IInitializedSecurityRoleSource
 {
