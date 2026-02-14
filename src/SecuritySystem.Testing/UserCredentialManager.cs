@@ -40,7 +40,8 @@ public class UserCredentialManager(
             SecurityRole = testPermission.SecurityRole,
             Period = testPermission.Period,
             Comment = testPermission.Comment,
-            Restrictions = testPermission.Restrictions
+            Restrictions = testPermission.Restrictions,
+            ExtendedData = testPermission.ExtendedData
         });
 
         var existsPrincipal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);

@@ -137,7 +137,9 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
             entity.HasIndex(e => e.Name).IsUnique();
 
             entity.Property(e => e.Name).IsRequired().HasMaxLength(DefaultMaxLength);
-	    }
+
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(DefaultMaxLength);
+        }
 
         {
             var entity = modelBuilder.Entity<Permission>().ToTable(nameof(Permission), AuthSchema);
@@ -145,6 +147,9 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 
             entity.HasOne(e => e.SecurityRole).WithMany().HasForeignKey($"{nameof(Permission.SecurityRole)}{DefaultIdPostfix}").IsRequired();
             entity.HasOne(e => e.Principal).WithMany().HasForeignKey($"{nameof(Permission.Principal)}{DefaultIdPostfix}").IsRequired();
+
+            entity.Property(e => e.Comment).IsRequired().HasMaxLength(DefaultMaxLength);
+            entity.Property(e => e.ExtendedValue).IsRequired().HasMaxLength(DefaultMaxLength);
         }
 
         {

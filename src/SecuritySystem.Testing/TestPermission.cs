@@ -1,4 +1,6 @@
-﻿using SecuritySystem.ExternalSystem.Management;
+﻿using System.Collections.Immutable;
+
+using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.Testing;
 
@@ -18,9 +20,11 @@ public class TestPermission
 
     public PermissionPeriod Period { get; set; } = PermissionPeriod.Eternity;
 
-    public Dictionary<Type, Array> Restrictions { get; } = new();
+    public Dictionary<Type, Array> Restrictions { get; } = [];
 
-    public string Comment { get; set; }
+    public Dictionary<string, object> ExtendedData { get; set; } = [];
+
+    public string Comment { get; set; } = "";
 
     public TypedSecurityIdentity<TIdent>? GetSingle<TSecurityContext, TIdent>()
         where TSecurityContext : ISecurityContext
@@ -72,21 +76,14 @@ public class TestPermission
         }
     }
 
-    public ManagedPermissionData ToManagedPermissionData()
+    public ManagedPermissionData ToManagedPermissionData() => new()
     {
-        if (this.SecurityRole is null)
-        {
-            throw new InvalidOperationException($"{nameof(this.SecurityRole)} not initialized");
-        }
-
-        return new ManagedPermissionData
-        {
-            SecurityRole = this.SecurityRole,
-            Period = this.Period,
-            Comment = this.Comment,
-            Restrictions = this.Restrictions.Where(pair => pair.Value.Length > 0).ToDictionary()
-        };
-    }
+        SecurityRole = this.SecurityRole ?? throw new InvalidOperationException($"{nameof(this.SecurityRole)} not initialized"),
+        Period = this.Period,
+        Comment = this.Comment,
+        Restrictions = this.Restrictions.Where(pair => pair.Value.Length > 0).ToImmutableDictionary(),
+        ExtendedData = this.ExtendedData.ToImmutableDictionary()
+    };
 
     public static implicit operator ManagedPermissionData(TestPermission testPermissionBuilder) => testPermissionBuilder.ToManagedPermissionData();
 }

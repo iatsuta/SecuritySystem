@@ -94,6 +94,6 @@ public abstract class TestBase
                .AddRelativeDomainPath((Employee employee) => employee)
                .AddSingleton(typeof(TestCheckboxConditionFactory<>))
 
-               .AddSingleton(_ => new TestPermissionData(this.GetPermissions().ToList()));
+               .AddSingleton(_ => new TestPermissions(this.GetPermissions().ToList()));
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using SecuritySystem.GeneralPermission.Validation;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
-public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> : IGeneralPermissionSettings<TPermission, TSecurityRole>
+public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> :
+    IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>
     where TPermission : class
     where TSecurityRole : notnull
 {
@@ -17,6 +19,10 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
     private Expression<Func<TSecurityRole, string>>? descriptionPath;
 
     private bool? isReadonly;
+
+    public Type? PermissionEqualityComparerType { get; private set; }
+
+    public Type? PermissionManagementServiceType { get; private set; }
 
 
     public TPermissionBindingInfo ApplyOptionalPaths<TPermissionBindingInfo>(TPermissionBindingInfo bindingInfo)
@@ -36,7 +42,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
             .PipeMaybe(this.descriptionPath, (b, v) => b with { SecurityRoleDescription = v.ToPropertyAccessors() });
     }
 
-    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionPeriod(
         PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
         PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor)
     {
@@ -46,7 +52,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
         return this;
     }
 
-    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionPeriod(
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionPeriod(
         Expression<Func<TPermission, DateTime?>>? startDatePath,
         Expression<Func<TPermission, DateTime?>>? endDatePath)
     {
@@ -55,23 +61,42 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole> :
             endDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(endDatePath));
     }
 
-    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetPermissionComment(Expression<Func<TPermission, string>> newCommentPath)
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionComment(
+        Expression<Func<TPermission, string>> newCommentPath)
     {
         this.commentPath = newCommentPath;
 
         return this;
     }
 
-    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetSecurityRoleDescription(Expression<Func<TSecurityRole, string>>? newDescriptionPath)
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetSecurityRoleDescription(
+        Expression<Func<TSecurityRole, string>>? newDescriptionPath)
     {
         this.descriptionPath = newDescriptionPath;
 
         return this;
     }
 
-    public IGeneralPermissionSettings<TPermission, TSecurityRole> SetReadonly(bool value = true)
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetReadonly(bool value = true)
     {
         this.isReadonly = value;
+
+        return this;
+    }
+
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionEqualityComparer<TComparer>()
+        where TComparer : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
+    {
+        this.PermissionEqualityComparerType = typeof(TComparer);
+
+        return this;
+    }
+
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionManagementService<
+        TPermissionManagementService>()
+        where TPermissionManagementService : IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>
+    {
+        this.PermissionManagementServiceType = typeof(TPermissionManagementService);
 
         return this;
     }

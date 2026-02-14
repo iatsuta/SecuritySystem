@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CommonFramework;
+
+using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
@@ -64,7 +66,7 @@ public class UpdatePermissionsHandler(
             SecurityRole = securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
             Period = new PermissionPeriod(permission.StartDate, permission.EndDate),
             Comment = permission.Comment,
-            Restrictions = restrictionsRequest.ToDictionary()
+            Restrictions = restrictionsRequest.ToImmutableDictionary()
         };
     }
 
