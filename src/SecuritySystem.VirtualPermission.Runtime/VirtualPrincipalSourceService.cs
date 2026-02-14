@@ -1,16 +1,18 @@
-﻿using CommonFramework;
+﻿using System.Linq.Expressions;
+using System.Reflection;
+
+using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
+
 using GenericQueryable;
+
 using SecuritySystem.Credential;
 using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Xml.Linq;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -71,10 +73,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
-    public async Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(
-        string nameFilter,
-        int limit,
-        CancellationToken cancellationToken)
+    public async Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
     {
         return await queryableSource
             .GetQueryable<TPermission>()
@@ -117,13 +116,13 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
         var getRestrictionsMethod = this.GetType().GetMethod(nameof(this.GetRestrictionArray), BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var restrictions = virtualBindingInfo
-            .GetSecurityContextTypes()
+            .SecurityContextTypes
             .Select(identityInfoSource.GetIdentityInfo)
             .Select(identityInfo =>
                 (identityInfo.DomainObjectType, getRestrictionsMethod
                     .MakeGenericMethod(identityInfo.DomainObjectType, identityInfo.IdentityType)
                     .Invoke<Array>(this, permission, identityInfo)))
-            .ToDictionary();
+            .ToImmutableDictionary();
 
         return new ManagedPermission
         {
@@ -136,9 +135,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
         };
     }
 
-    public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(
-        IEnumerable<SecurityRole> securityRoles,
-        CancellationToken cancellationToken)
+    public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
     {
         if (securityRoles.Contains(virtualBindingInfo.SecurityRole))
         {
@@ -154,7 +151,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
         }
     }
 
-    private Array GetRestrictionArray<TSecurityContext, TSecurityContextIdent>(TPermission permission,
+    private TSecurityContextIdent[] GetRestrictionArray<TSecurityContext, TSecurityContextIdent>(
+        TPermission permission,
         IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
         where TSecurityContext : ISecurityContext
         where TSecurityContextIdent : notnull
@@ -162,7 +160,8 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
         return this.GetRestrictionIdents(permission, identityInfo).ToArray();
     }
 
-    private IEnumerable<TSecurityContextIdent> GetRestrictionIdents<TSecurityContext, TSecurityContextIdent>(TPermission permission,
+    private IEnumerable<TSecurityContextIdent> GetRestrictionIdents<TSecurityContext, TSecurityContextIdent>(
+        TPermission permission,
         IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo)
         where TSecurityContext : ISecurityContext
         where TSecurityContextIdent : notnull

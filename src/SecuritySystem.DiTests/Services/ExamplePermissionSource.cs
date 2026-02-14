@@ -4,7 +4,7 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.DiTests.Services;
 
-public class ExamplePermissionSource(TestPermissionData data, DomainSecurityRule.ExpandedRoleGroupSecurityRule securityRule) : IPermissionSource
+public class ExamplePermissionSource(TestPermissions data, DomainSecurityRule.ExpandedRoleGroupSecurityRule securityRule) : IPermissionSource
 {
     public bool HasAccess() => throw new NotImplementedException();
 

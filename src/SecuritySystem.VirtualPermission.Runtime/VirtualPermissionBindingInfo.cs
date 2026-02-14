@@ -1,4 +1,6 @@
-﻿using CommonFramework;
+﻿using System.Collections.Immutable;
+
+using CommonFramework;
 using CommonFramework.ExpressionEvaluate;
 using CommonFramework.IdentitySource;
 
@@ -12,14 +14,15 @@ public abstract record VirtualPermissionBindingInfo
 
     public required SecurityRole SecurityRole { get; init; }
 
-    public IReadOnlyList<LambdaExpression> Restrictions { get; init; } = [];
+    public ImmutableList<LambdaExpression> Restrictions { get; init; } = [];
 
-    public IEnumerable<Type> GetSecurityContextTypes()
-    {
-        return this.Restrictions
-            .Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
-            .Distinct();
-    }
+    public ImmutableList<Type> SecurityContextTypes =>
+        field ??=
+        [
+            ..this.Restrictions
+                .Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
+                .Distinct()
+        ];
 }
 
 public record VirtualPermissionBindingInfo<TPermission> : VirtualPermissionBindingInfo

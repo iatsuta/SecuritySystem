@@ -7,6 +7,8 @@ namespace ExampleApp.IntegrationTests;
 
 public static class TestPermissionExtensions
 {
+    public const string ExtendedKey = nameof(Domain.Auth.General.Permission.ExtendedValue);
+
     extension(TestPermission testPermission)
     {
         public TypedSecurityIdentity<Guid>? BusinessUnit
@@ -19,6 +21,12 @@ public static class TestPermissionExtensions
         {
             get => testPermission.GetMany<BusinessUnit, Guid>();
             set => testPermission.SetMany<BusinessUnit, Guid>(value);
+        }
+
+        public string ExtendedValue
+        {
+            get => (string)testPermission.ExtendedData[ExtendedKey];
+            set => testPermission.ExtendedData[ExtendedKey] = value;
         }
     }
 }

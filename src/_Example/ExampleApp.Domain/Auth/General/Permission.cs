@@ -13,4 +13,6 @@ public class Permission
     public DateTime? EndDate { get; set; }
 
     public string Comment { get; set; } = "";
+
+    public string ExtendedValue { get; set; } = "";
 }

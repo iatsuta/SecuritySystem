@@ -5,31 +5,34 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
-public class ManagedPrincipalConverter<TPrincipal>(IServiceProxyFactory serviceProxyFactory, IPermissionBindingInfoSource bindingInfoSource)
+public class ManagedPrincipalConverter<TPrincipal>(
+    IServiceProxyFactory serviceProxyFactory,
+    IPermissionBindingInfoSource bindingInfoSource,
+    IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
     : IManagedPrincipalConverter<TPrincipal>
 {
     private readonly Lazy<IManagedPrincipalConverter<TPrincipal>> lazyInnerService = new(() =>
     {
         var bindingInfo = bindingInfoSource.GetForPrincipal(typeof(TPrincipal));
 
-        var innerServiceType = typeof(ManagedPrincipalConverter<,>).MakeGenericType(
-            bindingInfo.PrincipalType,
-            bindingInfo.PermissionType);
+        var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
-        return serviceProxyFactory.Create<IManagedPrincipalConverter<TPrincipal>>(innerServiceType, bindingInfo);
+        var innerServiceType = typeof(ManagedPrincipalConverter<,,>).MakeGenericType(
+            bindingInfo.PrincipalType,
+            bindingInfo.PermissionType,
+            restrictionBindingInfo.PermissionRestrictionType);
+
+        return serviceProxyFactory.Create<IManagedPrincipalConverter<TPrincipal>>(innerServiceType);
     });
 
     public Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken) =>
         this.lazyInnerService.Value.ToManagedPrincipalAsync(principal, cancellationToken);
 }
 
-public class ManagedPrincipalConverter<TPrincipal, TPermission>(
-    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+public class ManagedPrincipalConverter<TPrincipal, TPermission, TPermissionRestriction>(
     IManagedPrincipalHeaderConverter<TPrincipal> headerConverter,
-    IPermissionSecurityRoleResolver<TPermission> permissionSecurityRoleResolver,
     IPermissionLoader<TPrincipal, TPermission> permissionLoader,
-    IRawPermissionRestrictionLoader<TPermission> rawPermissionRestrictionLoader,
-    ISecurityIdentityExtractor<TPermission> permissionSecurityIdentityExtractor) : IManagedPrincipalConverter<TPrincipal>
+    IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction> permissionManagementService) : IManagedPrincipalConverter<TPrincipal>
     where TPrincipal : class
     where TPermission : class
 {
@@ -39,17 +42,6 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission>(
 
         return new ManagedPrincipal(
             headerConverter.Convert(principal),
-            await permissions.SyncWhenAll(permission => this.ToManagedPermissionAsync(permission, cancellationToken)));
+            await permissions.SyncWhenAll(permission => permissionManagementService.ToManagedPermissionAsync(permission, cancellationToken)));
     }
-
-    private async Task<ManagedPermission> ToManagedPermissionAsync(TPermission permission, CancellationToken cancellationToken) =>
-        new()
-        {
-            Identity = permissionSecurityIdentityExtractor.Extract(permission),
-            IsVirtual = bindingInfo.IsReadonly,
-            SecurityRole = permissionSecurityRoleResolver.Resolve(permission),
-            Period = bindingInfo.GetSafePeriod(permission),
-            Comment = bindingInfo.GetSafeComment(permission),
-            Restrictions = await rawPermissionRestrictionLoader.LoadAsync(permission, cancellationToken)
-        };
 }

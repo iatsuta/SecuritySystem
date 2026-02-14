@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Immutable;
+using System.Linq.Expressions;
 
 using CommonFramework;
 
@@ -13,7 +14,7 @@ public class VirtualBindingInfoSettingsBuilder<TPermission> : IVirtualBindingInf
         Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
         where TSecurityContext : ISecurityContext
     {
-        this.initList.Add(v => v with { Restrictions = v.Restrictions.Concat([path]).ToList() });
+        this.initList.Add(v => v with { Restrictions = v.Restrictions.Concat([path]).ToImmutableList() });
 
         return this;
     }
@@ -22,7 +23,7 @@ public class VirtualBindingInfoSettingsBuilder<TPermission> : IVirtualBindingInf
         Expression<Func<TPermission, TSecurityContext?>> path)
         where TSecurityContext : ISecurityContext
     {
-        this.initList.Add(v => v with { Restrictions = v.Restrictions.Concat([path]).ToList() });
+        this.initList.Add(v => v with { Restrictions = v.Restrictions.Concat([path]).ToImmutableList() });
 
         return this;
     }

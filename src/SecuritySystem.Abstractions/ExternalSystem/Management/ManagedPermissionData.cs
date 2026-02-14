@@ -1,4 +1,6 @@
-﻿namespace SecuritySystem.ExternalSystem.Management;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.ExternalSystem.Management;
 
 public record ManagedPermissionData
 {
@@ -8,7 +10,9 @@ public record ManagedPermissionData
 
     public string Comment { get; init; } = "";
 
-    public IReadOnlyDictionary<Type, Array> Restrictions { get; init; } = new Dictionary<Type, Array>();
+    public ImmutableDictionary<Type, Array> Restrictions { get; init; } = [];
+
+    public ImmutableDictionary<string, object> ExtendedData { get; init; } = [];
 
     public static implicit operator ManagedPermissionData(SecurityRole securityRole) => new() { SecurityRole = securityRole };
 }

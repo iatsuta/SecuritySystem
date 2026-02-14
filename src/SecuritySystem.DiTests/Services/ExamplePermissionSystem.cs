@@ -3,7 +3,7 @@ using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.DiTests.Services;
 
-public class ExamplePermissionSystem(ISecurityRuleExpander securityRuleExpander, TestPermissionData data) : IPermissionSystem
+public class ExamplePermissionSystem(ISecurityRuleExpander securityRuleExpander, TestPermissions data) : IPermissionSystem
 {
     public Type PermissionType => throw new NotImplementedException();
 
