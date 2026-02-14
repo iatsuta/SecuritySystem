@@ -3,16 +3,14 @@ using CommonFramework.ExpressionEvaluate;
 using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource;
 using CommonFramework.VisualIdentitySource;
-
 using GenericQueryable;
-
-using SecuritySystem.ExternalSystem.Management;
-using SecuritySystem.UserSource;
 using SecuritySystem.Credential;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
-
+using SecuritySystem.UserSource;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace SecuritySystem.VirtualPermission;
 
@@ -127,13 +125,15 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
                     .Invoke<Array>(this, permission, identityInfo)))
             .ToDictionary();
 
-        return new ManagedPermission(
-            permissionIdentityExtractor.Extract(permission),
-            true,
-            virtualBindingInfo.SecurityRole,
-            bindingInfo.GetSafePeriod(permission),
-            bindingInfo.GetSafeComment(permission),
-            restrictions);
+        return new ManagedPermission
+        {
+            Identity = permissionIdentityExtractor.Extract(permission),
+            IsVirtual = true,
+            SecurityRole = virtualBindingInfo.SecurityRole,
+            Period = bindingInfo.GetSafePeriod(permission),
+            Comment = bindingInfo.GetSafeComment(permission),
+            Restrictions = restrictions
+        };
     }
 
     public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(

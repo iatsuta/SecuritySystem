@@ -5,7 +5,5 @@ namespace SecuritySystem.Testing;
 
 public interface ITestingUserAuthenticationService : IRawUserAuthenticationService, IImpersonateService
 {
-    void SetUser(UserCredential? customUserCredential);
-
-    void Reset();
+    UserCredential? CustomUserCredential { get; set; }
 }

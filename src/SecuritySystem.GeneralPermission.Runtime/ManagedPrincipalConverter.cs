@@ -29,7 +29,7 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission>(
     IPermissionSecurityRoleResolver<TPermission> permissionSecurityRoleResolver,
     IPermissionLoader<TPrincipal, TPermission> permissionLoader,
     IRawPermissionRestrictionLoader<TPermission> rawPermissionRestrictionLoader,
-    ISecurityIdentityExtractorFactory securityIdentityExtractorFactory) : IManagedPrincipalConverter<TPrincipal>
+    ISecurityIdentityExtractor<TPermission> permissionSecurityIdentityExtractor) : IManagedPrincipalConverter<TPrincipal>
     where TPrincipal : class
     where TPermission : class
 {
@@ -43,11 +43,13 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission>(
     }
 
     private async Task<ManagedPermission> ToManagedPermissionAsync(TPermission permission, CancellationToken cancellationToken) =>
-        new(
-            securityIdentityExtractorFactory.Create<TPermission>().Extract(permission),
-            bindingInfo.IsReadonly,
-            permissionSecurityRoleResolver.Resolve(permission),
-            bindingInfo.GetSafePeriod(permission),
-            bindingInfo.GetSafeComment(permission),
-            await rawPermissionRestrictionLoader.LoadAsync(permission, cancellationToken));
+        new()
+        {
+            Identity = permissionSecurityIdentityExtractor.Extract(permission),
+            IsVirtual = bindingInfo.IsReadonly,
+            SecurityRole = permissionSecurityRoleResolver.Resolve(permission),
+            Period = bindingInfo.GetSafePeriod(permission),
+            Comment = bindingInfo.GetSafeComment(permission),
+            Restrictions = await rawPermissionRestrictionLoader.LoadAsync(permission, cancellationToken)
+        };
 }

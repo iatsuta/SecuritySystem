@@ -1,9 +1,8 @@
 ﻿namespace SecuritySystem.ExternalSystem.Management;
 
-public record ManagedPermission(
-    SecurityIdentity Identity,
-    bool IsVirtual,
-    SecurityRole SecurityRole,
-    PermissionPeriod Period,
-    string Comment,
-    IReadOnlyDictionary<Type, Array> Restrictions);
+public record ManagedPermission : ManagedPermissionData
+{
+    public required SecurityIdentity Identity { get; init; }
+
+    public required bool IsVirtual { get; init; }
+}

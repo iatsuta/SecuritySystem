@@ -65,7 +65,6 @@ public static class ServiceCollectionExtensions
                 .AddSingleton<IPermissionBindingInfoSource, PermissionBindingInfoSource>()
 
                 .AddSingleton(typeof(ISecurityIdentityExtractor<>), typeof(SecurityIdentityExtractor<>))
-                .AddSingleton<ISecurityIdentityExtractorFactory, SecurityIdentityExtractorFactory>()
                 .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
                 .AddSingleton<IPrincipalDataSecurityIdentityExtractor, PrincipalDataSecurityIdentityExtractor>()
 
