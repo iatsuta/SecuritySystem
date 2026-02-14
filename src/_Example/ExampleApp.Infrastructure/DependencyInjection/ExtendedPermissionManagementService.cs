@@ -1,11 +1,11 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
-using SecuritySystem.ExternalSystem.Management;
 
 using AuthGeneral = ExampleApp.Domain.Auth.General;
 
 using SecuritySystem.GeneralPermission;
 using SecuritySystem.Services;
+using SecuritySystem.ExternalSystem.Management;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 
