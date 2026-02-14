@@ -49,7 +49,7 @@ public class ExtendedPermissionManagementService(
     {
         var baseResult = await base.UpdatePermission(dbPermission, managedPermission, cancellationToken);
 
-        if (managedPermission.ExtendedData.TryGetKey(ExtendedKey, out var extendedValue) && dbPermission.ExtendedValue != extendedValue)
+        if (managedPermission.ExtendedData.TryGetValue(ExtendedKey, out var extendedValue) && (string)extendedValue != dbPermission.ExtendedValue)
         {
             throw new InvalidOperationException($"{ExtendedKey} can't be changed");
         }
