@@ -7,7 +7,7 @@ namespace ExampleApp.IntegrationTests;
 
 public static class TestPermissionExtensions
 {
-    extension(TestPermissionBuilder testPermission)
+    extension(TestPermission testPermission)
     {
         public TypedSecurityIdentity<Guid>? BusinessUnit
         {

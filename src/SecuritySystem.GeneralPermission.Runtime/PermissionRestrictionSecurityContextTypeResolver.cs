@@ -27,14 +27,14 @@ public class PermissionRestrictionSecurityContextTypeResolver<TPermissionRestric
 
 public class PermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction, TSecurityContextType>(
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType> restrictionBindingInfo,
-    ISecurityIdentityExtractorFactory securityIdentityExtractorFactory,
+    ISecurityIdentityExtractor<TSecurityContextType> securityContextTypeSecurityIdentityExtractor,
     ISecurityContextInfoSource securityContextInfoSource) : IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction>
 {
     public Type Resolve(TPermissionRestriction permissionRestriction)
     {
         return restrictionBindingInfo
             .SecurityContextType.Getter(permissionRestriction)
-            .Pipe(securityIdentityExtractorFactory.Create<TSecurityContextType>().Extract)
+            .Pipe(securityContextTypeSecurityIdentityExtractor.Extract)
             .Pipe(identity => securityContextInfoSource.GetSecurityContextInfo(identity).Type);
     }
 }

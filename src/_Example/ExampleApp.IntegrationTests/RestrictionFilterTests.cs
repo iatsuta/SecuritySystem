@@ -38,7 +38,7 @@ public class RestrictionFilterTests : TestBase
 
         // Act
         var action = () => this.AuthManager.For(this.testLogin).SetRoleAsync(
-            new TestPermissionBuilder(ExampleRoles.WithRestrictionFilterRole)
+            new TestPermission(ExampleRoles.WithRestrictionFilterRole)
             {
                 BusinessUnit = this.defaultBu
             }, this.CancellationToken);
@@ -56,7 +56,7 @@ public class RestrictionFilterTests : TestBase
 
         // Act
         var action = () => this.AuthManager.For(this.testLogin).SetRoleAsync(
-                         new TestPermissionBuilder(ExampleRoles.WithRestrictionFilterRole)
+                         new TestPermission(ExampleRoles.WithRestrictionFilterRole)
                          {
                              BusinessUnit = this.buWithAllowedFilter
                          }, this.CancellationToken);
@@ -84,7 +84,7 @@ public class RestrictionFilterTests : TestBase
     public async Task CreateCustomRestrictionRule_ApplySingleCorrectBU_OnlyCorrectBuFounded()
     {
         // Arrange
-        await this.AuthManager.For(this.testLogin).SetRoleAsync(new TestPermissionBuilder(this.securityRole) { BusinessUnits = [this.defaultBu, this.buWithAllowedFilter] }, this.CancellationToken);
+        await this.AuthManager.For(this.testLogin).SetRoleAsync(new TestPermission(this.securityRole) { BusinessUnits = [this.defaultBu, this.buWithAllowedFilter] }, this.CancellationToken);
         this.AuthManager.For(this.testLogin).LoginAs();
 
         // Act

@@ -81,7 +81,9 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     ISecurityContextInfoSource securityContextInfoSource,
     IPrincipalDomainService<TPrincipal> principalDomainService,
     IUserSource<TPrincipal> principalUserSource,
-    ISecurityIdentityExtractorFactory securityIdentityExtractorFactory,
+    ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor,
+    ISecurityIdentityExtractor<TSecurityRole> securityRoleIdentityExtractor,
+    ISecurityIdentityExtractor<TSecurityContextType> securityContextTypeIdentityExtractor,
     IPermissionLoader<TPrincipal, TPermission> permissionLoader,
     IPermissionRestrictionLoader<TPermission, TPermissionRestriction> permissionRestrictionLoader,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo)
@@ -94,13 +96,6 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TSecurit
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
 {
-    private readonly ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor = securityIdentityExtractorFactory.Create<TPermission>();
-
-    private readonly ISecurityIdentityExtractor<TSecurityRole> securityRoleIdentityExtractor = securityIdentityExtractorFactory.Create<TSecurityRole>();
-
-    private readonly ISecurityIdentityExtractor<TSecurityContextType> securityContextTypeIdentityExtractor =
-        securityIdentityExtractorFactory.Create<TSecurityContextType>();
-
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
     public async Task<PrincipalData> CreatePrincipalAsync(

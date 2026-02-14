@@ -16,7 +16,7 @@ public class UserCredentialManager(
 
     private readonly UserCredential userCredential = baseUserCredential ?? userAuthenticationService.GetUserName();
 
-    public UserCredentialManager WithCredential (UserCredential? newUserCredential)
+    public UserCredentialManager WithCredential(UserCredential? newUserCredential)
     {
         return new UserCredentialManager(userAuthenticationService, principalManagementService, rootPrincipalSourceService, credentialNameResolver,
             securityIdentityExtractor, newUserCredential);
@@ -31,9 +31,17 @@ public class UserCredentialManager(
         return securityIdentityExtractor.Extract(principalData);
     }
 
-    public async Task<SecurityIdentity> AddUserRoleAsync(TestPermission[] testPermissions, CancellationToken cancellationToken = default)
+    public async Task<SecurityIdentity> AddUserRoleAsync(ManagedPermissionData[] testPermissions, CancellationToken cancellationToken = default)
     {
-        var newPermissions = testPermissions.Select(testPermission => testPermission.ToManagedPermission());
+        var newPermissions = testPermissions.Select(testPermission => new ManagedPermission
+        {
+            Identity = SecurityIdentity.Default,
+            IsVirtual = false,
+            SecurityRole = testPermission.SecurityRole,
+            Period = testPermission.Period,
+            Comment = testPermission.Comment,
+            Restrictions = testPermission.Restrictions
+        });
 
         var existsPrincipal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
 

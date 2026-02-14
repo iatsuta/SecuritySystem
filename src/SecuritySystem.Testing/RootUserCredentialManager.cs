@@ -14,7 +14,7 @@ public class RootUserCredentialManager(
 
     public void LoginAs()
     {
-        authenticationService.SetUser(userCredential.Item1);
+        authenticationService.CustomUserCredential = userCredential.Item1;
     }
 
     public SecurityIdentity CreatePrincipal()
@@ -34,33 +34,34 @@ public class RootUserCredentialManager(
 
     public Task<SecurityIdentity> SetAdminRoleAsync(CancellationToken cancellationToken = default)
     {
-        return this.SetRoleAsync(administratorsRoleList.Roles.Select(TestPermission (v) => v).ToArray(), cancellationToken);
+        return this.SetRoleAsync(administratorsRoleList.Roles.Select(securityRole => new ManagedPermissionData { SecurityRole = securityRole }).ToArray(),
+            cancellationToken);
     }
 
-    public SecurityIdentity SetRole(params TestPermission[] permissions)
+    public SecurityIdentity SetRole(params ManagedPermissionData[] permissions)
     {
         return this.SetRoleAsync(permissions).GetAwaiter().GetResult();
     }
 
-    public async Task<SecurityIdentity> SetRoleAsync(TestPermission permission, CancellationToken cancellationToken = default)
+    public async Task<SecurityIdentity> SetRoleAsync(ManagedPermissionData permission, CancellationToken cancellationToken = default)
     {
         return await this.SetRoleAsync([permission], cancellationToken);
     }
 
-    public async Task<SecurityIdentity> SetRoleAsync(TestPermission[] permissions, CancellationToken cancellationToken = default)
+    public async Task<SecurityIdentity> SetRoleAsync(ManagedPermissionData[] permissions, CancellationToken cancellationToken = default)
     {
         await this.ClearRolesAsync(cancellationToken);
 
         return await this.AddRoleAsync(permissions, cancellationToken);
     }
 
-    public SecurityIdentity AddRole(params TestPermission[] permissions) =>
+    public SecurityIdentity AddRole(params ManagedPermissionData[] permissions) =>
         this.AddRoleAsync(permissions).GetAwaiter().GetResult();
 
-    public async Task<SecurityIdentity> AddRoleAsync(TestPermission permission, CancellationToken cancellationToken = default) =>
+    public async Task<SecurityIdentity> AddRoleAsync(ManagedPermissionData permission, CancellationToken cancellationToken = default) =>
         await this.AddRoleAsync([permission], cancellationToken);
 
-    public async Task<SecurityIdentity> AddRoleAsync(TestPermission[] permissions, CancellationToken cancellationToken = default) =>
+    public async Task<SecurityIdentity> AddRoleAsync(ManagedPermissionData[] permissions, CancellationToken cancellationToken = default) =>
         await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, async manger => await manger.AddUserRoleAsync(permissions, cancellationToken));
 
     public void ClearRoles()

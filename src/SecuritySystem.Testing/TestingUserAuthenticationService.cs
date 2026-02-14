@@ -1,4 +1,4 @@
-﻿using CommonFramework.DictionaryCache;
+﻿using System.Collections.Concurrent;
 
 using SecuritySystem.Credential;
 using SecuritySystem.Services;
@@ -10,28 +10,20 @@ public class TestingUserAuthenticationService(
     TestRootUserInfo testRootUserInfo)
     : ITestingUserAuthenticationService
 {
-    private readonly IDictionaryCache<UserCredential, string> credCache = new DictionaryCache<UserCredential, string>(
-        userCredential =>
-        {
-            return userCredential switch
+    private readonly ConcurrentDictionary<UserCredential, string> credCache = [];
+
+    public UserCredential? CustomUserCredential { get; set; }
+
+    public string GetUserName() =>
+        this.CustomUserCredential == null
+            ? testRootUserInfo.Name
+            : this.credCache.GetOrAdd(this.CustomUserCredential, _ => this.CustomUserCredential switch
             {
                 UserCredential.NamedUserCredential { Name: var name } => name,
 
-                _ => credentialNameResolverEvaluator.EvaluateAsync(TestingScopeMode.Read, async resolver => resolver.GetUserName(userCredential)).GetAwaiter().GetResult()
-            };
-        }).WithLock();
-
-    private string DefaultTestUserName => testRootUserInfo.Name;
-
-    public UserCredential? CustomUserCredential { get; internal set; }
-
-    public void SetUser(UserCredential? customUserCredential) =>
-        this.CustomUserCredential = customUserCredential ?? this.DefaultTestUserName;
-
-    public void Reset() => this.CustomUserCredential = this.DefaultTestUserName;
-
-    public string GetUserName() =>
-        this.CustomUserCredential == null ? this.DefaultTestUserName : this.credCache[this.CustomUserCredential];
+                _ => credentialNameResolverEvaluator.EvaluateAsync(TestingScopeMode.Read, async resolver => resolver.GetUserName(this.CustomUserCredential))
+                    .GetAwaiter().GetResult()
+            });
 
     public async Task<T> WithImpersonateAsync<T>(UserCredential customUserCredential, Func<Task<T>> func)
     {

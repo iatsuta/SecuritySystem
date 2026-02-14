@@ -24,7 +24,7 @@ public class GeneralPermissionTests : TestBase
 
         var testRole = ExampleRoles.BuManager;
 
-        var testPermission = new TestPermissionBuilder(testRole) { BusinessUnit = buIdentity };
+        var testPermission = new TestPermission(testRole) { BusinessUnit = buIdentity };
 
         var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(testPermission, this.CancellationToken);
         this.AuthManager.For(principalName).LoginAs();
@@ -60,7 +60,7 @@ public class GeneralPermissionTests : TestBase
 
         var testRole = ExampleRoles.BuManager;
 
-        var testPermission = new TestPermissionBuilder(testRole) { BusinessUnit = buIdentity };
+        var testPermission = new TestPermission(testRole) { BusinessUnit = buIdentity };
 
         var principalId = await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.DefaultRole], this.CancellationToken);
         this.AuthManager.For(principalId).LoginAs();

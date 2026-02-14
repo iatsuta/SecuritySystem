@@ -57,22 +57,24 @@ public class UpdatePermissionsHandler(
 
             select (securityContextType, idents);
 
-        return new ManagedPermission(
-            new UntypedSecurityIdentity(permission.PermissionId),
-	        permission.IsVirtual,
-	        securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
-            new PermissionPeriod(permission.StartDate, permission.EndDate),
-	        permission.Comment,
-	        restrictionsRequest.ToDictionary());
+        return new()
+        {
+            Identity = new UntypedSecurityIdentity(permission.PermissionId),
+            IsVirtual = permission.IsVirtual,
+            SecurityRole = securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
+            Period = new PermissionPeriod(permission.StartDate, permission.EndDate),
+            Comment = permission.Comment,
+            Restrictions = restrictionsRequest.ToDictionary()
+        };
     }
 
     private class RequestBodyDto
     {
-        public string PermissionId { get; set; } = default!;
+        public required string PermissionId { get; set; }
+
+        public required string RoleId { get; set; }
 
         public bool IsVirtual { get; set; }
-
-        public string RoleId { get; set; } = default!;
 
         public DateTime? StartDate { get; set; }
 
