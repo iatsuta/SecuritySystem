@@ -26,6 +26,8 @@ public class TestPermission
 
     public string Comment { get; set; } = "";
 
+    public SecurityIdentity Identity { get; init; } = SecurityIdentity.Default;
+
     public SecurityIdentity DelegatedFrom { get; init; } = SecurityIdentity.Default;
 
     public TypedSecurityIdentity<TIdent>? GetSingle<TSecurityContext, TIdent>()
@@ -78,15 +80,19 @@ public class TestPermission
         }
     }
 
-    public ManagedPermissionData ToManagedPermissionData() => new()
+    public ManagedPermission ToManagedPermissionData() => new()
     {
+        Identity = this.Identity,
+        ForceApplyIdentity = true,
+
         SecurityRole = this.SecurityRole ?? throw new InvalidOperationException($"{nameof(this.SecurityRole)} not initialized"),
         Period = this.Period,
+        IsVirtual = false,
         Comment = this.Comment,
         DelegatedFrom = this.DelegatedFrom,
         Restrictions = this.Restrictions.Where(pair => pair.Value.Length > 0).ToImmutableDictionary(),
         ExtendedData = this.ExtendedData.ToImmutableDictionary()
     };
 
-    public static implicit operator ManagedPermissionData(TestPermission testPermissionBuilder) => testPermissionBuilder.ToManagedPermissionData();
+    public static implicit operator ManagedPermission(TestPermission testPermissionBuilder) => testPermissionBuilder.ToManagedPermissionData();
 }

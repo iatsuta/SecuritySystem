@@ -31,20 +31,8 @@ public class UserCredentialManager(
         return securityIdentityExtractor.Extract(principalData);
     }
 
-    public async Task<SecurityIdentity> AddUserRoleAsync(ManagedPermissionData[] testPermissions, CancellationToken cancellationToken = default)
+    public async Task<SecurityIdentity> AddUserRoleAsync(ManagedPermission[] newPermissions, CancellationToken cancellationToken = default)
     {
-        var newPermissions = testPermissions.Select(testPermission => new ManagedPermission
-        {
-            Identity = SecurityIdentity.Default,
-            IsVirtual = false,
-            SecurityRole = testPermission.SecurityRole,
-            Period = testPermission.Period,
-            Comment = testPermission.Comment,
-            DelegatedFrom = testPermission.DelegatedFrom,
-            Restrictions = testPermission.Restrictions,
-            ExtendedData = testPermission.ExtendedData
-        });
-
         var existsPrincipal = await principalSourceService.TryGetPrincipalAsync(this.userCredential, cancellationToken);
 
         if (existsPrincipal == null)

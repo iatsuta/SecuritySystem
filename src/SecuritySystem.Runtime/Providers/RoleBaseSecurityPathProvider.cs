@@ -41,5 +41,5 @@ public class RoleBaseSecurityPathProvider<TDomainObject>(
     }
 
     public SecurityAccessorData GetAccessorData(TDomainObject domainObject) =>
-        new SecurityAccessorData.FixedSecurityAccessorData(this.lazyAccessorsFilter.Value.GetAccessorsFunc(domainObject).ToList());
+        new SecurityAccessorData.FixedSecurityAccessorData([..this.lazyAccessorsFilter.Value.GetAccessorsFunc(domainObject)]);
 }
