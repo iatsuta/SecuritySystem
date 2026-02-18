@@ -40,8 +40,8 @@ public class GeneralPrincipalManagementService(
 
     public Type PrincipalType => this.InnerService.PrincipalType;
 
-    public Task<PrincipalData> CreatePrincipalAsync(string principalName, IEnumerable<ManagedPermission> typedPermissions, CancellationToken cancellationToken = default) =>
-        this.InnerService.CreatePrincipalAsync(principalName, typedPermissions, cancellationToken);
+    public Task<PrincipalData> CreatePrincipalAsync(string principalName, IEnumerable<ManagedPermission> managedPermissions, CancellationToken cancellationToken = default) =>
+        this.InnerService.CreatePrincipalAsync(principalName, managedPermissions, cancellationToken);
 
     public Task<PrincipalData> UpdatePrincipalNameAsync(UserCredential userCredential, string principalName, CancellationToken cancellationToken) =>
         this.InnerService.UpdatePrincipalNameAsync(userCredential, principalName, cancellationToken);
@@ -50,8 +50,8 @@ public class GeneralPrincipalManagementService(
         this.InnerService.RemovePrincipalAsync(userCredential, force, cancellationToken);
 
     public Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential,
-        IEnumerable<ManagedPermission> typedPermissions, CancellationToken cancellationToken = default) =>
-        this.InnerService.UpdatePermissionsAsync(userCredential, typedPermissions, cancellationToken);
+        IEnumerable<ManagedPermission> managedPermissions, CancellationToken cancellationToken = default) =>
+        this.InnerService.UpdatePermissionsAsync(userCredential, managedPermissions, cancellationToken);
 }
 
 public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermissionRestriction>(
@@ -74,12 +74,12 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
 
     public async Task<PrincipalData> CreatePrincipalAsync(
         string principalName,
-        IEnumerable<ManagedPermission> typedPermissions,
+        IEnumerable<ManagedPermission> managedPermissions,
         CancellationToken cancellationToken)
     {
         var principal = await principalDomainService.GetOrCreateAsync(principalName, cancellationToken);
 
-        var result = await this.UpdatePermissionsAsync(principal, [], typedPermissions, cancellationToken);
+        var result = await this.UpdatePermissionsAsync(principal, [], managedPermissions, cancellationToken);
 
         return new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(principal,
             result.AddingItems.Cast<PermissionData<TPermission, TPermissionRestriction>>());
@@ -122,23 +122,23 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
 
     public async Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(
         UserCredential userCredential,
-        IEnumerable<ManagedPermission> typedPermissions,
+        IEnumerable<ManagedPermission> managedPermissions,
         CancellationToken cancellationToken)
     {
         var dbPrincipal = await principalUserSource.GetUserAsync(userCredential, cancellationToken);
 
         var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal, cancellationToken);
 
-        return await this.UpdatePermissionsAsync(dbPrincipal, dbPermissions, typedPermissions, cancellationToken);
+        return await this.UpdatePermissionsAsync(dbPrincipal, dbPermissions, managedPermissions, cancellationToken);
     }
 
     private async Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(
         TPrincipal dbPrincipal,
         List<TPermission> dbPermissions,
-        IEnumerable<ManagedPermission> typedPermissions,
+        IEnumerable<ManagedPermission> managedPermissions,
         CancellationToken cancellationToken)
     {
-        var permissionMergeResult = dbPermissions.GetMergeResult(typedPermissions, permissionIdentityExtractor.Extract,
+        var permissionMergeResult = dbPermissions.GetMergeResult(managedPermissions, permissionIdentityExtractor.Extract,
             p => p.Identity.IsDefault ? new object() : permissionIdentityExtractor.Converter.Convert(p.Identity));
 
         var newPermissions = await this.CreatePermissionsAsync(dbPrincipal, permissionMergeResult.AddingItems, cancellationToken);
@@ -172,10 +172,10 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
 
     private async Task<PermissionData<TPermission, TPermissionRestriction>[]> CreatePermissionsAsync(
         TPrincipal dbPrincipal,
-        IEnumerable<ManagedPermission> typedPermissions,
+        IEnumerable<ManagedPermission> managedPermissions,
         CancellationToken cancellationToken)
     {
-        return await typedPermissions.SyncWhenAll(managedPermission => permissionManagementService.CreatePermissionAsync(dbPrincipal, managedPermission, cancellationToken));
+        return await managedPermissions.SyncWhenAll(managedPermission => permissionManagementService.CreatePermissionAsync(dbPrincipal, managedPermission, cancellationToken));
     }
 
     private async Task<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)[]> UpdatePermissionsAsync(

@@ -24,7 +24,7 @@ public class RootUserCredentialManager(
 
     public async Task<SecurityIdentity> CreatePrincipalAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, manger => manger.CreatePrincipalAsync(cancellationToken));
+        return await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, manager => manager.CreatePrincipalAsync(cancellationToken));
     }
 
     public SecurityIdentity SetAdminRole()
@@ -62,7 +62,7 @@ public class RootUserCredentialManager(
         await this.AddRoleAsync([permission], cancellationToken);
 
     public async Task<SecurityIdentity> AddRoleAsync(ManagedPermissionData[] permissions, CancellationToken cancellationToken = default) =>
-        await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, async manger => await manger.AddUserRoleAsync(permissions, cancellationToken));
+        await this.ManagerEvaluator.EvaluateAsync(TestingScopeMode.Write, async manager => await manager.AddUserRoleAsync(permissions, cancellationToken));
 
     public void ClearRoles()
     {

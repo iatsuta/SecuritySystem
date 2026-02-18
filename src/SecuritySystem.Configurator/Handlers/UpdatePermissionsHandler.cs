@@ -24,9 +24,9 @@ public class UpdatePermissionsHandler(
 
         var permissions = await this.ParseRequestBodyAsync<List<RequestBodyDto>>(context);
 
-        var typedPermissions = permissions.Select(this.ToManagedPermission).ToList();
+        var managedPermissions = permissions.Select(this.ToManagedPermission).ToList();
 
-        var mergeResult = await principalManagementService.UpdatePermissionsAsync(context.ExtractSecurityIdentity(), typedPermissions, cancellationToken);
+        var mergeResult = await principalManagementService.UpdatePermissionsAsync(context.ExtractSecurityIdentity(), managedPermissions, cancellationToken);
 
         if (configuratorIntegrationEvents != null)
         {

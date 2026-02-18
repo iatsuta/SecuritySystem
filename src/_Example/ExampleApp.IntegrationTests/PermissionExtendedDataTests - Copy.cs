@@ -4,10 +4,10 @@ using SecuritySystem.Testing;
 
 namespace ExampleApp.IntegrationTests;
 
-public class PermissionExtendedDataTests : TestBase
+public class PermissionDelegatedFromTests : TestBase
 {
     [Fact]
-    public async Task SetRoleAsync_WithExtendedValue_ShouldPersistExtendedData()
+    public async Task Tet()
     {
         // Arrange
         var principalName = "TestPrincipal";

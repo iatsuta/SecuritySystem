@@ -8,7 +8,7 @@ public class FakePrincipalManagementService : IPrincipalManagementService
 {
     public Type PrincipalType => throw new InvalidOperationException();
 
-    public Task<PrincipalData> CreatePrincipalAsync(string principalName, IEnumerable<ManagedPermission> typedPermissions, CancellationToken cancellationToken = default)
+    public Task<PrincipalData> CreatePrincipalAsync(string principalName, IEnumerable<ManagedPermission> managedPermissions, CancellationToken cancellationToken = default)
     {
         throw new InvalidOperationException();
     }
@@ -23,7 +23,7 @@ public class FakePrincipalManagementService : IPrincipalManagementService
         throw new InvalidOperationException();
     }
 
-    public Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<ManagedPermission> typedPermissions, CancellationToken cancellationToken)
+    public Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(UserCredential userCredential, IEnumerable<ManagedPermission> managedPermissions, CancellationToken cancellationToken)
     {
         throw new InvalidOperationException();
     }
