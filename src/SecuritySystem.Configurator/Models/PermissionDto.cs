@@ -10,6 +10,8 @@ public record PermissionDto
 
     public required string Comment { get; init; }
 
+    public required string DelegatedFromId { get; init; }
+
     public required IReadOnlyList<ContextDto> Contexts { get; init; }
 
     public required DateTime? StartDate { get; init; }

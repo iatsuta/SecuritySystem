@@ -1,7 +1,9 @@
-﻿using SecuritySystem.Services;
+﻿using CommonFramework;
+
+using SecuritySystem.Services;
 
 using System.Collections.Concurrent;
-using CommonFramework;
+using System.Collections.Immutable;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
@@ -21,7 +23,7 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
 
     public SecurityContextInfoSource(IServiceProxyFactory serviceProxyFactory, IEnumerable<SecurityContextInfo> securityContextInfoList)
     {
-        this.SecurityContextInfoList = securityContextInfoList.ToList();
+        this.SecurityContextInfoList = [..securityContextInfoList];
 
         this.typeDict = this.SecurityContextInfoList.ToDictionary(v => v.Type);
         this.identityDict = this.typeDict.Values.ToDictionary(v => v.Identity);
@@ -32,7 +34,7 @@ public class SecurityContextInfoSource : ISecurityContextInfoSource
                 this.SecurityContextInfoList.Select(sr => sr.Identity.IdentType).Distinct());
     }
 
-    public IReadOnlyList<SecurityContextInfo> SecurityContextInfoList { get; }
+    public ImmutableArray<SecurityContextInfo> SecurityContextInfoList { get; }
 
     public virtual SecurityContextInfo GetSecurityContextInfo(Type type) =>
         this.typeDict[type];

@@ -25,7 +25,7 @@ public class PrincipalUniquePermissionValidator<TPrincipal, TPermission, TPermis
 
         if (duplicates.Count > 0)
         {
-            var messageBody = duplicates.Join(",", g => $"({displayPermissionService.ToString(g.Key)})");
+            var messageBody = duplicates.Join(",", g => $"({displayPermissionService.Format(g.Key)})");
 
             var message = $"Principal \"{principalVisualIdentityInfo.Name.Getter(principalData.Principal)}\" has duplicate permissions: {messageBody}";
 

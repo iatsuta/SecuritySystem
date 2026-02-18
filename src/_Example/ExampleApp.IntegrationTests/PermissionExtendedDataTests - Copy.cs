@@ -4,7 +4,7 @@ using SecuritySystem.Testing;
 
 namespace ExampleApp.IntegrationTests;
 
-public class ExtendedValuePermissionTests : TestBase
+public class PermissionExtendedDataTests : TestBase
 {
     [Fact]
     public async Task SetRoleAsync_WithExtendedValue_ShouldPersistExtendedData()

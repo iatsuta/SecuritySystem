@@ -10,6 +10,8 @@ public record ManagedPermissionData
 
     public string Comment { get; init; } = "";
 
+    public SecurityIdentity DelegatedFrom { get; init; } = SecurityIdentity.Default;
+
     public ImmutableDictionary<Type, Array> Restrictions { get; init; } = [];
 
     public ImmutableDictionary<string, object> ExtendedData { get; init; } = [];

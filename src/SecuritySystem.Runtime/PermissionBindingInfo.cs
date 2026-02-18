@@ -19,6 +19,8 @@ public abstract record PermissionBindingInfo<TPermission> : PermissionBindingInf
 
     public PropertyAccessors<TPermission, string>? PermissionComment { get; init; }
 
+    public PropertyAccessors<TPermission, TPermission?>? DelegatedFrom { get; init; }
+
     public PropertyAccessors<TPermission, DateTime?>? PermissionStartDate { get; init; }
 
     public PropertyAccessors<TPermission, DateTime?>? PermissionEndDate { get; init; }

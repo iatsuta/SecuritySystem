@@ -9,11 +9,11 @@ namespace SecuritySystem.Services;
 
 public class SecurityRolesIdentsResolver(ISecurityRuleExpander securityRuleExpander, ISecurityRoleSource securityRoleSource) : ISecurityRolesIdentsResolver
 {
-    private readonly ConcurrentDictionary<(DomainSecurityRule.RoleBaseSecurityRule, bool), ImmutableDictionary<Type, Array>> cache = new();
+    private readonly ConcurrentDictionary<(DomainSecurityRule.RoleBaseSecurityRule, bool), ImmutableDictionary<Type, Array>> cache = [];
 
-    public IReadOnlyDictionary<Type, Array> Resolve(DomainSecurityRule.RoleBaseSecurityRule baseSecurityRule, bool includeVirtual = false)
-    {
-        return this.cache.GetOrAdd((baseSecurityRule.WithDefaultCredential(), includeVirtual), pair =>
+    public ImmutableDictionary<Type, Array> Resolve(DomainSecurityRule.RoleBaseSecurityRule baseSecurityRule, bool includeVirtual = false) =>
+
+        this.cache.GetOrAdd((baseSecurityRule.WithDefaultCustoms(), includeVirtual), pair =>
 
             securityRuleExpander
                 .FullRoleExpand(pair.Item1)
@@ -25,5 +25,4 @@ public class SecurityRolesIdentsResolver(ISecurityRuleExpander securityRuleExpan
                 .Select(sr => sr.Identity)
                 .GroupBy(i => i.IdentType, i => i.GetId())
                 .ToImmutableDictionary(g => g.Key, g => g.ToArray(g.Key)));
-    }
 }

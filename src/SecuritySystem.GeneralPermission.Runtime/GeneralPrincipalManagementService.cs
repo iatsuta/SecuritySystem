@@ -66,9 +66,9 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo)
     : IPrincipalManagementService
 
-    where TPrincipal : class, new()
-    where TPermission : class, new()
-    where TPermissionRestriction : class, new()
+    where TPrincipal : class
+    where TPermission : class
+    where TPermissionRestriction : class
 {
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
@@ -115,17 +115,9 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
     {
         var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal, cancellationToken);
 
-        var permissionsData = await dbPermissions.SyncWhenAll(async dbPermission => await this.ToPermissionData(dbPermission, cancellationToken));
+        var permissionsData = await dbPermissions.SyncWhenAll(async dbPermission => await permissionRestrictionLoader.ToPermissionData(dbPermission, cancellationToken));
 
         return new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(dbPrincipal, permissionsData);
-    }
-
-    private async Task<PermissionData<TPermission, TPermissionRestriction>> ToPermissionData(TPermission dbPermission,
-        CancellationToken cancellationToken)
-    {
-        var dbRestrictions = await permissionRestrictionLoader.LoadAsync(dbPermission, cancellationToken);
-
-        return new PermissionData<TPermission, TPermissionRestriction>(dbPermission, dbRestrictions);
     }
 
     public async Task<MergeResult<PermissionData, PermissionData>> UpdatePermissionsAsync(
@@ -155,7 +147,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
 
         var removingPermissions = await permissionMergeResult.RemovingItems.SyncWhenAll(async oldDbPermission =>
         {
-            var result = await this.ToPermissionData(oldDbPermission, cancellationToken);
+            var result = await permissionRestrictionLoader.ToPermissionData(oldDbPermission, cancellationToken);
 
             foreach (var dbRestriction in result.Restrictions)
             {

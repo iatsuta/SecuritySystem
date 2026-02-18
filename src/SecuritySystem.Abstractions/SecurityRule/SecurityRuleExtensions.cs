@@ -161,6 +161,11 @@ public static class SecurityRuleExtensions
             customExpandType == null || securityRule.CustomExpandType != null
                 ? securityRule
                 : securityRule with { CustomExpandType = customExpandType };
+
+        public TSecurityRule WithDefaultCustoms() =>
+            securityRule.CustomCredential == null && securityRule.CustomExpandType == null && securityRule.CustomRestriction == null
+                ? securityRule
+                : securityRule with { CustomCredential = null, CustomExpandType = null, CustomRestriction = null };
     }
 
 
@@ -178,7 +183,7 @@ public static class SecurityRuleExtensions
                 : securityRule with { CustomCredential = customCredential };
 
         public TSecurityRule WithDefaultCredential() =>
-            securityRule with { CustomCredential = null };
+            securityRule.CustomCredential == null ? securityRule : securityRule with { CustomCredential = null };
 
         public TResult WithDefaultCredential<TResult>(Func<TSecurityRule, TResult> selector)
             where TResult : SecurityRule =>

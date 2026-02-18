@@ -107,7 +107,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
                 .Where(bindingInfo.Principal.Path.Select(p => p == principal))
                 .GenericToListAsync(cancellationToken);
 
-            return new ManagedPrincipal(header, permissions.Select(this.ToManagedPermission).ToList());
+            return new ManagedPrincipal(header, [..permissions.Select(this.ToManagedPermission)]);
         }
     }
 
@@ -131,6 +131,9 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
             SecurityRole = virtualBindingInfo.SecurityRole,
             Period = bindingInfo.GetSafePeriod(permission),
             Comment = bindingInfo.GetSafeComment(permission),
+            DelegatedFrom = bindingInfo.DelegatedFrom?.Getter.Invoke(permission) is { } delegatedFromPermission
+                ? permissionIdentityExtractor.Extract(delegatedFromPermission)
+                : SecurityIdentity.Default,
             Restrictions = restrictions
         };
     }

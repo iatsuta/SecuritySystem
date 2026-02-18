@@ -8,7 +8,7 @@ namespace SecuritySystem.Services;
 
 public class PrincipalDataSecurityIdentityExtractor(IServiceProxyFactory serviceProxyFactory) : IPrincipalDataSecurityIdentityExtractor
 {
-    private readonly ConcurrentDictionary<Type, IPrincipalDataSecurityIdentityExtractor> cache = new();
+    private readonly ConcurrentDictionary<Type, IPrincipalDataSecurityIdentityExtractor> cache = [];
 
     public TypedSecurityIdentity Extract(PrincipalData principalData)
     {

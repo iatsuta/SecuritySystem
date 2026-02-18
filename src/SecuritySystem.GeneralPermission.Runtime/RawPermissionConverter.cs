@@ -62,7 +62,7 @@ public class RawPermissionConverter<TPermissionRestriction, TSecurityContextObje
 
     private TSecurityContextObjectIdent[] ApplySecurityContextFilter(Array securityContextIdents, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
     {
-        return new Func<TSecurityContextObjectIdent[], SecurityContextRestrictionFilterInfo<ISecurityContext>, IReadOnlyList<TSecurityContextObjectIdent>>(
+        return new Func<TSecurityContextObjectIdent[], SecurityContextRestrictionFilterInfo<ISecurityContext>, TSecurityContextObjectIdent[]>(
                 this.ApplySecurityContextFilter)
             .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
             .Invoke<TSecurityContextObjectIdent[]>(this, securityContextIdents, restrictionFilterInfo);

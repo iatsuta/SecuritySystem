@@ -120,6 +120,6 @@ public class PermissionEqualityComparer<TPermission, TSecurityRole, TPermissionR
 
     public int GetHashCode(PermissionData<TPermission, TPermissionRestriction> permissionData)
     {
-        return permissionData.Restrictions.Count ^ generalBindingInfo.SecurityRole.Getter(permissionData.Permission).GetHashCode();
+        return permissionData.Restrictions.Length ^ generalBindingInfo.SecurityRole.Getter(permissionData.Permission).GetHashCode();
     }
 }

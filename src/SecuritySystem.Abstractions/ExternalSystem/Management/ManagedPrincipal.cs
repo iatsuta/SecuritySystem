@@ -1,3 +1,5 @@
-﻿namespace SecuritySystem.ExternalSystem.Management;
+﻿using System.Collections.Immutable;
 
-public record ManagedPrincipal(ManagedPrincipalHeader Header, IReadOnlyList<ManagedPermission> Permissions);
+namespace SecuritySystem.ExternalSystem.Management;
+
+public record ManagedPrincipal(ManagedPrincipalHeader Header, ImmutableArray<ManagedPermission> Permissions);

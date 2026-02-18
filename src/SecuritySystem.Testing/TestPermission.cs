@@ -26,6 +26,8 @@ public class TestPermission
 
     public string Comment { get; set; } = "";
 
+    public SecurityIdentity DelegatedFrom { get; init; } = SecurityIdentity.Default;
+
     public TypedSecurityIdentity<TIdent>? GetSingle<TSecurityContext, TIdent>()
         where TSecurityContext : ISecurityContext
         where TIdent : notnull
@@ -57,7 +59,7 @@ public class TestPermission
     {
         var arr = (TIdent[]?)this.Restrictions.GetValueOrDefault(typeof(TSecurityContext));
 
-        var value = arr ?? Array.Empty<TIdent>();
+        var value = arr ?? [];
 
         return value.Select(TypedSecurityIdentity.Create).ToArray();
     }
@@ -81,6 +83,7 @@ public class TestPermission
         SecurityRole = this.SecurityRole ?? throw new InvalidOperationException($"{nameof(this.SecurityRole)} not initialized"),
         Period = this.Period,
         Comment = this.Comment,
+        DelegatedFrom = this.DelegatedFrom,
         Restrictions = this.Restrictions.Where(pair => pair.Value.Length > 0).ToImmutableDictionary(),
         ExtendedData = this.ExtendedData.ToImmutableDictionary()
     };

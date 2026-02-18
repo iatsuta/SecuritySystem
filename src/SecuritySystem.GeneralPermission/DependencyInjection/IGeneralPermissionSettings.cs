@@ -19,6 +19,9 @@ public interface IGeneralPermissionSettings<out TPrincipal, TPermission, TSecuri
     IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionComment(
         Expression<Func<TPermission, string>> commentPath);
 
+    IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionDelegation(
+        Expression<Func<TPermission, TPermission?>> delegatedFromPath);
+
     IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetSecurityRoleDescription(
         Expression<Func<TSecurityRole, string>>? descriptionPath);
 

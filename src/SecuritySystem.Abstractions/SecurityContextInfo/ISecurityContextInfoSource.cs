@@ -1,9 +1,11 @@
-﻿// ReSharper disable once CheckNamespace
+﻿using System.Collections.Immutable;
+
+// ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
 public interface ISecurityContextInfoSource
 {
-    IReadOnlyList<SecurityContextInfo> SecurityContextInfoList { get; }
+    ImmutableArray<SecurityContextInfo> SecurityContextInfoList { get; }
 
     SecurityContextInfo GetSecurityContextInfo(Type type);
 

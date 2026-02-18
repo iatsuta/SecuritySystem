@@ -1,6 +1,8 @@
-﻿namespace SecuritySystem.Services;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.Services;
 
 public interface ISecurityRolesIdentsResolver
 {
-    IReadOnlyDictionary<Type, Array> Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false);
+    ImmutableDictionary<Type, Array> Resolve(DomainSecurityRule.RoleBaseSecurityRule securityRule, bool includeVirtual = false);
 }

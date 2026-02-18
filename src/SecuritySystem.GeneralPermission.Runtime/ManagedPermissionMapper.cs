@@ -69,7 +69,9 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityIdentityExtractor<TSecurityRole> securityRoleIdentityExtractor,
     ISecurityIdentityExtractor<TSecurityContextType> securityContextTypeIdentityExtractor,
-    IGenericRepository genericRepository)
+    ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor,
+    IGenericRepository genericRepository,
+    ISecurityRepository<TPermission> permissionRepository)
     : IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>
 
     where TPermission : class, new()
@@ -77,7 +79,6 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
     where TPermissionRestriction : class, new()
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
-
 {
     public async Task<ManagedPermission> ToManagedPermissionAsync(TPermission dbPermission, CancellationToken cancellationToken) =>
         new()
@@ -87,6 +88,9 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
             SecurityRole = permissionSecurityRoleResolver.Resolve(dbPermission),
             Period = bindingInfo.GetSafePeriod(dbPermission),
             Comment = bindingInfo.GetSafeComment(dbPermission),
+            DelegatedFrom = bindingInfo.DelegatedFrom?.Getter.Invoke(dbPermission) is { } delegatedFromPermission
+                ? permissionIdentityExtractor.Extract(delegatedFromPermission)
+                : SecurityIdentity.Default,
             Restrictions = (await rawPermissionRestrictionLoader.LoadAsync(dbPermission, cancellationToken)).ToImmutableDictionary()
         };
 
@@ -112,6 +116,15 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
         bindingInfo.PermissionStartDate?.Setter(newDbPermission, managedPermission.Period.StartDate);
         bindingInfo.PermissionEndDate?.Setter(newDbPermission, managedPermission.Period.EndDate);
         bindingInfo.PermissionComment?.Setter(newDbPermission, managedPermission.Comment);
+
+        if (!managedPermission.DelegatedFrom.IsDefault)
+        {
+            var delegatedFromAccessors = bindingInfo.DelegatedFrom ?? throw new InvalidOperationException("Delegated Permission Binding not initialized");
+
+            var delegatedFromPermission = await permissionRepository.GetObjectAsync(managedPermission.DelegatedFrom, cancellationToken);
+
+            delegatedFromAccessors.Setter(newDbPermission, delegatedFromPermission);
+        }
 
         await genericRepository.SaveAsync(newDbPermission, cancellationToken);
 
@@ -148,6 +161,18 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
         if (managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
         {
             throw new SecuritySystemException("wrong typed permission");
+        }
+
+        if (!managedPermission.DelegatedFrom.IsDefault)
+        {
+            var delegatedFromAccessors = bindingInfo.DelegatedFrom ?? throw new InvalidOperationException("Delegated Permission Binding not initialized");
+
+            var delegatedFromPermission = await permissionRepository.GetObjectAsync(managedPermission.DelegatedFrom, cancellationToken);
+
+            if (delegatedFromPermission != delegatedFromAccessors.Getter(dbPermission))
+            {
+                throw new InvalidOperationException("Delegated source can't be changed");
+            }
         }
 
         var securityRole = generalBindingInfo

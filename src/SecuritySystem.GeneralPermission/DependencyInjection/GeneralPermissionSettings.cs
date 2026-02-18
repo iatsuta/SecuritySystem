@@ -18,6 +18,8 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
 
     private Expression<Func<TSecurityRole, string>>? descriptionPath;
 
+    private Expression<Func<TPermission, TPermission?>>? delegatedFromPath;
+
     private bool? isReadonly;
 
     public Type? PermissionEqualityComparerType { get; private set; }
@@ -32,6 +34,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
             .PipeMaybe(this.startDateAccessors, (b, v) => b with { PermissionStartDate = v })
             .PipeMaybe(this.endDatedAccessors, (b, v) => b with { PermissionEndDate = v })
             .PipeMaybe(this.commentPath, (b, v) => b with { PermissionComment = v.ToPropertyAccessors() })
+            .PipeMaybe(this.delegatedFromPath, (b, v) => b with { DelegatedFrom = v.ToPropertyAccessors() })
             .PipeMaybe(this.isReadonly, (b, v) => b with { IsReadonly = v });
     }
 
@@ -65,6 +68,14 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         Expression<Func<TPermission, string>> newCommentPath)
     {
         this.commentPath = newCommentPath;
+
+        return this;
+    }
+
+    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionDelegation(
+        Expression<Func<TPermission, TPermission?>> newDelegatedFromPath)
+    {
+        this.delegatedFromPath = newDelegatedFromPath;
 
         return this;
     }

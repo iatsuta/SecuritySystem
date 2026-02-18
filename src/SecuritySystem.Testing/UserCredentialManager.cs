@@ -40,6 +40,7 @@ public class UserCredentialManager(
             SecurityRole = testPermission.SecurityRole,
             Period = testPermission.Period,
             Comment = testPermission.Comment,
+            DelegatedFrom = testPermission.DelegatedFrom,
             Restrictions = testPermission.Restrictions,
             ExtendedData = testPermission.ExtendedData
         });
@@ -54,7 +55,7 @@ public class UserCredentialManager(
         }
         else
         {
-            var updatedPrincipal = existsPrincipal with { Permissions = existsPrincipal.Permissions.Concat(newPermissions).ToList() };
+            var updatedPrincipal = existsPrincipal with { Permissions = [..existsPrincipal.Permissions, .. newPermissions] };
 
             await principalManagementService.UpdatePermissionsAsync(
                 updatedPrincipal.Header.Identity,

@@ -66,6 +66,7 @@ public class UpdatePermissionsHandler(
             SecurityRole = securityRoleSource.GetSecurityRole(new UntypedSecurityIdentity(permission.RoleId)),
             Period = new PermissionPeriod(permission.StartDate, permission.EndDate),
             Comment = permission.Comment,
+            DelegatedFrom = new UntypedSecurityIdentity(permission.DelegatedFromId),
             Restrictions = restrictionsRequest.ToImmutableDictionary()
         };
     }
@@ -85,6 +86,8 @@ public class UpdatePermissionsHandler(
         public string Comment { get; set; } = default!;
 
         public List<ContextDto> Contexts { get; set; } = default!;
+
+        public string DelegatedFromId { get; set; } = default!;
 
         public class ContextDto
         {

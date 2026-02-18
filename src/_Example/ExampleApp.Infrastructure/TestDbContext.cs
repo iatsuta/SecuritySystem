@@ -147,6 +147,7 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 
             entity.HasOne(e => e.SecurityRole).WithMany().HasForeignKey($"{nameof(Permission.SecurityRole)}{DefaultIdPostfix}").IsRequired();
             entity.HasOne(e => e.Principal).WithMany().HasForeignKey($"{nameof(Permission.Principal)}{DefaultIdPostfix}").IsRequired();
+            entity.HasOne(e => e.DelegatedFrom).WithMany().HasForeignKey($"{nameof(Permission.DelegatedFrom)}{DefaultIdPostfix}").IsRequired(false);
 
             entity.Property(e => e.Comment).IsRequired().HasMaxLength(DefaultMaxLength);
             entity.Property(e => e.ExtendedValue).IsRequired().HasMaxLength(DefaultMaxLength);

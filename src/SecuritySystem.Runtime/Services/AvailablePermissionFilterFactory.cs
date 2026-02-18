@@ -34,8 +34,7 @@ public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     TimeProvider timeProvider,
     IUserNameResolver<TPrincipal> userNameResolver,
-    ISecurityRolesIdentsResolver securityRolesIdentsResolver,
-    IPermissionSecurityRoleFilterFactory<TPermission> permissionSecurityRoleFilterFactory,
+    IPermissionSecurityRoleIdentsFilterFactory<TPermission> permissionSecurityRoleIdentsFilterFactory,
     IPermissionFilterFactory<TPermission> permissionFilterFactory,
     SecurityRuleCredential defaultSecurityRuleCredential,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo) : IAvailablePermissionFilterFactory<TPermission>
@@ -57,10 +56,7 @@ public class AvailablePermissionFilterFactory<TPrincipal, TPermission>(
             yield return bindingInfo.Principal.Path.Select(principalVisualIdentityInfo.Name.Path).Select(name => name == principalName);
         }
 
-        foreach (var (securityRoleIdentType, securityRoleIdents) in securityRolesIdentsResolver.Resolve(securityRule))
-        {
-            yield return permissionSecurityRoleFilterFactory.CreateFilter(securityRoleIdentType, securityRoleIdents);
-        }
+        yield return permissionSecurityRoleIdentsFilterFactory.CreateFilter(securityRule);
 
         foreach (var securityContextRestriction in securityRule.GetSafeSecurityContextRestrictions())
         {
