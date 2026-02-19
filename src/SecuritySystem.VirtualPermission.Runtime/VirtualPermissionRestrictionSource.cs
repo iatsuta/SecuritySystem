@@ -26,12 +26,12 @@ public class VirtualPermissionRestrictionSource<TPermission, TSecurityContext, T
     public Expression<Func<TPermission, IEnumerable<TSecurityContextIdent>>> GetIdentsExpr() =>
         virtualBindingInfo.GetRestrictionsExpr(identityInfo, restrictionFilterInfo?.GetPureFilter(serviceProvider));
 
-    public Expression<Func<TPermission, bool>> GetGrandAccessExpr() => this.GetManyGrandAccessExpr().BuildAnd();
+    public Expression<Func<TPermission, bool>> GetUnrestrictedFilter() => this.GetManyUnrestrictedFilter().BuildAnd();
 
     public Expression<Func<TPermission, bool>> GetContainsIdentsExpr(IEnumerable<TSecurityContextIdent> idents) =>
         this.GetManyContainsIdentsExpr(idents).BuildOr();
 
-    private IEnumerable<Expression<Func<TPermission, bool>>> GetManyGrandAccessExpr()
+    private IEnumerable<Expression<Func<TPermission, bool>>> GetManyUnrestrictedFilter()
     {
         foreach (var restrictionPath in virtualBindingInfo.Restrictions)
         {

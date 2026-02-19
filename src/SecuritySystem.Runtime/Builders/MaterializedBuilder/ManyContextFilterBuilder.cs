@@ -42,9 +42,9 @@ public class ManyContextFilterBuilder<TDomainObject, TSecurityContext, TSecurity
 			}
 			else
 			{
-				var grandAccessFilter = securityPath.Expression.Select(securityObjects => !securityObjects.Any());
+				var unrestrictedFilter = securityPath.Expression.Select(securityObjects => !securityObjects.Any());
 
-				return grandAccessFilter.BuildOr(containsFilterExpr);
+				return unrestrictedFilter.BuildOr(containsFilterExpr);
 			}
 		}
 	}

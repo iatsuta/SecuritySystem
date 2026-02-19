@@ -23,10 +23,10 @@ public class ManyContextFilterBuilder<TDomainObject, TPermission, TSecurityConte
 
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(HierarchicalExpandType expandType)
     {
-        var allowGrandAccess = securityContextRestriction?.Required != true;
+        var allowsUnrestrictedAccess = securityContextRestriction?.Required != true;
 
-        var grandAccessExpr = allowGrandAccess
-            ? permissionRestrictionSource.GetGrandAccessExpr()
+        var unrestrictedFilter = allowsUnrestrictedAccess
+            ? permissionRestrictionSource.GetUnrestrictedFilter()
             : _ => false;
 
         var getIdents = permissionRestrictionSource.GetIdentsExpr();
@@ -43,14 +43,14 @@ public class ManyContextFilterBuilder<TDomainObject, TPermission, TSecurityConte
             {
                 if (securityPath.Required)
                 {
-                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                    return (domainObject, permission) => ee.Evaluate(unrestrictedFilter, permission)
 
                                                          || ee.Evaluate(securityPath.SecurityPathQ, domainObject)
                                                              .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
                 else
                 {
-                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                    return (domainObject, permission) => ee.Evaluate(unrestrictedFilter, permission)
 
                                                                   || !ee.Evaluate(securityPath.SecurityPathQ, domainObject).Any()
 
@@ -62,14 +62,14 @@ public class ManyContextFilterBuilder<TDomainObject, TPermission, TSecurityConte
             {
                 if (securityPath.Required)
                 {
-                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                    return (domainObject, permission) => ee.Evaluate(unrestrictedFilter, permission)
 
                                                          || ee.Evaluate(securityPath.Expression, domainObject)
                                                              .Any(item => ee.Evaluate(expandExpressionQ, permission).Contains(ee.Evaluate(identityInfo.Id.Path, item)));
                 }
                 else
                 {
-                    return (domainObject, permission) => ee.Evaluate(grandAccessExpr, permission)
+                    return (domainObject, permission) => ee.Evaluate(unrestrictedFilter, permission)
 
                                                          || !ee.Evaluate(securityPath.Expression, domainObject).Any()
 

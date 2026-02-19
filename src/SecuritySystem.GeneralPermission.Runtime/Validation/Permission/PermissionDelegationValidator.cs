@@ -111,7 +111,7 @@ public class PermissionDelegationValidator<TPrincipal, TPermission, TPermissionR
             {
                 throw new SecuritySystemValidationException(
                     string.Format(
-                        "Invalid security context delegation: the source principal \"{0}\" does not have access to the following security contexts required for delegation to \"{1}\": {2}",
+                        "Invalid security context delegation: the security contexts of \"{1}\" exceed those granted by \"{0}\": {2}",
                         domainObjectDisplayService.ToString(permissionBindingInfo.Principal.Getter(delegatedFrom)),
                         domainObjectDisplayService.ToString(permissionBindingInfo.Principal.Getter(subPermission)),
                         invalidSecurityContextDict.Join(
@@ -119,7 +119,7 @@ public class PermissionDelegationValidator<TPrincipal, TPermission, TPermissionR
                             g =>
                             {
                                 var invalidValues = g.Value.Length == 0
-                                    ? "Global Access"
+                                    ? "Unrestricted"
                                     : g.Value.OfType<object>().Join(", ");
 
                                 return $"{g.Key.Name}: {invalidValues}";

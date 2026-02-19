@@ -25,9 +25,9 @@ public class SingleContextFilterBuilder<TDomainObject, TSecurityContext, TSecuri
 		}
 		else
 		{
-			var grandAccessFilter = securityPath.Expression.Select(securityObject => securityObject == null);
+			var unrestrictedFilter = securityPath.Expression.Select(securityObject => securityObject == null);
 
-			return grandAccessFilter.BuildOr(containsFilterExpr);
+			return unrestrictedFilter.BuildOr(containsFilterExpr);
 		}
 	}
 }
