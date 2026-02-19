@@ -1,4 +1,6 @@
-﻿namespace SecuritySystem.ExternalSystem.Management;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.ExternalSystem.Management;
 
 public abstract record PrincipalData
 {
@@ -11,10 +13,10 @@ public abstract record PrincipalData
 
 public record PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(
     TPrincipal Principal,
-    IReadOnlyList<PermissionData<TPermission, TPermissionRestriction>> PermissionDataList) : PrincipalData<TPrincipal>(Principal)
+    ImmutableArray<PermissionData<TPermission, TPermissionRestriction>> PermissionDataList) : PrincipalData<TPrincipal>(Principal)
 {
     public PrincipalData(TPrincipal principal, IEnumerable<PermissionData<TPermission, TPermissionRestriction>> permissionDataList)
-        : this(principal, permissionDataList.ToList())
+        : this(principal, [..permissionDataList])
     {
     }
 

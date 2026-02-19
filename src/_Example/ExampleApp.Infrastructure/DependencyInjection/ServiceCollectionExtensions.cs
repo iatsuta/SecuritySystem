@@ -130,6 +130,7 @@ public static class ServiceCollectionExtensions
                                         (permission, startDate) => permission.StartDate = startDate ?? DateTime.MinValue),
                                     new PropertyAccessors<AuthGeneral.Permission, DateTime?>(v => v.EndDate))
                                 .SetPermissionComment(v => v.Comment)
+                                .SetPermissionDelegation(v => v.DelegatedFrom)
                                 .SetPermissionManagementService<ExtendedPermissionManagementService>()));
         }
     }

@@ -7,7 +7,7 @@ namespace SecuritySystem.Expanders;
 public class SecurityRoleGroupExpander(ISecurityRoleSource securityRoleSource, IExpandedRoleGroupSecurityRuleSetOptimizer setOptimizer)
     : ISecurityRoleGroupExpander
 {
-    private readonly ConcurrentDictionary<DomainSecurityRule.NonExpandedRoleGroupSecurityRule, DomainSecurityRule.ExpandedRoleGroupSecurityRule> cache = new();
+    private readonly ConcurrentDictionary<DomainSecurityRule.NonExpandedRoleGroupSecurityRule, DomainSecurityRule.ExpandedRoleGroupSecurityRule> cache = [];
 
     private readonly ConcurrentDictionary<DomainSecurityRule.NonExpandedRolesSecurityRule, DomainSecurityRule.ExpandedRoleGroupSecurityRule> innerCache = new();
 

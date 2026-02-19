@@ -34,6 +34,13 @@ public class VirtualBindingInfoRootSettingsBuilder<TPermission> : IVirtualBindin
 
         return this;
     }
+    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPermissionDelegation(
+        Expression<Func<TPermission, TPermission?>> newDelegatedFromPath)
+    {
+        this.PermissionBindingInit.Add(permissionBinding => permissionBinding with { DelegatedFrom = newDelegatedFromPath.ToPropertyAccessors() });
+
+        return this;
+    }
 
     public IVirtualBindingInfoRootSettingsBuilder<TPermission> ForRole(SecurityRole securityRole,
         Action<IVirtualBindingInfoSettingsBuilder<TPermission>>? init = null)

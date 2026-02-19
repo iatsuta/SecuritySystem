@@ -67,7 +67,7 @@ public class RestrictionFilterTests : TestBase
 
 
     [Fact]
-    public async Task CreateCustomRestrictionRule_ApplyGrandPermission_OnlyCorrectBuFounded()
+    public async Task CreateCustomRestrictionRule_ApplyUnrestrictedPermission_OnlyCorrectBuFounded()
     {
         // Arrange
         await this.AuthManager.For(this.testLogin).SetRoleAsync(this.securityRole, this.CancellationToken);
@@ -95,7 +95,7 @@ public class RestrictionFilterTests : TestBase
     }
 
     //[Fact]
-    //public async Task CreateCustomRestrictionRule_SearchAccessorsForGrandPermission_EmployeeFounded()
+    //public async Task CreateCustomRestrictionRule_SearchAccessorsForUnrestrictedPermission_EmployeeFounded()
     //{
     //    // Arrange
     //    await this.AuthManager.For(this.testLogin).SetRoleAsync(this.securityRole, this.CancellationToken);

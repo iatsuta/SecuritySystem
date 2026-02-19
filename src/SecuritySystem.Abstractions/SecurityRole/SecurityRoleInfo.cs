@@ -1,4 +1,5 @@
-﻿using HierarchicalExpand;
+﻿using System.Collections.Immutable;
+using HierarchicalExpand;
 
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
@@ -9,9 +10,9 @@ public record SecurityRoleInfo(TypedSecurityIdentity Identity)
 
     public SecurityPathRestriction Restriction { get; init; } = SecurityPathRestriction.Default;
 
-    public IReadOnlyList<SecurityOperation> Operations { get; init; } = [];
+    public ImmutableArray<SecurityOperation> Operations { get; init; } = [];
 
-    public IReadOnlyList<SecurityRole> Children { get; init; } = [];
+    public ImmutableArray<SecurityRole> Children { get; init; } = [];
 
     public string? Description { get; init; }
 

@@ -1,4 +1,6 @@
-﻿namespace SecuritySystem.SecurityAccessor;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.SecurityAccessor;
 
 public abstract record SecurityAccessorData
 {
@@ -6,13 +8,13 @@ public abstract record SecurityAccessorData
 
     public static SecurityAccessorData Empty { get; } = Return();
 
-    public static SecurityAccessorData Return(params string[] items) => new FixedSecurityAccessorData(items);
+    public static SecurityAccessorData Return(params string[] items) => new FixedSecurityAccessorData([..items]);
 
     public static SecurityAccessorData Return(IEnumerable<string> items) => Return(items.ToArray());
 
     public static SecurityAccessorData TryReturn(string? item) => string.IsNullOrWhiteSpace(item) ? Empty : Return(item);
 
-    public record FixedSecurityAccessorData(IReadOnlyList<string> Items) : SecurityAccessorData;
+    public record FixedSecurityAccessorData(ImmutableArray<string> Items) : SecurityAccessorData;
 
     public record InfinitySecurityAccessorData : SecurityAccessorData;
 

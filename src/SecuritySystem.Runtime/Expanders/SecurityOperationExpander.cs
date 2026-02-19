@@ -5,7 +5,7 @@ namespace SecuritySystem.Expanders;
 public class SecurityOperationExpander(ISecurityRoleSource securityRoleSource, ISecurityOperationInfoSource securityOperationInfoSource)
     : ISecurityOperationExpander
 {
-    private readonly ConcurrentDictionary<DomainSecurityRule.OperationSecurityRule, DomainSecurityRule.NonExpandedRolesSecurityRule> cache = new();
+    private readonly ConcurrentDictionary<DomainSecurityRule.OperationSecurityRule, DomainSecurityRule.NonExpandedRolesSecurityRule> cache = [];
 
     public DomainSecurityRule.NonExpandedRolesSecurityRule Expand(DomainSecurityRule.OperationSecurityRule baseSecurityRule)
     {

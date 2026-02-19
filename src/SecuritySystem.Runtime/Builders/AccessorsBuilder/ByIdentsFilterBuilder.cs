@@ -25,10 +25,10 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TPermission, TSecurit
     {
         var securityObjects = this.GetSecurityObjects(domainObject).ToArray();
 
-        var allowGrandAccess = securityContextRestriction?.Required != true;
+        var allowsUnrestrictedAccess = securityContextRestriction?.Required != true;
 
-        var grandAccessExpr = allowGrandAccess
-            ? permissionRestrictionSource.GetGrandAccessExpr()
+        var unrestrictedFilter = allowsUnrestrictedAccess
+            ? permissionRestrictionSource.GetUnrestrictedFilter()
             : _ => false;
 
         if (securityObjects.Any())
@@ -37,13 +37,13 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TPermission, TSecurit
                 .Create<TSecurityContextIdent>(typeof(TSecurityContext))
                 .Expand(securityObjects.Select(identityInfo.Id.Getter), expandType.Reverse());
 
-            return grandAccessExpr.BuildOr(permissionRestrictionSource.GetContainsIdentsExpr(securityIdents));
+            return unrestrictedFilter.BuildOr(permissionRestrictionSource.GetContainsIdentsExpr(securityIdents));
         }
         else
         {
             if (contextSecurityPath.Required)
             {
-                return grandAccessExpr;
+                return unrestrictedFilter;
             }
             else
             {

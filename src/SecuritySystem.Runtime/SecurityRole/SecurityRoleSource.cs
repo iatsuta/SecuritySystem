@@ -3,6 +3,8 @@
 using SecuritySystem.Services;
 
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
+
 // ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
@@ -18,7 +20,7 @@ public class SecurityRoleSource : ISecurityRoleSource
 
     public SecurityRoleSource(IServiceProxyFactory serviceProxyFactory, IEnumerable<FullSecurityRole> securityRoles)
     {
-        this.SecurityRoles = securityRoles.ToList();
+        this.SecurityRoles = [..securityRoles];
 
         this.identityDict = this.SecurityRoles.ToDictionary(v => v.Identity);
 
@@ -29,7 +31,7 @@ public class SecurityRoleSource : ISecurityRoleSource
                 this.SecurityRoles.Select(sr => sr.Identity.IdentType).Distinct());
     }
 
-    public IReadOnlyList<FullSecurityRole> SecurityRoles { get; }
+    public ImmutableArray<FullSecurityRole> SecurityRoles { get; }
 
     public FullSecurityRole GetSecurityRole(SecurityRole securityRole) => this.GetSecurityRole(securityRole.Name);
 

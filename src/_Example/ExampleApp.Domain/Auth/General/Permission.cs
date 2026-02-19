@@ -8,6 +8,8 @@ public class Permission
 
     public virtual required SecurityRole SecurityRole { get; init; }
 
+    public virtual Permission? DelegatedFrom { get; init; }
+
     public DateTime StartDate { get; set; }
 
     public DateTime? EndDate { get; set; }

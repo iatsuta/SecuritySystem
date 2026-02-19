@@ -50,7 +50,7 @@ public class RootPrincipalSourceService(IEnumerable<IPrincipalSourceService> pri
 
                       select new ManagedPrincipal(
                           g.Key with { IsVirtual = g.All(p => p.Header.IsVirtual) },
-                          g.SelectMany(p => p.Permissions).ToList());
+                          [..g.SelectMany(p => p.Permissions)]);
 
         return request.SingleOrDefault(() => throw getOverflowException());
     }

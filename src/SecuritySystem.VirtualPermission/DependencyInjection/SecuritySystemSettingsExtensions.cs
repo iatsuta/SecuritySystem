@@ -31,10 +31,10 @@ public static class SecuritySystemSettingsExtensions
                 services.AddSingleton(bindingInfo);
                 services.TryAddSingleton<IVirtualPermissionBindingInfoValidator, VirtualPermissionBindingInfoValidator>();
 
+                var serviceType = typeof(VirtualPrincipalSourceService<>).MakeGenericType(bindingInfo.PermissionType);
+
                 foreach (var virtualBindingInfo in virtualBindingInfoList)
                 {
-                    var serviceType = typeof(VirtualPrincipalSourceService<>).MakeGenericType(bindingInfo.PermissionType);
-
                     services.AddScopedFrom<IPrincipalSourceService, IServiceProxyFactory>(factory =>
                         factory.Create<IPrincipalSourceService>(serviceType, virtualBindingInfo));
                 }

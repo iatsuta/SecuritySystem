@@ -32,10 +32,8 @@ public class DisplayPermissionService<TPermission, TPermissionRestriction>(
             generalBindingInfo);
     });
 
-
-    public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData) => this.lazyInnerService.Value.ToString(permissionData);
+    public string Format(PermissionData<TPermission, TPermissionRestriction> permissionData) => this.lazyInnerService.Value.Format(permissionData);
 }
-
 
 public class DisplayPermissionService<TPermission, TSecurityRole, TPermissionRestriction>(
     PermissionBindingInfo<TPermission> bindingInfo,
@@ -47,7 +45,7 @@ public class DisplayPermissionService<TPermission, TSecurityRole, TPermissionRes
     : IDisplayPermissionService<TPermission, TPermissionRestriction>
     where TSecurityRole : class
 {
-    public string ToString(PermissionData<TPermission, TPermissionRestriction> permissionData)
+    public string Format(PermissionData<TPermission, TPermissionRestriction> permissionData)
     {
         return this.GetPermissionVisualParts(permissionData).Join(" | ");
     }
@@ -72,11 +70,11 @@ public class DisplayPermissionService<TPermission, TSecurityRole, TPermissionRes
         {
             var securityContextInfo = securityContextInfoSource.GetSecurityContextInfo(securityContextTypeGroup.Key);
 
-            var securityEntities = securityContextStorage
+            var securityContextList = securityContextStorage
                 .GetTyped(securityContextInfo.Type)
                 .GetSecurityContextsByIdents(securityContextTypeGroup.Value);
 
-            yield return $"{securityContextInfo.Name}: {securityEntities.Select(v => v.Name).Join(", ")}";
+            yield return $"{securityContextInfo.Name}: {securityContextList.Select(v => v.Name).Join(", ")}";
         }
     }
 }

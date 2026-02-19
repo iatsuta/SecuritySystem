@@ -23,10 +23,10 @@ public class SingleContextFilterBuilder<TDomainObject, TPermission, TSecurityCon
 
     public override Expression<Func<TDomainObject, TPermission, bool>> GetSecurityFilterExpression(HierarchicalExpandType expandType)
 	{
-		var allowGrandAccess = securityContextRestriction?.Required != true;
+		var allowsUnrestrictedAccess = securityContextRestriction?.Required != true;
 
-		var grandAccessExpr = allowGrandAccess
-			? permissionRestrictionSource.GetGrandAccessExpr()
+        var unrestrictedFilter = allowsUnrestrictedAccess
+			? permissionRestrictionSource.GetUnrestrictedFilter()
 			: _ => false;
 
 		var getIdents = permissionRestrictionSource.GetIdentsExpr();
@@ -45,7 +45,7 @@ public class SingleContextFilterBuilder<TDomainObject, TPermission, TSecurityCon
 			{
 				return (domainObject, permission) =>
 
-					ee.Evaluate(grandAccessExpr, permission)
+					ee.Evaluate(unrestrictedFilter, permission)
 
 					|| ee.Evaluate(expandExpressionQ, permission).Contains(
 						ee.Evaluate(fullIdPath, domainObject));
@@ -54,7 +54,7 @@ public class SingleContextFilterBuilder<TDomainObject, TPermission, TSecurityCon
 			{
 				return (domainObject, permission) =>
 
-					ee.Evaluate(grandAccessExpr, permission)
+					ee.Evaluate(unrestrictedFilter, permission)
 
 					|| ee.Evaluate(securityPath.Expression, domainObject) == null
 

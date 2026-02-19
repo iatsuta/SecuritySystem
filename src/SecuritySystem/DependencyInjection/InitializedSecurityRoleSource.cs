@@ -1,4 +1,6 @@
-﻿namespace SecuritySystem.DependencyInjection;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.DependencyInjection;
 
 public class InitializedSecurityRoleSource(IEnumerable<PreInitializerFullSecurityRole> securityRoles) : IInitializedSecurityRoleSource
 {
@@ -7,7 +9,7 @@ public class InitializedSecurityRoleSource(IEnumerable<PreInitializerFullSecurit
         return securityRoles.Select(sr => this.GetInitializedRole(sr.FullSecurityRole));
     }
 
-    protected virtual IReadOnlyList<SecurityRole> ExceptAdministratorRoles { get; } = [SecurityRole.Administrator, SecurityRole.SystemIntegration];
+    protected virtual ImmutableArray<SecurityRole> ExceptAdministratorRoles { get; } = [SecurityRole.Administrator, SecurityRole.SystemIntegration];
 
     private FullSecurityRole GetInitializedRole(FullSecurityRole securityRole)
     {
@@ -19,7 +21,7 @@ public class InitializedSecurityRoleSource(IEnumerable<PreInitializerFullSecurit
 
             var newInfo = securityRole.Information with
                           {
-                              Children = info.Children.Concat(otherRoles).Distinct().ToList(),
+                              Children = [..info.Children.Concat(otherRoles).Distinct()],
                               Restriction = SecurityPathRestriction.Ignored
                           };
 

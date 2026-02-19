@@ -1,9 +1,11 @@
-﻿// ReSharper disable once CheckNamespace
+﻿using System.Collections.Immutable;
+
+// ReSharper disable once CheckNamespace
 namespace SecuritySystem;
 
 public interface ISecurityRoleSource
 {
-    IReadOnlyList<FullSecurityRole> SecurityRoles { get; }
+    ImmutableArray<FullSecurityRole> SecurityRoles { get; }
 
     FullSecurityRole GetSecurityRole(SecurityRole securityRole);
 

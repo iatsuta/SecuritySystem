@@ -46,7 +46,7 @@ public class PermissionRestrictionTypeFilterFactory<TPermissionRestriction, TSec
 
     where TSecurityContextTypeIdent : notnull
 {
-    private readonly ConcurrentDictionary<Type, LambdaExpression> cache = new();
+    private readonly ConcurrentDictionary<Type, LambdaExpression> cache = [];
 
     public Expression<Func<TPermissionRestriction, bool>> CreateFilter<TSecurityContext>()
         where TSecurityContext : class, ISecurityContext

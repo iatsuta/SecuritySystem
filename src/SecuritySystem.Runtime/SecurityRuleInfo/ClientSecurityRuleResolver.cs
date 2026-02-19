@@ -6,7 +6,7 @@ public class ClientSecurityRuleResolver(
     IDomainSecurityRoleExtractor domainSecurityRoleExtractor,
     IClientSecurityRuleInfoSource clientSecurityRuleInfoSource) : IClientSecurityRuleResolver
 {
-    private readonly ConcurrentDictionary<SecurityRole, DomainSecurityRule.ClientSecurityRule[]> cache = new();
+    private readonly ConcurrentDictionary<SecurityRole, DomainSecurityRule.ClientSecurityRule[]> cache = [];
 
     public IEnumerable<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole) =>
         this.cache.GetOrAdd(securityRole, _ =>

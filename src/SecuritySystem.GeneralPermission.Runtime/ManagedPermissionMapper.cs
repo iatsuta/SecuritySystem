@@ -7,11 +7,13 @@ using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 
 using System.Collections.Immutable;
+using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.GeneralPermission;
 
 public class PermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>(
     IServiceProxyFactory serviceProxyFactory,
+    IIdentityInfoSource identityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource)
@@ -25,20 +27,24 @@ public class PermissionManagementService<TPrincipal, TPermission, TPermissionRes
 
         var restrictionBindingInfo = restrictionBindingInfoSource.GetForPermission(bindingInfo.PermissionType);
 
-        var innerServiceType = typeof(PermissionManagementService<,,,,,>)
+        var permissionIdentityInfo = identityInfoSource.GetIdentityInfo(bindingInfo.PermissionType);
+
+        var innerServiceType = typeof(PermissionManagementService<,,,,,,>)
             .MakeGenericType(
                 bindingInfo.PrincipalType,
                 bindingInfo.PermissionType,
                 generalBindingInfo.SecurityRoleType,
                 restrictionBindingInfo.PermissionRestrictionType,
                 restrictionBindingInfo.SecurityContextTypeType,
-                restrictionBindingInfo.SecurityContextObjectIdentType);
+                restrictionBindingInfo.SecurityContextObjectIdentType,
+                permissionIdentityInfo.IdentityType);
 
         return serviceProxyFactory.Create<IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>>(
             innerServiceType,
             bindingInfo,
             generalBindingInfo,
-            restrictionBindingInfo);
+            restrictionBindingInfo,
+            permissionIdentityInfo);
     });
 
     private IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction> InnerService => this.lazyInnerService.Value;
@@ -54,11 +60,11 @@ public class PermissionManagementService<TPrincipal, TPermission, TPermissionRes
         this.InnerService.UpdatePermission(dbPermission, managedPermission, cancellationToken);
 }
 
-public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermissionIdent>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
-
+    IdentityInfo<TPermission, TPermissionIdent> permissionIdentityInfo,
     IPermissionSecurityRoleResolver<TPermission> permissionSecurityRoleResolver,
     IRawPermissionRestrictionLoader<TPermission> rawPermissionRestrictionLoader,
     ISecurityIdentityExtractor<TPermission> permissionSecurityIdentityExtractor,
@@ -69,7 +75,10 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
     ISecurityContextInfoSource securityContextInfoSource,
     ISecurityIdentityExtractor<TSecurityRole> securityRoleIdentityExtractor,
     ISecurityIdentityExtractor<TSecurityContextType> securityContextTypeIdentityExtractor,
-    IGenericRepository genericRepository)
+    ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor,
+    ISecurityIdentityConverter<TPermissionIdent> permissionIdentityConverter,
+    IGenericRepository genericRepository,
+    ISecurityRepository<TPermission> permissionRepository)
     : IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>
 
     where TPermission : class, new()
@@ -77,7 +86,7 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
     where TPermissionRestriction : class, new()
     where TSecurityContextType : class
     where TSecurityContextObjectIdent : notnull
-
+    where TPermissionIdent : notnull
 {
     public async Task<ManagedPermission> ToManagedPermissionAsync(TPermission dbPermission, CancellationToken cancellationToken) =>
         new()
@@ -87,6 +96,9 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
             SecurityRole = permissionSecurityRoleResolver.Resolve(dbPermission),
             Period = bindingInfo.GetSafePeriod(dbPermission),
             Comment = bindingInfo.GetSafeComment(dbPermission),
+            DelegatedFrom = bindingInfo.DelegatedFrom?.Getter.Invoke(dbPermission) is { } delegatedFromPermission
+                ? permissionIdentityExtractor.Extract(delegatedFromPermission)
+                : SecurityIdentity.Default,
             Restrictions = (await rawPermissionRestrictionLoader.LoadAsync(dbPermission, cancellationToken)).ToImmutableDictionary()
         };
 
@@ -95,9 +107,9 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
         ManagedPermission managedPermission,
         CancellationToken cancellationToken)
     {
-        if (!managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
+        if (managedPermission.IsVirtual || (!managedPermission.Identity.IsDefault && !managedPermission.ForceApplyIdentity))
         {
-            throw new SecuritySystemException("wrong typed permission");
+            throw new SecuritySystemException("wrong permission");
         }
 
         var securityRole = securityRoleSource.GetSecurityRole(managedPermission.SecurityRole);
@@ -106,12 +118,28 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
 
         var newDbPermission = new TPermission();
 
+        if (!managedPermission.Identity.IsDefault)
+        {
+            var permissionIdentity = permissionIdentityConverter.Convert(managedPermission.Identity);
+
+            permissionIdentityInfo.Id.Setter.Invoke(newDbPermission, permissionIdentity.Id);
+        }
+
         bindingInfo.Principal.Setter(newDbPermission, dbPrincipal);
         generalBindingInfo.SecurityRole.Setter(newDbPermission, dbRole);
 
         bindingInfo.PermissionStartDate?.Setter(newDbPermission, managedPermission.Period.StartDate);
         bindingInfo.PermissionEndDate?.Setter(newDbPermission, managedPermission.Period.EndDate);
         bindingInfo.PermissionComment?.Setter(newDbPermission, managedPermission.Comment);
+
+        if (!managedPermission.DelegatedFrom.IsDefault)
+        {
+            var delegatedFromAccessors = bindingInfo.DelegatedFrom ?? throw new InvalidOperationException("Delegated Permission Binding not initialized");
+
+            var delegatedFromPermission = await permissionRepository.GetObjectAsync(managedPermission.DelegatedFrom, cancellationToken);
+
+            delegatedFromAccessors.Setter(newDbPermission, delegatedFromPermission);
+        }
 
         await genericRepository.SaveAsync(newDbPermission, cancellationToken);
 
@@ -145,9 +173,21 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
         ManagedPermission managedPermission,
         CancellationToken cancellationToken)
     {
-        if (managedPermission.Identity.IsDefault || managedPermission.IsVirtual)
+        if (managedPermission.IsVirtual || managedPermission.Identity.IsDefault)
         {
-            throw new SecuritySystemException("wrong typed permission");
+            throw new SecuritySystemException("wrong permission");
+        }
+
+        if (!managedPermission.DelegatedFrom.IsDefault)
+        {
+            var delegatedFromAccessors = bindingInfo.DelegatedFrom ?? throw new InvalidOperationException("Delegated Permission Binding not initialized");
+
+            var delegatedFromPermission = await permissionRepository.GetObjectAsync(managedPermission.DelegatedFrom, cancellationToken);
+
+            if (delegatedFromPermission != delegatedFromAccessors.Getter(dbPermission))
+            {
+                throw new InvalidOperationException("Delegated source can't be changed");
+            }
         }
 
         var securityRole = generalBindingInfo

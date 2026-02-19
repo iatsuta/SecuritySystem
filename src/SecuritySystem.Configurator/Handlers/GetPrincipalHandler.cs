@@ -44,7 +44,8 @@ public class GetPrincipalHandler(
 					Role = permission.SecurityRole.Name,
 					RoleId = securityRoleSource.GetSecurityRole(permission.SecurityRole).Identity.GetId().ToString()!,
 					Comment = permission.Comment,
-					StartDate = permission.Period.StartDate,
+                    DelegatedFromId = permission.DelegatedFrom.GetId().ToString()!,
+                    StartDate = permission.Period.StartDate,
 					EndDate = permission.Period.EndDate,
 					Contexts = permission
                         .Restrictions

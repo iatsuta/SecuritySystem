@@ -4,7 +4,7 @@ using SecuritySystem.Testing;
 
 namespace ExampleApp.IntegrationTests;
 
-public class ExtendedValuePermissionTests : TestBase
+public class PermissionExtendedDataTests : TestBase
 {
     [Fact]
     public async Task SetRoleAsync_WithExtendedValue_ShouldPersistExtendedData()
@@ -14,7 +14,7 @@ public class ExtendedValuePermissionTests : TestBase
 
         var extendedValue = "abc";
 
-        var testPermission = new TestPermission(ExampleRoles.DefaultRole) { ExtendedValue = extendedValue }.ToManagedPermissionData();
+        var testPermission = new TestPermission(ExampleRoles.DefaultRole) { ExtendedValue = extendedValue };
 
         // Act
         var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(testPermission, this.CancellationToken);

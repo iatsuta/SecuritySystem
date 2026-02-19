@@ -15,9 +15,9 @@ public abstract class ByIdentsFilterBuilder<TDomainObject, TSecurityContext, TSe
         }
         else
         {
-            var allowGrandAccess = securityContextRestriction?.Required != true;
+            var allowsUnrestrictedAccess = securityContextRestriction?.Required != true;
 
-            return _ => allowGrandAccess;
+            return _ => allowsUnrestrictedAccess;
         }
     }
 

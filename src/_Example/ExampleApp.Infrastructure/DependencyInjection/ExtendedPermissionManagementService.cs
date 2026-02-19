@@ -1,21 +1,21 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
-
-using AuthGeneral = ExampleApp.Domain.Auth.General;
-
+using CommonFramework.IdentitySource;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.GeneralPermission;
 using SecuritySystem.Services;
-using SecuritySystem.ExternalSystem.Management;
+using AuthGeneral = ExampleApp.Domain.Auth.General;
 
 namespace ExampleApp.Infrastructure.DependencyInjection;
 
 public class ExtendedPermissionManagementService(
     IServiceProxyFactory serviceProxyFactory,
+    IIdentityInfoSource identityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
     IGeneralPermissionBindingInfoSource generalBindingInfoSource,
     IGeneralPermissionRestrictionBindingInfoSource restrictionBindingInfoSource,
     IGenericRepository genericRepository) :
-    PermissionManagementService<AuthGeneral.Principal, AuthGeneral.Permission, AuthGeneral.PermissionRestriction>(serviceProxyFactory, bindingInfoSource,
+    PermissionManagementService<AuthGeneral.Principal, AuthGeneral.Permission, AuthGeneral.PermissionRestriction>(serviceProxyFactory, identityInfoSource, bindingInfoSource,
         generalBindingInfoSource, restrictionBindingInfoSource)
 {
     private const string ExtendedKey = nameof(AuthGeneral.Permission.ExtendedValue);

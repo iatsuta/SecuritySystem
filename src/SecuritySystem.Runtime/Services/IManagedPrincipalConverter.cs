@@ -4,5 +4,5 @@ namespace SecuritySystem.Services;
 
 public interface IManagedPrincipalConverter<in TPrincipal>
 {
-	Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal principal, CancellationToken cancellationToken);
+	Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal dbPrincipal, CancellationToken cancellationToken);
 }
