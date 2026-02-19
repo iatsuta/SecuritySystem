@@ -1,12 +1,6 @@
 ﻿using CommonFramework;
-using CommonFramework.DependencyInjection;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SecuritySystem.DependencyInjection;
-using SecuritySystem.ExternalSystem;
-using SecuritySystem.ExternalSystem.Management;
 
 using System.Linq.Expressions;
 
@@ -16,56 +10,27 @@ public static class SecuritySystemSettingsExtensions
 {
     extension(ISecuritySystemSettings securitySystemSettings)
     {
-        public ISecuritySystemSettings AddVirtualPermission(
-            PermissionBindingInfo bindingInfo,
-            IReadOnlyList<VirtualPermissionBindingInfo> virtualBindingInfoList)
-        {
-            foreach (var virtualBindingInfo in virtualBindingInfoList)
-            {
-                securitySystemSettings.AddPermissionSystem(serviceProxyFactory =>
-                    serviceProxyFactory.Create<IPermissionSystemFactory, VirtualPermissionSystemFactory>(virtualBindingInfo));
-            }
-
-            return securitySystemSettings.AddExtensions(services =>
-            {
-                services.AddSingleton(bindingInfo);
-                services.TryAddSingleton<IVirtualPermissionBindingInfoValidator, VirtualPermissionBindingInfoValidator>();
-
-                var serviceType = typeof(VirtualPrincipalSourceService<>).MakeGenericType(bindingInfo.PermissionType);
-
-                foreach (var virtualBindingInfo in virtualBindingInfoList)
-                {
-                    services.AddScopedFrom<IPrincipalSourceService, IServiceProxyFactory>(factory =>
-                        factory.Create<IPrincipalSourceService>(serviceType, virtualBindingInfo));
-                }
-            });
-        }
-
         public ISecuritySystemSettings AddVirtualPermission<TPrincipal, TPermission>(
             PropertyAccessors<TPermission, TPrincipal> principalAccessors,
-            Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> initAction)
+            Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> setupAction)
             where TPrincipal : class
             where TPermission : class
         {
-            var bindingInfo = new PermissionBindingInfo<TPermission, TPrincipal> { IsReadonly = true, Principal = principalAccessors };
+            var builder = new VirtualBindingInfoRootSettingsBuilder<TPrincipal, TPermission>();
 
-            var builder = new VirtualBindingInfoRootSettingsBuilder<TPermission>();
+            setupAction.Invoke(builder);
 
-            initAction.Invoke(builder);
+            builder.Initialize(securitySystemSettings, principalAccessors);
 
-            return securitySystemSettings.AddVirtualPermission(bindingInfo, builder.VirtualPermissionBindingInfoList.ToArray());
+            return securitySystemSettings;
         }
 
         public ISecuritySystemSettings AddVirtualPermission<TPrincipal, TPermission>(
             Expression<Func<TPermission, TPrincipal>> principalPath,
-            Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> initAction)
+            Action<IVirtualBindingInfoRootSettingsBuilder<TPermission>> setupAction)
             where TPrincipal : class
             where TPermission : class =>
             securitySystemSettings.AddVirtualPermission(
-                new PropertyAccessors<TPermission, TPrincipal>(
-                    principalPath,
-                    principalPath.Compile(),
-                    (_, __) => throw new NotImplementedException("ReadOnly")),
-                initAction);
+                principalPath.ToPropertyAccessors(), setupAction);
     }
 }

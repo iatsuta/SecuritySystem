@@ -80,7 +80,7 @@ public class TestPermission
         }
     }
 
-    public ManagedPermission ToManagedPermissionData() => new()
+    public ManagedPermission ToManagedPermission() => new()
     {
         Identity = this.Identity,
         ForceApplyIdentity = true,
@@ -94,5 +94,5 @@ public class TestPermission
         ExtendedData = this.ExtendedData.ToImmutableDictionary()
     };
 
-    public static implicit operator ManagedPermission(TestPermission testPermissionBuilder) => testPermissionBuilder.ToManagedPermissionData();
+    public static implicit operator ManagedPermission(TestPermission testPermissionBuilder) => testPermissionBuilder.ToManagedPermission();
 }
