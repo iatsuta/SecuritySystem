@@ -64,7 +64,7 @@ public class PermissionDelegationValidator<TPrincipal, TPermission, TPermissionR
         {
             if (permissionBindingInfo.Principal.Getter(delegatedFrom) == permissionBindingInfo.Principal.Getter(permission))
             {
-                throw new SecuritySystemValidationException("Permission cannot be delegated to the original user");
+                throw new SecuritySystemValidationException("Invalid delegation target: the permission cannot be delegated to its original principal");
             }
 
             var delegatedFromData = await permissionRestrictionLoader.ToPermissionData(delegatedFrom, cancellationToken);
@@ -95,28 +95,35 @@ public class PermissionDelegationValidator<TPrincipal, TPermission, TPermissionR
         if (!this.IsCorrectRoleSubset(subPermission, delegatedFrom))
         {
             throw new SecuritySystemValidationException(
-                $"Invalid delegated permission role. Selected role \"{permissionSecurityRoleResolver.Resolve(subPermission)}\" not subset of \"{permissionSecurityRoleResolver.Resolve(delegatedFrom)}\"");
+                $"Invalid delegated permission role: the selected role \"{permissionSecurityRoleResolver.Resolve(subPermission)}\" is not a subset of \"{permissionSecurityRoleResolver.Resolve(delegatedFrom)}\"");
         }
 
         if (!this.IsCorrectPeriodSubset(subPermission, delegatedFrom))
         {
             throw new SecuritySystemValidationException(
-                $"Invalid delegated permission period. Selected period \"{permissionBindingInfo.GetSafePeriod(subPermission)}\" not subset of \"{permissionBindingInfo.GetSafePeriod(delegatedFrom)}\"");
+                $"Invalid delegated permission period: the selected period \"{permissionBindingInfo.GetSafePeriod(subPermission)}\" is not a subset of \"{permissionBindingInfo.GetSafePeriod(delegatedFrom)}\"");
         }
 
         {
-            var invalidEntityGroups = this.GetInvalidContextDict(subPermissionData, delegatedFromData).ToList();
+            var invalidSecurityContextDict = this.GetInvalidSecurityContextDict(subPermissionData, delegatedFromData).ToList();
 
-            if (invalidEntityGroups.Any())
+            if (invalidSecurityContextDict.Any())
             {
                 throw new SecuritySystemValidationException(
                     string.Format(
-                        "Can't delegate permission from {0} to {1}, because {0} have no access to objects ({2})",
+                        "Invalid security context delegation: the source principal \"{0}\" does not have access to the following security contexts required for delegation to \"{1}\": {2}",
                         domainObjectDisplayService.ToString(permissionBindingInfo.Principal.Getter(delegatedFrom)),
                         domainObjectDisplayService.ToString(permissionBindingInfo.Principal.Getter(subPermission)),
-                        invalidEntityGroups.Join(
+                        invalidSecurityContextDict.Join(
                             " | ",
-                            g => $"{g.Key.Name}: {g.Value.OfType<object>().Join(", ")}")));
+                            g =>
+                            {
+                                var invalidValues = g.Value.Length == 0
+                                    ? "Global Access"
+                                    : g.Value.OfType<object>().Join(", ");
+
+                                return $"{g.Key.Name}: {invalidValues}";
+                            })));
             }
         }
     }
@@ -132,7 +139,7 @@ public class PermissionDelegationValidator<TPrincipal, TPermission, TPermissionR
         return permissionBindingInfo.GetSafePeriod(delegatedFrom).Contains(permissionBindingInfo.GetSafePeriod(subPermission));
     }
 
-    private IEnumerable<KeyValuePair<SecurityContextInfo, Array>> GetInvalidContextDict(
+    private IEnumerable<KeyValuePair<SecurityContextInfo, Array>> GetInvalidSecurityContextDict(
         PermissionData<TPermission, TPermissionRestriction> subPermissionData,
         PermissionData<TPermission, TPermissionRestriction> delegatedFromData)
     {
@@ -158,7 +165,7 @@ public class PermissionDelegationValidator<TPrincipal, TPermission, TPermissionR
                         .Create(securityContextInfo.Type)
                         .Expand(delegatedFromRestrictions, HierarchicalExpandType.Children);
 
-                    var missedAccessElements = expandedChildren.OfType<object>().Except(subRestrictions.Cast<object>()).ToArray();
+                    var missedAccessElements = subRestrictions.Cast<object>().Except(expandedChildren.OfType<object>()).ToArray();
 
                     if (missedAccessElements.Length > 0)
                     {

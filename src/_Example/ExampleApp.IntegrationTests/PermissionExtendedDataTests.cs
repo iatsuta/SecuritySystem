@@ -14,7 +14,7 @@ public class PermissionExtendedDataTests : TestBase
 
         var extendedValue = "abc";
 
-        var testPermission = new TestPermission(ExampleRoles.DefaultRole) { ExtendedValue = extendedValue }.ToManagedPermissionData();
+        var testPermission = new TestPermission(ExampleRoles.DefaultRole) { ExtendedValue = extendedValue };
 
         // Act
         var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(testPermission, this.CancellationToken);

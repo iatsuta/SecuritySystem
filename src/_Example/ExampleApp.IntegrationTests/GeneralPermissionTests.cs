@@ -6,6 +6,7 @@ using ExampleApp.Domain;
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
+using SecuritySystem;
 using SecuritySystem.AvailableSecurity;
 using SecuritySystem.DomainServices;
 using SecuritySystem.Testing;
@@ -14,6 +15,23 @@ namespace ExampleApp.IntegrationTests;
 
 public class GeneralPermissionTests : TestBase
 {
+    [Fact]
+    public async Task SetRoleAsync_ShouldPreservePermissionIdentity()
+    {
+        // Arrange
+        var testPermission = new TestPermission(ExampleRoles.DefaultRole) { Identity = TypedSecurityIdentity.Create(Guid.NewGuid()) };
+
+        // Act
+        var principalIdentity = await this.AuthManager.For("TestPrincipal").SetRoleAsync(testPermission, this.CancellationToken);
+
+        // Assert
+        var managedPrincipal = await this.AuthManager.For(principalIdentity).GetPrincipalAsync(this.CancellationToken);
+
+        var managedPermission = managedPrincipal.Permissions.Should().ContainSingle().Subject;
+
+        managedPermission.Identity.Should().Be(testPermission.Identity);
+    }
+
     [Fact]
     public async Task AssignGeneralPermission_PermissionResolved()
     {
@@ -27,7 +45,7 @@ public class GeneralPermissionTests : TestBase
         var testPermission = new TestPermission(testRole) { BusinessUnit = buIdentity };
 
         var principalIdentity = await this.AuthManager.For(principalName).SetRoleAsync(testPermission, this.CancellationToken);
-        this.AuthManager.For(principalName).LoginAs();
+        this.AuthManager.For(principalIdentity).LoginAs();
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
         var availableSecurityRoleSource = scope.ServiceProvider.GetRequiredService<IAvailableSecurityRoleSource>();
@@ -54,15 +72,13 @@ public class GeneralPermissionTests : TestBase
     public async Task AssignGeneralPermission_WithRootBu_AllTestObjectsResolved()
     {
         // Arrange
-        var principalName = "TestPrincipal";
-
         var buIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>("TestRootBu", this.CancellationToken);
 
         var testRole = ExampleRoles.BuManager;
 
         var testPermission = new TestPermission(testRole) { BusinessUnit = buIdentity };
 
-        var principalId = await this.AuthManager.For(principalName).SetRoleAsync([testPermission, ExampleRoles.DefaultRole], this.CancellationToken);
+        var principalId = await this.AuthManager.For("TestPrincipal").SetRoleAsync([testPermission, ExampleRoles.DefaultRole], this.CancellationToken);
         this.AuthManager.For(principalId).LoginAs();
 
         await using var scope = this.RootServiceProvider.CreateAsyncScope();
