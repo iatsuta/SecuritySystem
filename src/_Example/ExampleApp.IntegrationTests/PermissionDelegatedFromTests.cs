@@ -2,7 +2,6 @@
 using ExampleApp.Domain;
 
 using SecuritySystem;
-using SecuritySystem.GeneralPermission;
 using SecuritySystem.Testing;
 using SecuritySystem.Validation;
 

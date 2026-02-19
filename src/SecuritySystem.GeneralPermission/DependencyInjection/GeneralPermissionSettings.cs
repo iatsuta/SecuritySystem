@@ -1,14 +1,25 @@
 ﻿using System.Linq.Expressions;
 
 using CommonFramework;
+using CommonFramework.DependencyInjection;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using SecuritySystem.DependencyInjection;
+using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.GeneralPermission.Validation;
+using SecuritySystem.GeneralPermission.Initialize;
+using SecuritySystem.GeneralPermission.Validation.Permission;
+using SecuritySystem.GeneralPermission.Validation.PermissionRestriction;
+using SecuritySystem.GeneralPermission.Validation.Principal;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
-public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> :
-    IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>
+public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> : IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>
     where TPermission : class
     where TSecurityRole : notnull
+    where TPrincipal : class
 {
     private PropertyAccessors<TPermission, DateTime?>? startDateAccessors;
 
@@ -22,12 +33,63 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
 
     private bool? isReadonly;
 
-    public Type? PermissionEqualityComparerType { get; private set; }
+    private Type? permissionEqualityComparerType;
 
-    public Type? PermissionManagementServiceType { get; private set; }
+    private Type? permissionManagementServiceType;
 
 
-    public TPermissionBindingInfo ApplyOptionalPaths<TPermissionBindingInfo>(TPermissionBindingInfo bindingInfo)
+    public void Initialize(ISecuritySystemSettings securitySystemSettings,
+        PropertyAccessors<TPermission, TPrincipal> principalAccessors,
+        PropertyAccessors<TPermission, TSecurityRole> securityRoleAccessors,
+        PropertyAccessors<TPermissionRestriction, TPermission> permissionAccessors,
+        PropertyAccessors<TPermissionRestriction, TSecurityContextType> securityContextTypeAccessors,
+        PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> securityContextObjectIdAccessors)
+    {
+        this.RegisterGeneralServices(securitySystemSettings);
+
+        var bindingInfo = new PermissionBindingInfo<TPermission, TPrincipal>
+        {
+            Principal = principalAccessors,
+        }.Pipe(this.ApplyOptionalPaths);
+
+        var generalBindingInfo = new GeneralPermissionBindingInfo<TPermission, TSecurityRole>
+        {
+            SecurityRole = securityRoleAccessors,
+        }.Pipe(this.ApplyGeneralOptionalPaths);
+
+        var restrictionBindingInfo =
+            new GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission>
+            {
+                Permission = permissionAccessors,
+                SecurityContextType = securityContextTypeAccessors,
+                SecurityContextObjectId = securityContextObjectIdAccessors
+            };
+
+        securitySystemSettings
+            .AddPermissionSystem(sp => new GeneralPermissionSystemFactory(sp, bindingInfo))
+            .AddExtensions(services =>
+            {
+                services
+                    .AddSingleton<PermissionBindingInfo>(bindingInfo)
+                    .AddSingleton<GeneralPermissionBindingInfo>(generalBindingInfo)
+                    .AddSingleton<GeneralPermissionRestrictionBindingInfo>(restrictionBindingInfo)
+
+                    .AddScoped(typeof(IPrincipalSourceService), typeof(GeneralPrincipalSourceService<TPrincipal>));
+
+                if (this.permissionEqualityComparerType != null)
+                {
+                    services.AddScoped(typeof(IPermissionEqualityComparer<TPermission, TPermissionRestriction>), this.permissionEqualityComparerType);
+                }
+
+                if (this.permissionManagementServiceType != null)
+                {
+                    services.AddScoped(typeof(IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>),
+                        this.permissionManagementServiceType);
+                }
+            });
+    }
+
+    private TPermissionBindingInfo ApplyOptionalPaths<TPermissionBindingInfo>(TPermissionBindingInfo bindingInfo)
         where TPermissionBindingInfo : PermissionBindingInfo<TPermission, TPrincipal>
     {
         return bindingInfo
@@ -38,7 +100,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
             .PipeMaybe(this.isReadonly, (b, v) => b with { IsReadonly = v });
     }
 
-    public TGeneralPermissionBindingInfo ApplyGeneralOptionalPaths<TGeneralPermissionBindingInfo>(TGeneralPermissionBindingInfo bindingInfo)
+    private TGeneralPermissionBindingInfo ApplyGeneralOptionalPaths<TGeneralPermissionBindingInfo>(TGeneralPermissionBindingInfo bindingInfo)
         where TGeneralPermissionBindingInfo : GeneralPermissionBindingInfo<TPermission, TSecurityRole>
     {
         return bindingInfo
@@ -98,7 +160,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
     public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionEqualityComparer<TComparer>()
         where TComparer : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
     {
-        this.PermissionEqualityComparerType = typeof(TComparer);
+        this.permissionEqualityComparerType = typeof(TComparer);
 
         return this;
     }
@@ -107,8 +169,58 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         TPermissionManagementService>()
         where TPermissionManagementService : IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>
     {
-        this.PermissionManagementServiceType = typeof(TPermissionManagementService);
+        this.permissionManagementServiceType = typeof(TPermissionManagementService);
 
         return this;
+    }
+
+    private ISecuritySystemSettings RegisterGeneralServices(ISecuritySystemSettings settings)
+    {
+        return settings
+            .AddExtensions(services =>
+            {
+                if (services.AlreadyInitialized<IGeneralPermissionBindingInfoSource, GeneralPermissionBindingInfoSource>())
+                {
+                    return;
+                }
+
+                services
+                    .AddSingleton(typeof(IPermissionRestrictionTypeFilterFactory<>), typeof(PermissionRestrictionTypeFilterFactory<>))
+                    .AddScoped(typeof(IPermissionRestrictionFilterFactory<>), typeof(PermissionRestrictionFilterFactory<>))
+                    .AddScoped(typeof(IRawPermissionConverter<>), typeof(RawPermissionConverter<>))
+                    .AddSingleton(typeof(IPermissionSecurityRoleFilterFactory<>), typeof(PermissionSecurityRoleFilterFactory<>))
+                    .AddSingleton(typeof(IPermissionSecurityRoleIdentsFilterFactory<>), typeof(PermissionSecurityRoleIdentsFilterFactory<>))
+                    .AddScoped(typeof(IPermissionFilterFactory<>), typeof(PermissionFilterFactory<>))
+                    .AddScoped<ISecurityRoleInitializer, SecurityRoleInitializer>()
+                    .AddScoped(typeof(ISecurityRoleInitializer<>), typeof(SecurityRoleInitializer<>))
+                    .AddScoped<ISecurityContextInitializer, SecurityContextInitializer>()
+                    .AddScoped(typeof(ISecurityContextInitializer<>), typeof(SecurityContextInitializer<>))
+                    .AddScoped(typeof(IManagedPrincipalConverter<>), typeof(ManagedPrincipalConverter<>))
+                    .AddScoped(typeof(IDisplayPermissionService<,>), typeof(DisplayPermissionService<,>))
+
+                    .AddSingleton(typeof(IPermissionEqualityComparer<,>), typeof(PermissionEqualityComparer<,>))
+
+                    .AddKeyedScoped(typeof(IPrincipalValidator<,,>), "Root", typeof(PrincipalRootValidator<,,>))
+                    .AddScoped(typeof(IPrincipalValidator<,,>), typeof(PrincipalUniquePermissionValidator<,,>))
+                    .AddKeyedScoped(typeof(IPermissionValidator<,>), "Root", typeof(PermissionRootValidator<,>))
+                    .AddSingleton(typeof(IPermissionValidator<,>), typeof(PermissionRequiredContextValidator<,>))
+                    .AddScoped(typeof(IPermissionValidator<,>), typeof(PermissionDelegationValidator<,>))
+                    .AddKeyedScoped(typeof(IPermissionRestrictionValidator<>), "Root", typeof(PermissionRestrictionRootValidator<>))
+                    .AddSingleton(typeof(IPermissionRestrictionValidator<>), typeof(AllowedTypePermissionRestrictionValidator<>))
+                    .AddScoped(typeof(IPermissionRestrictionValidator<>), typeof(ExistsPermissionRestrictionValidator<>))
+                    .AddScoped(typeof(IPermissionRestrictionValidator<>), typeof(AllowedFilterPermissionRestrictionValidator<>))
+                    .AddScoped(typeof(IPermissionLoader<,>), typeof(PermissionLoader<,>))
+                    .AddScoped(typeof(IPermissionRestrictionLoader<,>), typeof(PermissionRestrictionLoader<,>))
+                    .AddScoped(typeof(IRawPermissionRestrictionLoader<>), typeof(RawPermissionRestrictionLoader<>))
+                    .AddSingleton(typeof(IPermissionRestrictionRawConverter<>), typeof(PermissionRestrictionRawConverter<>))
+                    .AddSingleton(typeof(IPermissionSecurityRoleResolver<>), typeof(PermissionSecurityRoleResolver<>))
+                    .AddSingleton(typeof(IPermissionRestrictionSecurityContextTypeResolver<>), typeof(PermissionRestrictionSecurityContextTypeResolver<>))
+                    .AddSingleton<InitializerSettings>()
+                    .AddSingleton<IGeneralPermissionBindingInfoSource, GeneralPermissionBindingInfoSource>()
+                    .AddSingleton<IGeneralPermissionRestrictionBindingInfoSource, GeneralPermissionRestrictionBindingInfoSource>()
+                    .AddScoped(typeof(IPermissionManagementService<,,>), typeof(PermissionManagementService<,,>));
+            })
+
+            .SetPrincipalManagementService<GeneralPrincipalManagementService>();
     }
 }

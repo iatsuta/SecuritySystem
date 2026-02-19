@@ -4,13 +4,13 @@ namespace SecuritySystem.ExternalSystem.Management;
 
 public record ManagedPermission
 {
-    public required SecurityIdentity Identity { get; init; }
+    public required SecurityRole SecurityRole { get; init; }
+
+    public SecurityIdentity Identity { get; init; } = SecurityIdentity.Default;
 
     public bool ForceApplyIdentity { get; init; }
 
     public bool IsVirtual { get; init; }
-
-    public required SecurityRole SecurityRole { get; init; }
 
     public PermissionPeriod Period { get; init; } = PermissionPeriod.Eternity;
 
@@ -23,7 +23,7 @@ public record ManagedPermission
     public ImmutableDictionary<string, object> ExtendedData { get; init; } = [];
 
 
-    public static implicit operator ManagedPermission(SecurityRole securityRole) => new() { SecurityRole = securityRole, Identity = SecurityIdentity.Default };
+    public static implicit operator ManagedPermission(SecurityRole securityRole) => new() { SecurityRole = securityRole };
 
     public ManagedPermission WithExtendedData(string key, object value)
     {
