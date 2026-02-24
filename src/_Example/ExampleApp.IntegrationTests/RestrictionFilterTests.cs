@@ -1,8 +1,12 @@
 ﻿using ExampleApp.Application;
 using ExampleApp.Domain;
+using ExampleApp.Domain.Auth.General;
+using GenericQueryable;
+using Microsoft.Extensions.DependencyInjection;
 using SecuritySystem;
 using SecuritySystem.Testing;
 using SecuritySystem.Validation;
+using SecurityRole = SecuritySystem.SecurityRole;
 
 namespace ExampleApp.IntegrationTests;
 
@@ -60,6 +64,25 @@ public class RestrictionFilterTests : TestBase
                          {
                              BusinessUnit = this.buWithAllowedFilter
                          }, this.CancellationToken);
+
+        await action();
+
+        await using var scope = this.RootServiceProvider.CreateAsyncScope();
+        var sp = scope.ServiceProvider;
+
+        var permissionQ = sp.GetRequiredService<IRepository<PermissionRestriction>>().GetQueryable().Select(p => p.SecurityContextId);
+
+        var permissionStringList = await permissionQ.GenericToListAsync(this.CancellationToken);
+
+        var permissionGuidList = permissionStringList.Select(Guid.Parse);
+
+        var buList = await sp
+            .GetRequiredService<IRepository<BusinessUnit>>()
+            .GetQueryable()
+            .Where(bu => permissionQ.Any(p => p == bu.Id.ToString()))
+            .GenericToListAsync(this.CancellationToken);
+
+        return;
 
         // Assert
         await action.Should().NotThrowAsync();

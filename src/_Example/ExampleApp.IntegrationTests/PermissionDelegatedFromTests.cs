@@ -64,12 +64,16 @@ public class PermissionDelegationFromTests : TestBase
         var targetPrincipalName = "TargetPrincipal";
         var sourceBuIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>("TestRootBu", this.CancellationToken);
         var targetBuIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<BusinessUnit, Guid>($"Test{nameof(BusinessUnit)}1", this.CancellationToken);
+        var targetLocationIdentity = await this.AuthManager.GetSecurityContextIdentityAsync<Location, int>($"Test{nameof(Location)}1", this.CancellationToken);
 
         var delegatedFromPermission = new TestPermission(ExampleRoles.DefaultRole)
             { Identity = TypedSecurityIdentity.Create(Guid.NewGuid()), BusinessUnit = sourceBuIdentity };
 
         var subPermission = new TestPermission(ExampleRoles.DefaultRole)
-            { Identity = TypedSecurityIdentity.Create(Guid.NewGuid()), BusinessUnit = targetBuIdentity, DelegatedFrom = delegatedFromPermission.Identity };
+        {
+            Identity = TypedSecurityIdentity.Create(Guid.NewGuid()), BusinessUnit = targetBuIdentity, Location = targetLocationIdentity,
+            DelegatedFrom = delegatedFromPermission.Identity
+        };
 
 
         await this.AuthManager.For(sourcePrincipalName).SetRoleAsync(delegatedFromPermission, this.CancellationToken);

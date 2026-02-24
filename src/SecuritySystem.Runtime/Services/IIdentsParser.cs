@@ -1,13 +1,13 @@
 ﻿namespace SecuritySystem.Services;
 
-public interface IIdentsParser<out TIdent> : IIdentsParser
+public interface IIdentsParser<in TSource, out TIdent> : IIdentsParser<TSource>
 {
-	new TIdent[] Parse(IEnumerable<string> idents);
+    new TIdent[] Parse(IEnumerable<TSource> idents);
 
-	Array IIdentsParser.Parse(IEnumerable<string> idents) => this.Parse(idents);
+    Array IIdentsParser<TSource>.Parse(IEnumerable<TSource> idents) => this.Parse(idents);
 }
 
-public interface IIdentsParser
+public interface IIdentsParser<in TSource>
 {
-	Array Parse(IEnumerable<string> idents);
+    Array Parse(IEnumerable<TSource> idents);
 }

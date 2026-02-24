@@ -413,13 +413,15 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
             .AddSingleton(typeof(ISecurityIdentityExtractor<>), typeof(SecurityIdentityExtractor<>))
             .AddSingleton(typeof(ISecurityIdentityConverter<>), typeof(SecurityIdentityConverter<>))
+            .AddSingleton<ISecurityIdentityConverter<string>, StringSecurityIdentityConverter>()
+
             .AddSingleton<IPrincipalDataSecurityIdentityExtractor, PrincipalDataSecurityIdentityExtractor>()
 
             .AddSingleton<IMissedUserErrorSource, MissedUserErrorSource>()
 
             .AddSingleton<IFormatProviderSource>(new FormatProviderSource(CultureInfo.CurrentCulture))
-            .AddSingleton(typeof(IIdentsParser<>), typeof(IdentsParser<>))
-            .AddSingleton<IDomainObjectIdentsParser, DomainObjectIdentsParser>()
+            .AddSingleton(typeof(IIdentsParser<,>), typeof(IdentsParser<,>))
+            .AddSingleton(typeof(IDomainObjectIdentsParser<>), typeof(DomainObjectIdentsParser<>))
 
             .AddScoped(typeof(ISecurityRepository<>), typeof(SecurityRepository<>))
             .AddSingleton(typeof(ISecurityIdentityFilterFactory<>), typeof(SecurityIdentityFilterFactory<>))

@@ -6,17 +6,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SecuritySystem.Services;
 
-public class DomainObjectIdentsParser(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IDomainObjectIdentsParser
+public class DomainObjectIdentsParser<TSource>(IServiceProvider serviceProvider, IIdentityInfoSource identityInfoSource) : IDomainObjectIdentsParser<TSource>
 {
-	private readonly ConcurrentDictionary<Type, IIdentsParser> parsersCache = new();
+    private readonly ConcurrentDictionary<Type, IIdentsParser<TSource>> parsersCache = new();
 
-	public Array Parse(Type domainObjectType, IEnumerable<string> idents) =>
-		parsersCache.GetOrAdd(domainObjectType, _ =>
-			{
-				var identityInfo = identityInfoSource.GetIdentityInfo(domainObjectType);
+    public Array Parse(Type domainObjectType, IEnumerable<TSource> idents) =>
+        parsersCache.GetOrAdd(domainObjectType, _ =>
+            {
+                var identityInfo = identityInfoSource.GetIdentityInfo(domainObjectType);
 
-				return (IIdentsParser)serviceProvider.GetRequiredService(typeof(IIdentsParser<>).MakeGenericType(identityInfo.IdentityType));
-			})
-			.Parse(idents);
+                return (IIdentsParser<TSource>)serviceProvider.GetRequiredService(
+                    typeof(IIdentsParser<,>).MakeGenericType(typeof(TSource), identityInfo.IdentityType));
+            })
+            .Parse(idents);
 
 }

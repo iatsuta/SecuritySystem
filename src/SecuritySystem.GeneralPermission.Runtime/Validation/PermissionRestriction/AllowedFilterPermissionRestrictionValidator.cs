@@ -1,6 +1,7 @@
 ﻿using CommonFramework;
 using CommonFramework.IdentitySource;
 
+using SecuritySystem.Services;
 using SecuritySystem.Validation;
 
 namespace SecuritySystem.GeneralPermission.Validation.PermissionRestriction;
@@ -34,7 +35,8 @@ public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction,
     IPermissionSecurityRoleResolver<TPermission> permissionSecurityRoleResolver,
     ISecurityContextSource securityContextSource,
     IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction> permissionRestrictionSecurityContextTypeResolver,
-    IIdentityInfoSource identityInfoSource) : IPermissionRestrictionValidator<TPermissionRestriction>
+    IIdentityInfoSource identityInfoSource,
+    IDomainObjectIdentsParser<TSecurityContextObjectIdent> domainObjectIdentsParser) : IPermissionRestrictionValidator<TPermissionRestriction>
     where TSecurityContextObjectIdent : notnull
 {
     public async Task ValidateAsync(TPermissionRestriction permissionRestriction, CancellationToken cancellationToken)
@@ -51,7 +53,7 @@ public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction,
             {
                 var securityContextId = restrictionBindingInfo.SecurityContextObjectId.Getter(permissionRestriction);
 
-                if (!this.IsAllowed(securityContextId, restrictionFilterInfo))
+                if (!await this.IsAllowed(securityContextId, restrictionFilterInfo, cancellationToken))
                 {
                     throw new SecuritySystemValidationException($"SecurityContext: '{securityContextId}' denied by filter");
                 }
@@ -59,20 +61,27 @@ public class AllowedFilterPermissionRestrictionValidator<TPermissionRestriction,
         }
     }
 
-    private bool IsAllowed(TSecurityContextObjectIdent securityContextId, SecurityContextRestrictionFilterInfo restrictionFilterInfo)
+    private Task<bool> IsAllowed(TSecurityContextObjectIdent securityContextId, SecurityContextRestrictionFilterInfo restrictionFilterInfo, CancellationToken cancellationToken)
     {
-        return new Func<TSecurityContextObjectIdent, SecurityContextRestrictionFilterInfo<ISecurityContext>, bool>(this.IsAllowed)
-            .CreateGenericMethod(restrictionFilterInfo.SecurityContextType)
-            .Invoke<bool>(this, securityContextId, restrictionFilterInfo);
+        var identityInfo = identityInfoSource.GetIdentityInfo(restrictionFilterInfo.SecurityContextType);
+
+        return new Func<TSecurityContextObjectIdent, SecurityContextRestrictionFilterInfo<ISecurityContext>, IdentityInfo<ISecurityContext, Ignore>, CancellationToken, Task<bool>>
+                (this.IsAllowed<ISecurityContext, Ignore>)
+            .CreateGenericMethod(restrictionFilterInfo.SecurityContextType, identityInfo.IdentityType)
+            .Invoke<Task<bool>>(this, securityContextId, restrictionFilterInfo, identityInfo, cancellationToken);
     }
 
-    private bool IsAllowed<TSecurityContext>(
+    private async Task<bool> IsAllowed<TSecurityContext, TSecurityContextIdent>(
         TSecurityContextObjectIdent securityContextId,
-        SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo)
+        SecurityContextRestrictionFilterInfo<TSecurityContext> restrictionFilterInfo,
+        IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo, CancellationToken cancellationToken)
         where TSecurityContext : class, ISecurityContext
+        where TSecurityContextIdent : notnull
     {
-        var identityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextObjectIdent>();
+        var convertedIdent = domainObjectIdentsParser.Parse(typeof(TSecurityContext), [securityContextId]).Cast<TSecurityContextIdent>().Single();
 
-        return securityContextSource.GetQueryable(restrictionFilterInfo).Select(identityInfo.Id.Path).Contains(securityContextId);
+        return securityContextSource.GetQueryable(restrictionFilterInfo)
+            .Select(identityInfo.Id.Path)
+            .Contains(convertedIdent);
     }
 }

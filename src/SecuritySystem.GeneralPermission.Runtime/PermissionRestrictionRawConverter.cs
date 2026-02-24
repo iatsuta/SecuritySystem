@@ -1,4 +1,6 @@
-﻿using CommonFramework;
+﻿using System.Collections.Immutable;
+using CommonFramework;
+using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -29,12 +31,13 @@ public class PermissionRestrictionRawConverter<TPermissionRestriction>(
 public class PermissionRestrictionRawConverter<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
 
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> restrictionBindingInfo,
-    IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction> permissionRestrictionSecurityContextTypeResolver)
+    IPermissionRestrictionSecurityContextTypeResolver<TPermissionRestriction> permissionRestrictionSecurityContextTypeResolver,
+    IDomainObjectIdentsParser<TSecurityContextObjectIdent> domainObjectIdentsParser)
     : IPermissionRestrictionRawConverter<TPermissionRestriction>
 {
     public Dictionary<Type, Array> Convert(IEnumerable<TPermissionRestriction> permissionRestrictions)
     {
         return permissionRestrictions.GroupBy(permissionRestrictionSecurityContextTypeResolver.Resolve, restrictionBindingInfo.SecurityContextObjectId.Getter)
-            .ToDictionary(g => g.Key, Array (g) => g.ToArray());
+            .ToDictionary(g => g.Key, g => domainObjectIdentsParser.Parse(g.Key, g));
     }
 }

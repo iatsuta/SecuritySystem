@@ -10,7 +10,6 @@ public interface ISecurityIdentityConverter
 }
 
 public interface ISecurityIdentityConverter<TIdent> : ISecurityIdentityConverter
-    where TIdent : notnull
 {
     new TypedSecurityIdentity<TIdent>? TryConvert(SecurityIdentity securityIdentity);
 

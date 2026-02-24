@@ -14,7 +14,7 @@ public class UpdatePermissionsHandler(
     [WithoutRunAs] ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityContextInfoSource securityContextInfoSource,
-    IDomainObjectIdentsParser domainObjectIdentsParser,
+    IDomainObjectIdentsParser<string> domainObjectIdentsParser,
 	IPrincipalManagementService principalManagementService,
     IConfiguratorIntegrationEvents? configuratorIntegrationEvents = null) : BaseWriteHandler, IUpdatePermissionsHandler
 {

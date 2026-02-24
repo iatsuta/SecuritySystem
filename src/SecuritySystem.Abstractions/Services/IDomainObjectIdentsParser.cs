@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.Services;
 
-public interface IDomainObjectIdentsParser
+public interface IDomainObjectIdentsParser<in TSource>
 {
-	Array Parse(Type domainObjectType, IEnumerable<string> idents);
+	Array Parse(Type domainObjectType, IEnumerable<TSource> idents);
 }

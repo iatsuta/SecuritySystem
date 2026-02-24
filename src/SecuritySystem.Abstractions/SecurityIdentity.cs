@@ -44,14 +44,12 @@ public abstract record TypedSecurityIdentity : SecurityIdentity
 	}
 
     public static TypedSecurityIdentity<TIdent> Create<TIdent>(TIdent ident)
-        where TIdent : notnull
     {
         return new TypedSecurityIdentity<TIdent>(ident);
     }
 }
 
 public record TypedSecurityIdentity<TIdent>(TIdent Id) : TypedSecurityIdentity
-	where TIdent : notnull
 {
     public override bool IsDefault => EqualityComparer<TIdent>.Default.Equals(this.Id, default);
 
@@ -59,6 +57,6 @@ public record TypedSecurityIdentity<TIdent>(TIdent Id) : TypedSecurityIdentity
 
 	public override object GetId()
 	{
-		return this.Id;
+		return this.Id!;
 	}
 }

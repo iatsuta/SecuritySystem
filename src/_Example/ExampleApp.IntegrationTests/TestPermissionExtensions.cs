@@ -11,6 +11,13 @@ public static class TestPermissionExtensions
 
     extension(TestPermission testPermission)
     {
+        public TypedSecurityIdentity<int>? Location
+        {
+            get => testPermission.GetSingle<Location, int>();
+            set => testPermission.SetSingle<Location, int>(value);
+        }
+
+
         public TypedSecurityIdentity<Guid>? BusinessUnit
         {
             get => testPermission.GetSingle<BusinessUnit, Guid>();

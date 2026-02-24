@@ -60,7 +60,8 @@ public class PermissionManagementService<TPrincipal, TPermission, TPermissionRes
         this.InnerService.UpdatePermission(dbPermission, managedPermission, cancellationToken);
 }
 
-public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermissionIdent>(
+public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent,
+    TPermissionIdent>(
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     GeneralPermissionBindingInfo<TPermission, TSecurityRole> generalBindingInfo,
     GeneralPermissionRestrictionBindingInfo<TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent, TPermission> restrictionBindingInfo,
@@ -78,7 +79,8 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
     ISecurityIdentityExtractor<TPermission> permissionIdentityExtractor,
     ISecurityIdentityConverter<TPermissionIdent> permissionIdentityConverter,
     IGenericRepository genericRepository,
-    ISecurityRepository<TPermission> permissionRepository)
+    ISecurityRepository<TPermission> permissionRepository,
+    ISecurityIdentityConverter<TSecurityContextObjectIdent> securityContextObjectIdentConverter)
     : IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>
 
     where TPermission : class, new()
@@ -149,11 +151,14 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
 
             var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, cancellationToken);
 
-            var newPermissionRestrictions = await restrictionGroup.Value.Cast<TSecurityContextObjectIdent>().SyncWhenAll(async securityContextId =>
+            var newPermissionRestrictions = await restrictionGroup.Value.Cast<object>().SyncWhenAll(async rawSecurityContextId =>
             {
                 var newDbPermissionRestriction = new TPermissionRestriction();
 
                 restrictionBindingInfo.Permission.Setter(newDbPermissionRestriction, newDbPermission);
+
+                var securityContextId = this.ConvertSecurityContextObjectIdent(rawSecurityContextId);
+
                 restrictionBindingInfo.SecurityContextObjectId.Setter(newDbPermissionRestriction, securityContextId);
                 restrictionBindingInfo.SecurityContextType.Setter(newDbPermissionRestriction, dbSecurityContextType);
 
@@ -208,7 +213,8 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
         var restrictionMergeResult = dbRestrictions.GetMergeResult(
             managedPermission.Restrictions
                 .ChangeKey(t => securityContextInfoSource.GetSecurityContextInfo(t).Identity)
-                .SelectMany(pair => pair.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => (pair.Key, securityContextId))),
+                .SelectMany(pair =>
+                    pair.Value.Cast<object>().Select(securityContextId => (pair.Key, SecurityContextId:this.ConvertSecurityContextObjectIdent(securityContextId)))),
             pr => (
                 securityContextTypeIdentityExtractor.Extract(restrictionBindingInfo.SecurityContextType.Getter(pr)),
                 restrictionBindingInfo.SecurityContextObjectId.Getter(pr)),
@@ -232,13 +238,15 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
 
             var newPermissionRestrictions = await restrictionMergeResult.AddingItems.SyncWhenAll(async restriction =>
             {
+                var securityContextId = this.ConvertSecurityContextObjectIdent(restriction.SecurityContextId);
+
                 var newPermissionRestriction = new TPermissionRestriction();
 
                 var dbSecurityContextType =
                     await securityContextTypeRepository.GetObjectAsync(restriction.Key, cancellationToken);
 
                 restrictionBindingInfo.Permission.Setter(newPermissionRestriction, dbPermission);
-                restrictionBindingInfo.SecurityContextObjectId.Setter(newPermissionRestriction, restriction.securityContextId);
+                restrictionBindingInfo.SecurityContextObjectId.Setter(newPermissionRestriction, securityContextId);
                 restrictionBindingInfo.SecurityContextType.Setter(newPermissionRestriction, dbSecurityContextType);
 
                 await genericRepository.SaveAsync(newPermissionRestriction, cancellationToken);
@@ -259,4 +267,7 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
             return (permissionData, true);
         }
     }
+
+    private TSecurityContextObjectIdent ConvertSecurityContextObjectIdent(object obj) =>
+        securityContextObjectIdentConverter.Convert(TypedSecurityIdentity.Create(obj)).Id;
 }
