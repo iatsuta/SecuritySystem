@@ -10,7 +10,7 @@ public abstract class BaseWriteHandler
     protected async Task<TModel> ParseRequestBodyAsync<TModel>(HttpContext context)
     {
         using var streamReader = new StreamReader(context.Request.Body);
-        var requestBody = await streamReader.ReadToEndAsync();
+        var requestBody = await streamReader.ReadToEndAsync(context.RequestAborted);
 
         return JsonSerializer.Deserialize<TModel>(requestBody)!;
     }
