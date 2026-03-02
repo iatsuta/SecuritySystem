@@ -29,7 +29,7 @@ public class TestController(
     }
 
     [HttpGet]
-    public async Task<string> GetCurrentUserLogin(CancellationToken cancellationToken = default)
+    public string GetCurrentUserLogin()
     {
         return currentEmployeeSource.CurrentUser.Login;
     }

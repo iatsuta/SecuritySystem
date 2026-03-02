@@ -19,7 +19,7 @@ public class VirtualPermissionTests : TestBase
         this.AuthManager.For(runAs).LoginAs();
 
         // Act
-        var currentUserLogin = await testController.GetCurrentUserLogin(this.CancellationToken);
+        var currentUserLogin = testController.GetCurrentUserLogin();
         var testObjects = await testController.GetTestObjects(this.CancellationToken);
 
         // Assert
@@ -48,7 +48,7 @@ public class VirtualPermissionTests : TestBase
         this.AuthManager.For(runAs).LoginAs();
 
         // Act
-        var currentUserLogin = await testController.GetCurrentUserLogin(this.CancellationToken);
+        var currentUserLogin = testController.GetCurrentUserLogin();
         var buList = await testController.GetBuList(this.CancellationToken);
 
         // Assert
