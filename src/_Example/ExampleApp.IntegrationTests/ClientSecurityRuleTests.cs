@@ -28,6 +28,5 @@ public class ClientSecurityRuleTests : TestBase
 
         // Assert
         result.OrderBy(v => v.Name).Should().BeEquivalentTo(expectedResult);
-        return;
     }
 }
