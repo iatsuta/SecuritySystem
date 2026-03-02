@@ -27,6 +27,8 @@ public abstract class TestBase
                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true }));
     }
 
+    protected CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     protected IServiceProvider RootServiceProvider => this.lazyRootServiceProvider.Value;
 
     protected virtual IEnumerable<TestPermission> GetPermissions() => [];

@@ -16,7 +16,7 @@ public class ExamplePermissionSource(TestPermissions data, DomainSecurityRule.Ex
 
                       where roles.Contains(permission.SecurityRole)
 
-                      select permission.Restrictions.ChangeValue(idents => (Array)idents.ToArray());
+                      select permission.Restrictions.ChangeValue(Array (idents) => idents.ToArray());
 
         return request.ToList();
     }
