@@ -14,10 +14,10 @@ public class DomainSecurityRoleExtractor(ISecurityRuleExpander expander, IExpand
 
     public IEnumerable<SecurityRole> ExtractSecurityRoles(DomainSecurityRule securityRule) =>
         this.rolesCache.GetOrAdd(securityRule.WithDefaultCredential(), _ =>
-            expander.FullRoleExpand(this.rulesCache[securityRule]).Children.SelectMany(c => c.SecurityRoles).ToHashSet());
+            expander.FullRoleExpand(this.ExtractSecurityRule(securityRule)).Children.SelectMany(c => c.SecurityRoles).ToHashSet());
 
     public DomainSecurityRule.ExpandedRoleGroupSecurityRule ExtractSecurityRule(DomainSecurityRule securityRule) =>
-        this.rulesCache.GetOrAdd(securityRule, _ =>
+        this.rulesCache.GetOrAdd(securityRule.WithDefaultCredential(), _ =>
         {
             var usedRules = new HashSet<DomainSecurityRule.ExpandedRoleGroupSecurityRule>();
 
