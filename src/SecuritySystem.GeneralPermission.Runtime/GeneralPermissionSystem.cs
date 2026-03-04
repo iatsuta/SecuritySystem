@@ -48,7 +48,7 @@ public class GeneralPermissionSystem<TPermission>(
     IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
         ((IPermissionSystem)this.InnerService).GetPermissionSource(securityRule);
 
-    public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default) =>
+    public Task<List<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default) =>
         this.InnerService.GetAvailableSecurityRoles(cancellationToken);
 }
 
@@ -83,7 +83,7 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
         serviceProxyFactory.Create<IPermissionSource<TPermission>, GeneralPermissionSource<TPermission>>(
             securityRule.TryApply(defaultSecurityRuleCredential));
 
-    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
+    public async Task<List<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
     {
         var dbRolesIdents = await availablePermissionSource
             .GetQueryable(DomainSecurityRule.AnyRole with { CustomCredential = defaultSecurityRuleCredential })
@@ -91,8 +91,6 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
             .Distinct()
             .GenericToListAsync(cancellationToken);
 
-        return dbRolesIdents.Select(ident => securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(ident)));
+        return dbRolesIdents.Select(SecurityRole (ident) => securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(ident))).ToList();
     }
-
-    IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) => this.GetPermissionSource(securityRule);
 }

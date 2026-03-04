@@ -25,6 +25,8 @@
   <Project Path="SecuritySystem.GeneralPermission.Runtime/SecuritySystem.GeneralPermission.Runtime.csproj" />
   
   <Project Path="SecuritySystem.GeneralPermission/SecuritySystem.GeneralPermission.csproj" />
+  <Project Path="SecuritySystem.Notification.Abstractions/SecuritySystem.Notification.Abstractions.csproj" />
+  <Project Path="SecuritySystem.Notification/SecuritySystem.Notification.csproj" />
   <Project Path="SecuritySystem.Runtime/SecuritySystem.Runtime.csproj" />
   <Project Path="SecuritySystem.Testing/SecuritySystem.Testing.csproj" />
   <Project Path="SecuritySystem.VirtualPermission.Runtime/SecuritySystem.VirtualPermission.Runtime.csproj" />

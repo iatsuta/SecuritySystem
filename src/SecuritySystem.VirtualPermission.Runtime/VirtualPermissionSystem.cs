@@ -34,7 +34,7 @@ public class VirtualPermissionSystem<TPermission>(
         if (securityRuleExpander.FullRoleExpand(securityRule).Children.SelectMany(c => c.SecurityRoles).Contains(virtualBindingInfo.SecurityRole))
         {
             return serviceProxyFactory.Create<IPermissionSource<TPermission>, VirtualPermissionSource<TPermission>>(virtualBindingInfo,
-                securityRule with { CustomCredential = securityRuleCredential });
+                securityRule.TryApply(securityRuleCredential));
         }
         else
         {
@@ -46,7 +46,4 @@ public class VirtualPermissionSystem<TPermission>(
         await this.GetPermissionSource(virtualBindingInfo.SecurityRole).GetPermissionQuery().GenericAnyAsync(cancellationToken)
             ? [virtualBindingInfo.SecurityRole]
             : [];
-
-
-    IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) => this.GetPermissionSource(securityRule);
 }

@@ -6,7 +6,7 @@ public interface IPermissionSystem
 
     IPermissionSource GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule);
 
-    Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default);
+    Task<List<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default);
 }
 
 public interface IPermissionSystem<TPermission> : IPermissionSystem
@@ -16,4 +16,6 @@ public interface IPermissionSystem<TPermission> : IPermissionSystem
         where TSecurityContextIdent : notnull;
 
     new IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+
+    IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) => this.GetPermissionSource(securityRule);
 }

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>IvAt.SecuritySystem.Notification</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IvAt.CommonFramework.GenericRepository" />
+
+    <PackageReference Include="IvAt.CommonFramework.IdentitySource.Abstractions" />
+
+    <PackageReference Include="IvAt.GenericQueryable.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem.Notification.Abstractions\SecuritySystem.Notification.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
