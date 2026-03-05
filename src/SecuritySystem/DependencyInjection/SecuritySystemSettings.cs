@@ -35,7 +35,7 @@ using System.Reflection;
 
 namespace SecuritySystem.DependencyInjection;
 
-public class SecuritySystemBuilder : ISecuritySystemBuilder, IServiceCollectionBuilder
+public class SecuritySystemBuilder : ISecuritySystemBuilder, IServiceInitializer
 {
     private readonly List<DomainSecurityServiceBuilder> domainBuilders = [];
 

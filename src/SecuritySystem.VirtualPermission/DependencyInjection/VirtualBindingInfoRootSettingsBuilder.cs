@@ -14,7 +14,7 @@ using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission.DependencyInjection;
 
-public class VirtualPermissionRootBuilder<TPrincipal, TPermission> : IVirtualPermissionRootBuilder<TPermission>
+public class VirtualPermissionRootBuilder<TPrincipal, TPermission>(PropertyAccessors<TPermission, TPrincipal> principalAccessors) : IVirtualPermissionRootBuilder<TPermission>, IServiceInitializer<ISecuritySystemBuilder>
     where TPermission : class
 {
     private readonly List<VirtualPermissionSecurityRoleItemBindingInfo<TPermission>> itemBindingInfoList = [];
@@ -87,7 +87,7 @@ public class VirtualPermissionRootBuilder<TPrincipal, TPermission> : IVirtualPer
         return this;
     }
 
-    public void Initialize(ISecuritySystemBuilder securitySystemBuilder, PropertyAccessors<TPermission, TPrincipal> principalAccessors)
+    public void Initialize(ISecuritySystemBuilder securitySystemBuilder)
     {
         var bindingInfo =
             permissionBindingInit.Aggregate(new PermissionBindingInfo<TPermission, TPrincipal> { IsReadonly = true, Principal = principalAccessors },

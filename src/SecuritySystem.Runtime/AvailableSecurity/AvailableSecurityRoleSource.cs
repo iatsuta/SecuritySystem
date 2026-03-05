@@ -1,4 +1,6 @@
-﻿using SecuritySystem.ExternalSystem;
+﻿using CommonFramework;
+
+using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.AvailableSecurity;
 

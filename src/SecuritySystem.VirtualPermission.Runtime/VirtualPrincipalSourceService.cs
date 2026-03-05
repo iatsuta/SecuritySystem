@@ -44,10 +44,13 @@ public class VirtualPrincipalSourceService<TPermission>(
     public IAsyncEnumerable<ManagedPrincipalHeader> GetPrincipalsAsync(string nameFilter, int limit) =>
         this.InnerService.GetPrincipalsAsync(nameFilter, limit);
 
-    public Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken) =>
+    public ValueTask<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken) =>
         this.InnerService.TryGetPrincipalAsync(userCredential, cancellationToken);
 
     public IAsyncEnumerable<string> GetLinkedPrincipalsAsync(ImmutableHashSet<SecurityRole> securityRoles) => this.InnerService.GetLinkedPrincipalsAsync(securityRoles);
+
+    public ValueTask<ManagedPrincipal> GetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken) =>
+        this.InnerService.GetPrincipalAsync(userCredential, cancellationToken);
 }
 
 public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
@@ -95,7 +98,7 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
                     .GenericAsAsyncEnumerable();
             }).Take(limit).Distinct();
 
-    public async Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
+    public async ValueTask<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
     {
         var principal = await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken);
 
@@ -110,15 +113,11 @@ public class VirtualPrincipalSourceService<TPrincipal, TPermission>(
             var managedPermissions = await virtualBindingInfo
                 .Items
                 .ToAsyncEnumerable()
-                .SelectMany(async (itemBindingInfo, ct) =>
-                {
-                    var permissions = await queryableSource.GetQueryable<TPermission>()
-                        .Where(itemBindingInfo.Filter(serviceProvider))
-                        .Where(bindingInfo.Principal.Path.Select(p => p == principal))
-                        .GenericToListAsync(ct);
-
-                    return permissions.Select(permission => this.ToManagedPermission(permission, itemBindingInfo.SecurityRole));
-                })
+                .SelectMany(itemBindingInfo => queryableSource.GetQueryable<TPermission>()
+                    .Where(itemBindingInfo.Filter(serviceProvider))
+                    .Where(bindingInfo.Principal.Path.Select(p => p == principal))
+                    .GenericAsAsyncEnumerable()
+                    .Select(permission => this.ToManagedPermission(permission, itemBindingInfo.SecurityRole)))
                 .ToArrayAsync(cancellationToken);
 
             return new ManagedPrincipal(header, [..managedPermissions]);
