@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 
 using SecuritySystem.DependencyInjection;
 
@@ -17,23 +18,19 @@ public static class SecuritySystemBuilderExtensions
             PropertyAccessors<TPermissionRestriction, TPermission> permissionAccessors,
             PropertyAccessors<TPermissionRestriction, TSecurityContextType> securityContextTypeAccessors,
             PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> securityContextObjectIdAccessors,
-            Action<IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>>? setupAction = null)
+            Action<IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>>? setupAction = null)
             where TPrincipal : class
             where TPermission : class
             where TSecurityRole : class
             where TPermissionRestriction : class
             where TSecurityContextType : class
-            where TSecurityContextObjectIdent : notnull
-        {
-            var settings = new GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>();
-
-            setupAction?.Invoke(settings);
-
-            settings.Initialize(securitySystemBuilder, principalAccessors, securityRoleAccessors, permissionAccessors, securityContextTypeAccessors,
-                securityContextObjectIdAccessors);
-
-            return securitySystemBuilder;
-        }
+            where TSecurityContextObjectIdent : notnull =>
+            securitySystemBuilder
+                .Initialize<ISecuritySystemBuilder,
+                    GeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+                        TSecurityContextObjectIdent>>
+                (new (principalAccessors, securityRoleAccessors, permissionAccessors, securityContextTypeAccessors, securityContextObjectIdAccessors),
+                    setupAction);
 
         public ISecuritySystemBuilder AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
             TSecurityContextObjectIdent>(
@@ -42,7 +39,7 @@ public static class SecuritySystemBuilderExtensions
             Expression<Func<TPermissionRestriction, TPermission>> permissionPath,
             Expression<Func<TPermissionRestriction, TSecurityContextType>> securityContextTypePath,
             Expression<Func<TPermissionRestriction, TSecurityContextObjectIdent>> securityContextObjectIdPath,
-            Action<IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>>? setupAction = null)
+            Action<IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>>? setupAction = null)
             where TPrincipal : class
             where TPermission : class
             where TSecurityRole : class

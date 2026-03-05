@@ -2,6 +2,7 @@
 using CommonFramework.GenericRepository;
 
 using GenericQueryable;
+using SecuritySystem.ExternalSystem.Management;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -26,6 +27,9 @@ public class PermissionRestrictionLoader<TPermission, TPermissionRestriction>(
     });
 
     public IAsyncEnumerable<TPermissionRestriction> LoadAsync(TPermission permission) => this.lazyInnerService.Value.LoadAsync(permission);
+
+    public ValueTask<PermissionData<TPermission, TPermissionRestriction>> ToPermissionData(TPermission dbPermission, CancellationToken cancellationToken) =>
+        this.lazyInnerService.Value.ToPermissionData(dbPermission, cancellationToken);
 }
 
 public class PermissionRestrictionLoader<TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(

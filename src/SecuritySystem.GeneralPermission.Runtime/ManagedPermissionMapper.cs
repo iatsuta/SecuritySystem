@@ -49,13 +49,13 @@ public class PermissionManagementService<TPrincipal, TPermission, TPermissionRes
 
     private IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction> InnerService => this.lazyInnerService.Value;
 
-    public virtual Task<ManagedPermission> ToManagedPermissionAsync(TPermission dbPermission, CancellationToken cancellationToken) =>
+    public virtual ValueTask<ManagedPermission> ToManagedPermissionAsync(TPermission dbPermission, CancellationToken cancellationToken) =>
         this.InnerService.ToManagedPermissionAsync(dbPermission, cancellationToken);
 
-    public virtual Task<PermissionData<TPermission, TPermissionRestriction>> CreatePermissionAsync(TPrincipal dbPrincipal, ManagedPermission managedPermission, CancellationToken cancellationToken) =>
+    public virtual ValueTask<PermissionData<TPermission, TPermissionRestriction>> CreatePermissionAsync(TPrincipal dbPrincipal, ManagedPermission managedPermission, CancellationToken cancellationToken) =>
         this.InnerService.CreatePermissionAsync(dbPrincipal, managedPermission, cancellationToken);
 
-    public virtual Task<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)> UpdatePermission(TPermission dbPermission,
+    public virtual ValueTask<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)> UpdatePermission(TPermission dbPermission,
         ManagedPermission managedPermission, CancellationToken cancellationToken) =>
         this.InnerService.UpdatePermission(dbPermission, managedPermission, cancellationToken);
 }
@@ -88,7 +88,7 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
     where TSecurityContextObjectIdent : notnull
     where TPermissionIdent : notnull
 {
-    public async Task<ManagedPermission> ToManagedPermissionAsync(TPermission dbPermission, CancellationToken cancellationToken) =>
+    public async ValueTask<ManagedPermission> ToManagedPermissionAsync(TPermission dbPermission, CancellationToken cancellationToken) =>
         new()
         {
             Identity = permissionSecurityIdentityExtractor.Extract(dbPermission),
@@ -102,7 +102,7 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
             Restrictions = (await rawPermissionRestrictionLoader.LoadAsync(dbPermission, cancellationToken)).ToImmutableDictionary()
         };
 
-    public async Task<PermissionData<TPermission, TPermissionRestriction>> CreatePermissionAsync(
+    public async ValueTask<PermissionData<TPermission, TPermissionRestriction>> CreatePermissionAsync(
         TPrincipal dbPrincipal,
         ManagedPermission managedPermission,
         CancellationToken cancellationToken)
@@ -143,34 +143,30 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
 
         await genericRepository.SaveAsync(newDbPermission, cancellationToken);
 
-        var newPermissionRestrictions = await managedPermission.Restrictions.ToAsyncEnumerable().SelectAsync(async restrictionGroup =>
+        var newPermissionRestrictions = await managedPermission.Restrictions.ToAsyncEnumerable().SelectMany(async (restrictionGroup, ct) =>
         {
             var securityContextTypeIdentity = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Identity;
 
-            var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, cancellationToken);
+            var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, ct);
 
-            var newPermissionRestrictions = await restrictionGroup.Value.Cast<TSecurityContextObjectIdent>().ToAsyncEnumerable().SelectAsync(async
-                    securityContextId =>
-                {
-                    var newDbPermissionRestriction = new TPermissionRestriction();
+            return restrictionGroup.Value.Cast<TSecurityContextObjectIdent>().Select(securityContextId => new { dbSecurityContextType, securityContextId });
+        }).Select(async (pair, ct) =>
+        {
+            var newDbPermissionRestriction = new TPermissionRestriction();
 
-                    restrictionBindingInfo.Permission.Setter(newDbPermissionRestriction, newDbPermission);
-                    restrictionBindingInfo.SecurityContextObjectId.Setter(newDbPermissionRestriction, securityContextId);
-                    restrictionBindingInfo.SecurityContextType.Setter(newDbPermissionRestriction, dbSecurityContextType);
+            restrictionBindingInfo.Permission.Setter(newDbPermissionRestriction, newDbPermission);
+            restrictionBindingInfo.SecurityContextObjectId.Setter(newDbPermissionRestriction, pair.securityContextId);
+            restrictionBindingInfo.SecurityContextType.Setter(newDbPermissionRestriction, pair.dbSecurityContextType);
 
-                    await genericRepository.SaveAsync(newDbPermissionRestriction, cancellationToken);
+            await genericRepository.SaveAsync(newDbPermissionRestriction, ct);
 
-                    return newDbPermissionRestriction;
-                })
-                .ToArrayAsync(cancellationToken);
-
-            return newPermissionRestrictions;
+            return newDbPermissionRestriction;
         }).ToArrayAsync(cancellationToken);
 
-        return new PermissionData<TPermission, TPermissionRestriction>(newDbPermission, newPermissionRestrictions.SelectMany());
+        return new PermissionData<TPermission, TPermissionRestriction>(newDbPermission, newPermissionRestrictions);
     }
 
-    public async Task<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)> UpdatePermission(
+    public async ValueTask<(PermissionData<TPermission, TPermissionRestriction> PermissonData, bool Updated)> UpdatePermission(
         TPermission dbPermission,
         ManagedPermission managedPermission,
         CancellationToken cancellationToken)
@@ -232,18 +228,18 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
             bindingInfo.PermissionStartDate?.Setter.Invoke(dbPermission, managedPermission.Period.StartDate);
             bindingInfo.PermissionEndDate?.Setter.Invoke(dbPermission, managedPermission.Period.EndDate);
 
-            var newPermissionRestrictions = await restrictionMergeResult.AddingItems.ToAsyncEnumerable().SelectAsync(async restriction =>
+            var newPermissionRestrictions = await restrictionMergeResult.AddingItems.ToAsyncEnumerable().Select(async (restriction, ct) =>
             {
-                var newPermissionRestriction = new TPermissionRestriction();
-
                 var dbSecurityContextType =
-                    await securityContextTypeRepository.GetObjectAsync(restriction.Key, cancellationToken);
+                    await securityContextTypeRepository.GetObjectAsync(restriction.Key, ct);
+
+                var newPermissionRestriction = new TPermissionRestriction();
 
                 restrictionBindingInfo.Permission.Setter(newPermissionRestriction, dbPermission);
                 restrictionBindingInfo.SecurityContextObjectId.Setter(newPermissionRestriction, restriction.securityContextId);
                 restrictionBindingInfo.SecurityContextType.Setter(newPermissionRestriction, dbSecurityContextType);
 
-                await genericRepository.SaveAsync(newPermissionRestriction, cancellationToken);
+                await genericRepository.SaveAsync(newPermissionRestriction, ct);
 
                 return newPermissionRestriction;
             }).ToArrayAsync(cancellationToken);

@@ -29,18 +29,15 @@ public class VirtualPermissionSystem<TPermission>(
                 VirtualPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(virtualBindingInfo, Tuple.Create(restrictionFilterInfo));
     }
 
-    public IEnumerable<IPermissionSource<TPermission>> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule)
-    {
-        var expandedRoles = securityRuleExpander.FullRoleExpand(securityRule).Children.SelectMany(c => c.SecurityRoles).Distinct().ToHashSet();
+    public IEnumerable<IPermissionSource<TPermission>> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
 
-        return
+        from expandedRolesSecurityRule in securityRuleExpander.FullRoleExpand(securityRule).Children
 
-            from itemBindingInfo in virtualBindingInfo.Items
+        from itemBindingInfo in virtualBindingInfo.Items
 
-            where expandedRoles.Contains(itemBindingInfo.SecurityRole)
+        where expandedRolesSecurityRule.SecurityRoles.Contains(itemBindingInfo.SecurityRole)
 
-            select this.CreatePermissionSource(securityRule, itemBindingInfo);
-    }
+        select this.CreatePermissionSource(expandedRolesSecurityRule, itemBindingInfo);
 
     public IAsyncEnumerable<SecurityRole> GetAvailableSecurityRoles() =>
         virtualBindingInfo

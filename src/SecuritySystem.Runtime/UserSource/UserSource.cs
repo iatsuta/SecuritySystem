@@ -17,13 +17,13 @@ public class UserSource<TUser>(IUserQueryableSource<TUser> userQueryableSource, 
 
     public Type UserType { get; } = typeof(TUser);
 
-    public Task<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
+    public ValueTask<TUser?> TryGetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
     {
         return tryGetUserCache.GetValueOrCreateAsync(userCredential,
-            () => userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken));
+            async () => await userQueryableSource.GetQueryable(userCredential).GenericSingleOrDefaultAsync(cancellationToken));
     }
 
-    public Task<TUser> GetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
+    public ValueTask<TUser> GetUserAsync(UserCredential userCredential, CancellationToken cancellationToken)
     {
         return getUserCache.GetValueOrCreateAsync(userCredential, async () =>
             await this.TryGetUserAsync(userCredential, cancellationToken) ?? missedUserService.GetUser(userCredential));

@@ -16,7 +16,13 @@ using SecuritySystem.Services;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
-public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent> : IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>
+public class GeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
+    PropertyAccessors<TPermission, TPrincipal> principalAccessors,
+    PropertyAccessors<TPermission, TSecurityRole> securityRoleAccessors,
+    PropertyAccessors<TPermissionRestriction, TPermission> permissionAccessors,
+    PropertyAccessors<TPermissionRestriction, TSecurityContextType> securityContextTypeAccessors,
+    PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> securityContextObjectIdAccessors)
+    : IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction>, IServiceInitializer<ISecuritySystemBuilder>
     where TPermission : class
     where TSecurityRole : notnull
     where TPrincipal : class
@@ -38,12 +44,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
     private Type? permissionManagementServiceType;
 
 
-    public void Initialize(ISecuritySystemBuilder securitySystemBuilder,
-        PropertyAccessors<TPermission, TPrincipal> principalAccessors,
-        PropertyAccessors<TPermission, TSecurityRole> securityRoleAccessors,
-        PropertyAccessors<TPermissionRestriction, TPermission> permissionAccessors,
-        PropertyAccessors<TPermissionRestriction, TSecurityContextType> securityContextTypeAccessors,
-        PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> securityContextObjectIdAccessors)
+    public void Initialize(ISecuritySystemBuilder securitySystemBuilder)
     {
         this.RegisterGeneralServices(securitySystemBuilder);
 
@@ -107,7 +108,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
             .PipeMaybe(this.descriptionPath, (b, v) => b with { SecurityRoleDescription = v.ToPropertyAccessors() });
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionPeriod(
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionPeriod(
         PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
         PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor)
     {
@@ -117,7 +118,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         return this;
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionPeriod(
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionPeriod(
         Expression<Func<TPermission, DateTime?>>? startDatePath,
         Expression<Func<TPermission, DateTime?>>? endDatePath)
     {
@@ -126,7 +127,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
             endDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(endDatePath));
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionComment(
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionComment(
         Expression<Func<TPermission, string>> newCommentPath)
     {
         this.commentPath = newCommentPath;
@@ -134,7 +135,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         return this;
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionDelegation(
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionDelegation(
         Expression<Func<TPermission, TPermission?>> newDelegatedFromPath)
     {
         this.delegatedFromPath = newDelegatedFromPath;
@@ -142,7 +143,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         return this;
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetSecurityRoleDescription(
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetSecurityRoleDescription(
         Expression<Func<TSecurityRole, string>>? newDescriptionPath)
     {
         this.descriptionPath = newDescriptionPath;
@@ -150,14 +151,14 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         return this;
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetReadonly(bool value = true)
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetReadonly(bool value = true)
     {
         this.isReadonly = value;
 
         return this;
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionEqualityComparer<TComparer>()
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionEqualityComparer<TComparer>()
         where TComparer : IPermissionEqualityComparer<TPermission, TPermissionRestriction>
     {
         this.permissionEqualityComparerType = typeof(TComparer);
@@ -165,7 +166,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         return this;
     }
 
-    public IGeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionManagementService<
+    public IGeneralPermissionBuilder<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction> SetPermissionManagementService<
         TPermissionManagementService>()
         where TPermissionManagementService : IPermissionManagementService<TPrincipal, TPermission, TPermissionRestriction>
     {

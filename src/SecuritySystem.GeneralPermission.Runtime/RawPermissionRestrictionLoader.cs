@@ -17,7 +17,7 @@ public class RawPermissionRestrictionLoader<TPermission>(
         return serviceProxyFactory.Create<IRawPermissionRestrictionLoader<TPermission>>(innerServiceType);
     });
 
-    public Task<Dictionary<Type, Array>> LoadAsync(TPermission permission, CancellationToken cancellationToken) =>
+    public ValueTask<Dictionary<Type, Array>> LoadAsync(TPermission permission, CancellationToken cancellationToken) =>
         lazyInnerService.Value.LoadAsync(permission, cancellationToken);
 }
 
@@ -25,7 +25,7 @@ public class RawPermissionRestrictionLoader<TPermission, TPermissionRestriction>
     IPermissionRestrictionLoader<TPermission, TPermissionRestriction> permissionRestrictionLoader,
     IPermissionRestrictionRawConverter<TPermissionRestriction> permissionRestrictionRawConverter) : IRawPermissionRestrictionLoader<TPermission>
 {
-    public async Task<Dictionary<Type, Array>> LoadAsync(TPermission permission, CancellationToken cancellationToken)
+    public async ValueTask<Dictionary<Type, Array>> LoadAsync(TPermission permission, CancellationToken cancellationToken)
     {
         var dbRestrictions = await permissionRestrictionLoader.LoadAsync(permission).ToArrayAsync(cancellationToken);
 
