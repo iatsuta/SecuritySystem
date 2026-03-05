@@ -116,7 +116,7 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
         var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal).ToArrayAsync(cancellationToken);
 
         var permissionsData = await dbPermissions.ToAsyncEnumerable()
-            .SelectAsync(async dbPermission => await permissionRestrictionLoader.ToPermissionData(dbPermission, cancellationToken))
+            .Select(permissionRestrictionLoader.ToPermissionData)
             .ToArrayAsync(cancellationToken);
 
         return new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(dbPrincipal, permissionsData);
@@ -146,28 +146,31 @@ public class GeneralPrincipalManagementService<TPrincipal, TPermission, TPermiss
         var newPermissions = await permissionMergeResult
             .AddingItems
             .ToAsyncEnumerable()
-            .SelectAsync((managedPermission, ct) => permissionManagementService.CreatePermissionAsync(dbPrincipal, managedPermission, ct))
+            .Select(async (managedPermission, ct) => await permissionManagementService.CreatePermissionAsync(dbPrincipal, managedPermission, ct))
             .ToArrayAsync(cancellationToken);
 
-        var updatedPermissions = await
-            permissionMergeResult.CombineItems
-                .ToAsyncEnumerable()
-                .SelectAsync((permissionPair, ct) => permissionManagementService.UpdatePermission(permissionPair.Item1, permissionPair.Item2, ct))
-                .ToArrayAsync(cancellationToken);
+        var updatedPermissions = await permissionMergeResult
+            .CombineItems
+            .ToAsyncEnumerable()
+            .Select(async (permissionPair, ct) => await permissionManagementService.UpdatePermission(permissionPair.Item1, permissionPair.Item2, ct))
+            .ToArrayAsync(cancellationToken);
 
-        var removingPermissions = await permissionMergeResult.RemovingItems.ToAsyncEnumerable().SelectAsync(async oldDbPermission =>
-        {
-            var result = await permissionRestrictionLoader.ToPermissionData(oldDbPermission, cancellationToken);
-
-            foreach (var dbRestriction in result.Restrictions)
+        var removingPermissions = await permissionMergeResult
+            .RemovingItems
+            .ToAsyncEnumerable()
+            .Select(async (oldDbPermission, ct) =>
             {
-                await genericRepository.RemoveAsync(dbRestriction, cancellationToken);
-            }
+                var result = await permissionRestrictionLoader.ToPermissionData(oldDbPermission, ct);
 
-            await genericRepository.RemoveAsync(oldDbPermission, cancellationToken);
+                foreach (var dbRestriction in result.Restrictions)
+                {
+                    await genericRepository.RemoveAsync(dbRestriction, ct);
+                }
 
-            return result;
-        }).ToArrayAsync(cancellationToken);
+                await genericRepository.RemoveAsync(oldDbPermission, ct);
+
+                return result;
+            }).ToArrayAsync(cancellationToken);
 
         await principalValidator.ValidateAsync(
             new PrincipalData<TPrincipal, TPermission, TPermissionRestriction>(dbPrincipal,

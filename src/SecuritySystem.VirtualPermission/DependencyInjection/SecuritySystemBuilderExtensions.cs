@@ -1,4 +1,5 @@
 ﻿using CommonFramework;
+using CommonFramework.DependencyInjection;
 
 using SecuritySystem.DependencyInjection;
 
@@ -14,16 +15,10 @@ public static class SecuritySystemBuilderExtensions
             PropertyAccessors<TPermission, TPrincipal> principalAccessors,
             Action<IVirtualPermissionRootBuilder<TPermission>> setupAction)
             where TPrincipal : class
-            where TPermission : class
-        {
-            var builder = new VirtualPermissionRootBuilder<TPrincipal, TPermission>();
-
-            setupAction.Invoke(builder);
-
-            builder.Initialize(securitySystemBuilder, principalAccessors);
-
-            return securitySystemBuilder;
-        }
+            where TPermission : class =>
+            securitySystemBuilder.Initialize<ISecuritySystemBuilder, VirtualPermissionRootBuilder<TPrincipal, TPermission>>(
+                new VirtualPermissionRootBuilder<TPrincipal, TPermission>(principalAccessors),
+                setupAction);
 
         public ISecuritySystemBuilder AddVirtualPermission<TPrincipal, TPermission>(
             Expression<Func<TPermission, TPrincipal>> principalPath,
