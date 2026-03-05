@@ -30,9 +30,9 @@ public class NotificationPermissionExtractor<TPermission>(
 
         var parsedLevelInfoResult =
             permissionInfoResult
-                .Select(principalInfo => new PermissionLevelDictInfo<TPermission>
+                .Select(principalInfo => new
                 {
-                    Permission = principalInfo.Permission,
+                    principalInfo.Permission,
                     LevelDict = principalInfo.LevelInfo
                         .Split(LevelsSeparator, StringSplitOptions.RemoveEmptyEntries)
                         .Select(levelData => levelData.Split(LevelValueSeparator))
@@ -41,23 +41,11 @@ public class NotificationPermissionExtractor<TPermission>(
                             levelParts => int.Parse(levelParts[1]))
                 });
 
-        var optimalRequest = cachedNotificationFilterGroups.Aggregate(parsedLevelInfoResult, (state, g) => new ApplyPermissionLevelDictInfoAsyncEnumerable(state, g));
-
-        return optimalRequest.Select(pair => pair.Permission).Distinct();
-    }
-
-    private class ApplyPermissionLevelDictInfoAsyncEnumerable(
-        IAsyncEnumerable<PermissionLevelDictInfo<TPermission>> state,
-        NotificationFilterGroup notificationFilterGroup) : IAsyncEnumerable<PermissionLevelDictInfo<TPermission>>
-    {
-        public async IAsyncEnumerator<PermissionLevelDictInfo<TPermission>> GetAsyncEnumerator(CancellationToken cancellationToken)
+        var optimalRequest = cachedNotificationFilterGroups.Aggregate(parsedLevelInfoResult, (state, g) =>
         {
-            if (notificationFilterGroup.ExpandType == NotificationExpandType.All)
+            if (g.ExpandType == NotificationExpandType.All)
             {
-                await foreach (var value in state.WithCancellation(cancellationToken))
-                {
-                    yield return value;
-                }
+                return state;
             }
             else
             {
@@ -65,7 +53,7 @@ public class NotificationPermissionExtractor<TPermission>(
 
                     from pair in state
 
-                    group pair by pair.LevelDict[notificationFilterGroup.SecurityContextType]
+                    group pair by pair.LevelDict[g.SecurityContextType]
 
                     into levelGroup
 
@@ -73,17 +61,11 @@ public class NotificationPermissionExtractor<TPermission>(
 
                     select levelGroup;
 
-                var g = await request.FirstOrDefaultAsync(cancellationToken);
-
-                if (g != null)
-                {
-                    foreach (var permissionLevelDictInfo in g)
-                    {
-                        yield return permissionLevelDictInfo;
-                    }
-                }
+                return request.Take(1).SelectMany(v => v);
             }
-        }
+        });
+
+        return optimalRequest.Select(pair => pair.Permission).Distinct();
     }
 
     private IQueryable<PermissionLevelInfo<TPermission>> ApplyNotificationFilter(
