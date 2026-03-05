@@ -5,7 +5,7 @@ public class NotificationPrincipalExtractor<TPrincipal, TPermission>(
     INotificationPermissionExtractor<TPermission> notificationPermissionExtractor)
     : INotificationPrincipalExtractor<TPrincipal>
 {
-    public IAsyncEnumerable<TPrincipal> GetPrincipalsAsync(SecurityRole[] securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups)
+    public IAsyncEnumerable<TPrincipal> GetPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups)
     {
         return notificationPermissionExtractor
             .GetPermissionsAsync(securityRoles, notificationFilterGroups)

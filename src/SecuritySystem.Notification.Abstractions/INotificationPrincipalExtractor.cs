@@ -2,5 +2,5 @@
 
 public interface INotificationPrincipalExtractor<out TPrincipal>
 {
-    IAsyncEnumerable<TPrincipal> GetPrincipalsAsync(SecurityRole[] securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups);
+    IAsyncEnumerable<TPrincipal> GetPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups);
 }

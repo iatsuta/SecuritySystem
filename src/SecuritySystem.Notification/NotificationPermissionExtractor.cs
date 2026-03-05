@@ -7,8 +7,7 @@ namespace SecuritySystem.Notification;
 public class NotificationPermissionExtractor<TPermission>(
     INotificationGeneralPermissionFilterFactory<TPermission> notificationGeneralPermissionFilterFactory,
     IPermissionLevelInfoExtractor<TPermission> permissionLevelInfoExtractor,
-    IQueryableSource queryableSource)
-    : INotificationPermissionExtractor<TPermission>
+    IQueryableSource queryableSource) : INotificationPermissionExtractor<TPermission>
     where TPermission : class
 {
     private const string LevelsSeparator = "|";
@@ -53,18 +52,9 @@ public class NotificationPermissionExtractor<TPermission>(
     {
         public async IAsyncEnumerator<PermissionLevelDictInfo<TPermission>> GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            await using var enumerator = state.GetAsyncEnumerator(cancellationToken);
-
-            if (!await enumerator.MoveNextAsync())
-            {
-                yield break;
-            }
-
-            var reloadedEnumerable = AsyncEnumerable.Repeat(enumerator.Current, 1).Concat(enumerator.ReadToEnd());
-
             if (notificationFilterGroup.ExpandType == NotificationExpandType.All)
             {
-                await foreach (var value in reloadedEnumerable)
+                await foreach (var value in state.WithCancellation(cancellationToken))
                 {
                     yield return value;
                 }
@@ -73,7 +63,7 @@ public class NotificationPermissionExtractor<TPermission>(
             {
                 var request =
 
-                    from pair in reloadedEnumerable
+                    from pair in state
 
                     group pair by pair.LevelDict[notificationFilterGroup.SecurityContextType]
 
@@ -83,9 +73,14 @@ public class NotificationPermissionExtractor<TPermission>(
 
                     select levelGroup;
 
-                foreach (var permissionLevelDictInfo in await request.FirstAsync(cancellationToken))
+                var g = await request.FirstOrDefaultAsync(cancellationToken);
+
+                if (g != null)
                 {
-                    yield return permissionLevelDictInfo;
+                    foreach (var permissionLevelDictInfo in g)
+                    {
+                        yield return permissionLevelDictInfo;
+                    }
                 }
             }
         }
@@ -107,16 +102,5 @@ public class NotificationPermissionExtractor<TPermission>(
                 LevelInfo = permissionLevelInfo.LevelInfo
                             + $"{LevelsSeparator}{notificationFilterGroup.SecurityContextType.Name}{LevelValueSeparator}{permissionLevelInfo.Level}"
             };
-    }
-}
-
-internal static class AsyncEnumeratorExtensions
-{
-    public static async IAsyncEnumerable<T> ReadToEnd<T>(this IAsyncEnumerator<T> enumerator)
-    {
-        while (await enumerator.MoveNextAsync())
-        {
-            yield return enumerator.Current;
-        }
     }
 }
