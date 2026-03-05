@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>IvAt.SecuritySystem.Notification.Abstractions</PackageId>
+    <RootNamespace>SecuritySystem.Notification</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecuritySystem.Abstractions\SecuritySystem.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,8 +1,10 @@
-﻿namespace SecuritySystem.SecurityRuleInfo;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.SecurityRuleInfo;
 
 public interface IDomainSecurityRoleExtractor
 {
-    IEnumerable<SecurityRole> ExtractSecurityRoles(DomainSecurityRule securityRule);
+    ImmutableHashSet<SecurityRole> ExtractSecurityRoles(DomainSecurityRule securityRule);
 
     DomainSecurityRule.ExpandedRoleGroupSecurityRule ExtractSecurityRule(DomainSecurityRule securityRule);
 }
