@@ -19,7 +19,7 @@ public class TestController(
     IRepositoryFactory<Employee> employeeRepositoryFactory) : ControllerBase
 {
     [HttpGet]
-    public async Task<IEnumerable<TestObjectDto>> GetTestObjects(CancellationToken cancellationToken = default)
+    public async Task<List<TestObjectDto>> GetTestObjects(CancellationToken cancellationToken = default)
     {
         return await testObjectRepositoryFactory
             .Create(SecurityRule.View)
@@ -44,7 +44,7 @@ public class TestController(
     }
 
     [HttpGet]
-    public async Task<IEnumerable<BuDto>> GetBuList(CancellationToken cancellationToken = default)
+    public async Task<List<BuDto>> GetBuList(CancellationToken cancellationToken = default)
     {
         return await buRepositoryFactory
             .Create(SecurityRule.View)

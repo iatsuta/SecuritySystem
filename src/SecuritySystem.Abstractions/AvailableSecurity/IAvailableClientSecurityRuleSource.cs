@@ -2,5 +2,5 @@
 
 public interface IAvailableClientSecurityRuleSource
 {
-    Task<List<DomainSecurityRule.ClientSecurityRule>> GetAvailableSecurityRules(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<DomainSecurityRule.ClientSecurityRule> GetAvailableSecurityRules();
 }

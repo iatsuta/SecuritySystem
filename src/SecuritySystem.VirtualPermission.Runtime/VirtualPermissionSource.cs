@@ -17,6 +17,7 @@ public class VirtualPermissionSource<TPermission>(
     IVisualIdentityInfoSource visualIdentityInfoSource,
     IPermissionBindingInfoSource bindingInfoSource,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
+    VirtualPermissionSecurityRoleItemBindingInfo<TPermission> itemBindingInfo,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
     where TPermission : class
 {
@@ -34,6 +35,7 @@ public class VirtualPermissionSource<TPermission>(
             innerServiceType,
             bindingInfo,
             virtualBindingInfo,
+            itemBindingInfo,
             principalVisualIdentityInfo,
             securityRule);
     });
@@ -60,6 +62,7 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
     SecurityRuleCredential defaultSecurityRuleCredential,
     PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
     VirtualPermissionBindingInfo<TPermission> virtualBindingInfo,
+    VirtualPermissionSecurityRoleItemBindingInfo<TPermission> itemBindingInfo,
     VisualIdentityInfo<TPrincipal> principalVisualIdentityInfo,
     DomainSecurityRule.RoleBaseSecurityRule securityRule) : IPermissionSource<TPermission>
     where TPermission : class
@@ -86,7 +89,7 @@ public class VirtualPermissionSource<TPrincipal, TPermission>(
         //TODO: inject SecurityContextRestrictionFilterInfo
         return queryableSource
             .GetQueryable<TPermission>()
-            .Where(virtualBindingInfo.GetFilter(serviceProvider))
+            .Where(itemBindingInfo.Filter(serviceProvider))
             .Where(bindingInfo.GetPeriodFilter(timeProvider.GetLocalNow().Date))
             .PipeMaybe(
                 userNameResolver.Resolve(customSecurityRuleCredential ?? securityRule.CustomCredential ?? defaultSecurityRuleCredential),

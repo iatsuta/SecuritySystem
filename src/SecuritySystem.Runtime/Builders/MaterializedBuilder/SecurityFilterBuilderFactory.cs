@@ -34,7 +34,8 @@ public class SecurityFilterBuilderFactory<TDomainObject>(
         var securityContextRestrictions = securityRule.GetSafeSecurityContextRestrictions().ToList();
 
         var rawPermissions = permissionSystems
-                             .SelectMany(ps => ps.GetPermissionSource(securityRule).GetPermissions(securityTypes))
+                             .SelectMany(ps => ps.GetPermissionSources(securityRule))
+                             .SelectMany(ps => ps.GetPermissions(securityTypes))
                              .ToList();
 
         var optimizedPermissions = permissionOptimizationService.Optimize(rawPermissions);

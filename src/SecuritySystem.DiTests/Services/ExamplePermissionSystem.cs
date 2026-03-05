@@ -7,7 +7,8 @@ public class ExamplePermissionSystem(ISecurityRuleExpander securityRuleExpander,
 {
     public Type PermissionType => throw new NotImplementedException();
 
-    public IPermissionSource GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) => new ExamplePermissionSource(data, securityRuleExpander.FullRoleExpand(securityRule));
+    public IEnumerable<IPermissionSource> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
+        [new ExamplePermissionSource(data, securityRuleExpander.FullRoleExpand(securityRule))];
 
-    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default) => data.Permissions.Select(p => p.SecurityRole);
+    public IAsyncEnumerable<SecurityRole> GetAvailableSecurityRoles() => data.Permissions.Select(p => p.SecurityRole).ToAsyncEnumerable();
 }

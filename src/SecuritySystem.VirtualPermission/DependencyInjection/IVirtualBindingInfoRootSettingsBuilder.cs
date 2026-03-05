@@ -1,22 +1,31 @@
 ﻿using CommonFramework;
+
 using System.Linq.Expressions;
 
 namespace SecuritySystem.VirtualPermission.DependencyInjection;
 
-public interface IVirtualBindingInfoRootSettingsBuilder<TPermission>
+public interface IVirtualPermissionRootBuilder<TPermission>
     where TPermission : notnull
 {
-    IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(
+    IVirtualPermissionRootBuilder<TPermission> AddRestriction<TSecurityContext>(
+        Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
+        where TSecurityContext : ISecurityContext;
+
+    IVirtualPermissionRootBuilder<TPermission> AddRestriction<TSecurityContext>(
+        Expression<Func<TPermission, TSecurityContext?>> path)
+        where TSecurityContext : ISecurityContext;
+
+    IVirtualPermissionRootBuilder<TPermission> SetPeriod(
         PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
         PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor);
 
-     IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(
+    IVirtualPermissionRootBuilder<TPermission> SetPeriod(
         Expression<Func<TPermission, DateTime?>>? startDatePath,
         Expression<Func<TPermission, DateTime?>>? endDatePath);
 
-    IVirtualBindingInfoRootSettingsBuilder<TPermission> SetComment(Expression<Func<TPermission, string>> commentPath);
+    IVirtualPermissionRootBuilder<TPermission> SetComment(Expression<Func<TPermission, string>> commentPath);
 
-    IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPermissionDelegation(Expression<Func<TPermission, TPermission?>> newDelegatedFromPath);
+    IVirtualPermissionRootBuilder<TPermission> SetPermissionDelegation(Expression<Func<TPermission, TPermission?>> newDelegatedFromPath);
 
-    IVirtualBindingInfoRootSettingsBuilder<TPermission> ForRole(SecurityRole securityRole, Action<IVirtualBindingInfoSettingsBuilder<TPermission>>? init = null);
+    IVirtualPermissionRootBuilder<TPermission> AddSecurityRole(SecurityRole securityRole, Action<IVirtualBindingInfoSettingsBuilder<TPermission>>? init = null);
 }

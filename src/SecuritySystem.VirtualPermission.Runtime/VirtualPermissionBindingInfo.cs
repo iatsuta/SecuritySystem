@@ -12,8 +12,6 @@ public abstract record VirtualPermissionBindingInfo
 {
 	public abstract Type PermissionType { get; }
 
-    public required SecurityRole SecurityRole { get; init; }
-
     public ImmutableList<LambdaExpression> Restrictions { get; init; } = [];
 
     public ImmutableList<Type> SecurityContextTypes =>
@@ -23,6 +21,8 @@ public abstract record VirtualPermissionBindingInfo
                 .Select(restrictionPath => restrictionPath.ReturnType.GetCollectionElementTypeOrSelf())
                 .Distinct()
         ];
+
+    public abstract ImmutableList<VirtualPermissionSecurityRoleItemBindingInfo> BaseItems { get; }
 }
 
 public record VirtualPermissionBindingInfo<TPermission> : VirtualPermissionBindingInfo
@@ -30,11 +30,11 @@ public record VirtualPermissionBindingInfo<TPermission> : VirtualPermissionBindi
 {
     public override Type PermissionType { get; } = typeof(TPermission);
 
+    public override ImmutableList<VirtualPermissionSecurityRoleItemBindingInfo> BaseItems => field ??= [..this.Items];
 
-    public Func<IServiceProvider, Expression<Func<TPermission, bool>>> GetFilter { get; init; } = _ => _ => true;
+    public ImmutableList<VirtualPermissionSecurityRoleItemBindingInfo<TPermission>> Items { get; init; } = [];
 
-
-	public Expression<Func<TPermission, Array>> GetRestrictionsArrayExpr(IdentityInfo identityInfo, LambdaExpression? pureFilter)
+    public Expression<Func<TPermission, Array>> GetRestrictionsArrayExpr(IdentityInfo identityInfo, LambdaExpression? pureFilter)
 	{
 		return new Func<IdentityInfo<ISecurityContext, Ignore>, Expression<Func<ISecurityContext, bool>>?, Expression<Func<TPermission, Array>>>(
 				this.GetRestrictionsArrayExpr)

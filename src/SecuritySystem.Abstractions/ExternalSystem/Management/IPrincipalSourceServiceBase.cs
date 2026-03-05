@@ -1,11 +1,13 @@
 ﻿using SecuritySystem.Credential;
 using SecuritySystem.UserSource;
 
+using System.Collections.Immutable;
+
 namespace SecuritySystem.ExternalSystem.Management;
 
 public interface IPrincipalSourceServiceBase
 {
-    Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken);
+    IAsyncEnumerable<ManagedPrincipalHeader> GetPrincipalsAsync(string nameFilter, int limit);
 
     Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken);
 
@@ -15,5 +17,5 @@ public interface IPrincipalSourceServiceBase
 
         ?? throw new UserSourceException($"Principal with {nameof(userCredential)} '{userCredential}' not found");
 
-    Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken);
+    IAsyncEnumerable<string> GetLinkedPrincipalsAsync(ImmutableHashSet<SecurityRole> securityRoles);
 }

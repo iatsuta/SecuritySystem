@@ -17,11 +17,11 @@ public class SecurityContextInfoBuilder<TSecurityContext>(TypedSecurityIdentity 
 
 	private string name = typeof(TSecurityContext).Name;
 
-	public Action<IHierarchicalExpandSettings>? HierarchicalSetupAction { get; private set; }
+	public Action<IHierarchicalExpandBuilder>? HierarchicalSetupAction { get; private set; }
 
-	public Action<IIdentitySourceSettings>? IdentitySetupAction { get; private set; }
+	public Action<IIdentitySourceBuilder>? IdentitySetupAction { get; private set; }
 
-	public Action<IVisualIdentitySourceSettings>? VisualIdentitySetupAction { get; private set; }
+	public Action<IVisualIdentitySourceBuilder>? VisualIdentitySetupAction { get; private set; }
 
 	public ISecurityContextInfoBuilder<TSecurityContext> SetName(string newName)
 	{

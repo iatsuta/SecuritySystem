@@ -30,11 +30,11 @@ public class GetBusinessRoleContextEntitiesHandler(
             entities = entities.Where(p => p.Name.Contains(searchToken, StringComparison.OrdinalIgnoreCase));
 
         return await entities
+            .ToAsyncEnumerable()
             .Select(x => new RestrictionDto { Id = x.Id.ToString()!, Name = x.Name })
             .OrderByDescending(x => x.Name.Equals(searchToken, StringComparison.OrdinalIgnoreCase))
             .ThenBy(x => x.Name)
             .Take(70)
-            .ToAsyncEnumerable()
             .ToListAsync(cancellationToken);
     }
 }

@@ -107,13 +107,14 @@ public static class ServiceCollectionExtensions
 
                         .AddVirtualPermission<Employee, TestManager>(
                             domainObject => domainObject.Employee,
-                            b => b.ForRole(ExampleRoles.TestManager, bi => bi
+                            b => b
                                 .AddRestriction(domainObject => domainObject.BusinessUnit)
-                                .AddRestriction(domainObject => domainObject.Location)))
+                                .AddRestriction(domainObject => domainObject.Location)
+                                .AddSecurityRole(ExampleRoles.TestManager))
 
                         .AddVirtualPermission<Employee, Administrator>(
                             domainObject => domainObject.Employee,
-                            b => b.ForRole(SecurityRole.Administrator))
+                            b => b.AddSecurityRole(SecurityRole.Administrator))
 
                         .AddGeneralPermission(
                             p => p.Principal,

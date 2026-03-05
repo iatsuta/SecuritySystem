@@ -18,9 +18,9 @@ public class GetBusinessRoleContextsHandler(
 
 		return await securityContextInfoSource
 			.SecurityContextInfoList
-			.Select(x => new EntityDto { Id = x.Identity.GetId().ToString()!, Name = x.Name })
+            .ToAsyncEnumerable()
+            .Select(x => new EntityDto { Id = x.Identity.GetId().ToString()!, Name = x.Name })
 			.OrderBy(x => x.Name)
-			.ToAsyncEnumerable()
 			.ToListAsync(cancellationToken);
 	}
 }

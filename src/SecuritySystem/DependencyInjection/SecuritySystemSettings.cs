@@ -5,8 +5,11 @@ using CommonFramework.GenericRepository;
 using CommonFramework.IdentitySource.DependencyInjection;
 using CommonFramework.RelativePath;
 using CommonFramework.VisualIdentitySource.DependencyInjection;
+
 using HierarchicalExpand.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem.AccessDenied;
 using SecuritySystem.AvailableSecurity;
 using SecuritySystem.Builders._Factory;
@@ -25,13 +28,14 @@ using SecuritySystem.SecurityAccessor;
 using SecuritySystem.SecurityRuleInfo;
 using SecuritySystem.Services;
 using SecuritySystem.UserSource;
+using SecuritySystem.Builders.MaterializedBuilder;
+
 using System.Globalization;
 using System.Reflection;
-using SecuritySystem.Builders.MaterializedBuilder;
 
 namespace SecuritySystem.DependencyInjection;
 
-public class SecuritySystemSettings : ISecuritySystemSettings
+public class SecuritySystemBuilder : ISecuritySystemBuilder, IServiceCollectionBuilder
 {
     private readonly List<DomainSecurityServiceBuilder> domainBuilders = [];
 
@@ -60,25 +64,25 @@ public class SecuritySystemSettings : ISecuritySystemSettings
     private Type principalManagementServiceType = typeof(FakePrincipalManagementService);
 
 
-    private readonly List<Action<IIdentitySourceSettings>> identitySetupActions = [];
+    private readonly List<Action<IHierarchicalExpandBuilder>> hierarchicalSetupActions = [];
 
-    private readonly List<Action<IVisualIdentitySourceSettings>> visualIdentitySetupActions = [];
+    private readonly List<Action<IIdentitySourceBuilder>> identitySetupActions = [];
 
-    private readonly List<Action<IHierarchicalExpandSettings>> hierarchicalSetupActions = [];
+    private readonly List<Action<IVisualIdentitySourceBuilder>> visualIdentitySetupActions = [];
 
 
     public bool InitializeDefaultRoles { get; set; } = true;
 
     public bool AutoAddSelfRelativePath { get; set; } = true;
 
-    public ISecuritySystemSettings SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule)
+    public ISecuritySystemBuilder SetSecurityAdministratorRule(DomainSecurityRule.RoleBaseSecurityRule rule)
     {
         this.securityAdministratorRule = rule;
 
         return this;
     }
 
-    public ISecuritySystemSettings AddSecurityContext<TSecurityContext>(TypedSecurityIdentity identity,
+    public ISecuritySystemBuilder AddSecurityContext<TSecurityContext>(TypedSecurityIdentity identity,
         Action<ISecurityContextInfoBuilder<TSecurityContext>>? setup = null)
         where TSecurityContext : class, ISecurityContext
     {
@@ -106,7 +110,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddDomainSecurity<TDomainObject>(Action<IDomainSecurityServiceBuilder<TDomainObject>> setup)
+    public ISecuritySystemBuilder AddDomainSecurity<TDomainObject>(Action<IDomainSecurityServiceBuilder<TDomainObject>> setup)
     {
         var builder = new DomainSecurityServiceBuilder<TDomainObject>();
 
@@ -117,15 +121,15 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddDomainSecurityMetadata<TMetadata>()
+    public ISecuritySystemBuilder AddDomainSecurityMetadata<TMetadata>()
         where TMetadata : IDomainSecurityServiceMetadata
     {
         return this.GetType().GetMethod(nameof(this.AddDomainSecurityMetadataInternal), BindingFlags.Instance | BindingFlags.NonPublic)!
             .MakeGenericMethod(typeof(TMetadata), TMetadata.DomainType)
-            .Invoke<ISecuritySystemSettings>(this);
+            .Invoke<ISecuritySystemBuilder>(this);
     }
 
-    private ISecuritySystemSettings AddDomainSecurityMetadataInternal<TMetadata, TDomainObject>()
+    private ISecuritySystemBuilder AddDomainSecurityMetadataInternal<TMetadata, TDomainObject>()
         where TMetadata : IDomainSecurityServiceMetadata<TDomainObject>
     {
         return this.AddDomainSecurity<TDomainObject>(b => b.Override<TMetadata>().Pipe(TMetadata.Setup));
@@ -133,28 +137,28 @@ public class SecuritySystemSettings : ISecuritySystemSettings
 
 
 
-    public ISecuritySystemSettings AddSecurityRole(SecurityRole securityRole, SecurityRoleInfo info)
+    public ISecuritySystemBuilder AddSecurityRole(SecurityRole securityRole, SecurityRoleInfo info)
     {
         this.registerActions.Add(sc => this.AddSecurityRole(sc, new FullSecurityRole(securityRole.Name, info)));
 
         return this;
     }
 
-    public ISecuritySystemSettings AddSecurityRule(DomainSecurityRule.SecurityRuleHeader header, DomainSecurityRule implementation)
+    public ISecuritySystemBuilder AddSecurityRule(DomainSecurityRule.SecurityRuleHeader header, DomainSecurityRule implementation)
     {
         this.registerActions.Add(sc => sc.AddSingleton(new SecurityRuleHeaderInfo(header, implementation)));
 
         return this;
     }
 
-    public ISecuritySystemSettings AddSecurityOperation(SecurityOperation securityOperation, SecurityOperationInfo info)
+    public ISecuritySystemBuilder AddSecurityOperation(SecurityOperation securityOperation, SecurityOperationInfo info)
     {
         this.registerActions.Add(sc => sc.AddSingleton(new FullSecurityOperation(securityOperation, info)));
 
         return this;
     }
 
-    public ISecuritySystemSettings AddPermissionSystem<TPermissionSystemFactory>()
+    public ISecuritySystemBuilder AddPermissionSystem<TPermissionSystemFactory>()
         where TPermissionSystemFactory : class, IPermissionSystemFactory
     {
         this.registerActions.Add(sc => sc.AddScoped<IPermissionSystemFactory, TPermissionSystemFactory>());
@@ -162,21 +166,21 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddPermissionSystem(Func<IServiceProvider, IPermissionSystemFactory> getFactory)
+    public ISecuritySystemBuilder AddPermissionSystem(Func<IServiceProvider, IPermissionSystemFactory> getFactory)
     {
         this.registerActions.Add(sc => sc.AddScopedFrom(getFactory));
 
         return this;
     }
 
-    public ISecuritySystemSettings AddPermissionSystem(Func<IServiceProxyFactory, IPermissionSystemFactory> getFactory)
+    public ISecuritySystemBuilder AddPermissionSystem(Func<IServiceProxyFactory, IPermissionSystemFactory> getFactory)
     {
         this.registerActions.Add(sc => sc.AddScopedFrom(getFactory));
 
         return this;
     }
 
-    public ISecuritySystemSettings AddRunAsValidator<TValidator>()
+    public ISecuritySystemBuilder AddRunAsValidator<TValidator>()
         where TValidator : class, IRunAsValidator
     {
         this.registerActions.Add(sc => sc.AddScoped<TValidator>());
@@ -184,14 +188,14 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddExtensions(ISecuritySystemExtension extensions)
+    public ISecuritySystemBuilder AddExtensions(ISecuritySystemExtension extensions)
     {
         this.registerActions.Add(extensions.AddServices);
 
         return this;
     }
 
-    public ISecuritySystemSettings SetAccessDeniedExceptionService<TAccessDeniedExceptionService>()
+    public ISecuritySystemBuilder SetAccessDeniedExceptionService<TAccessDeniedExceptionService>()
         where TAccessDeniedExceptionService : class, IAccessDeniedExceptionService
     {
         this.accessDeniedExceptionServiceType = typeof(TAccessDeniedExceptionService);
@@ -199,7 +203,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>>? setupUserSource)
+    public ISecuritySystemBuilder AddUserSource<TUser>(Action<IUserSourceBuilder<TUser>>? setupUserSource)
         where TUser : class
     {
         if (!userSourceTypes.Add(typeof(TUser)))
@@ -247,7 +251,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetSecurityAccessorInfinityStorage<TStorage>()
+    public ISecuritySystemBuilder SetSecurityAccessorInfinityStorage<TStorage>()
         where TStorage : class, ISecurityAccessorInfinityStorage
     {
         this.securityAccessorInfinityStorageType = typeof(TStorage);
@@ -255,7 +259,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetPrincipalManagementService<TPrincipalManagementService>()
+    public ISecuritySystemBuilder SetPrincipalManagementService<TPrincipalManagementService>()
         where TPrincipalManagementService : class, IPrincipalManagementService
     {
         this.principalManagementServiceType = typeof(TPrincipalManagementService);
@@ -263,14 +267,14 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetDefaultSecurityRuleCredential(SecurityRuleCredential securityRuleCredential)
+    public ISecuritySystemBuilder SetDefaultSecurityRuleCredential(SecurityRuleCredential securityRuleCredential)
     {
         this.defaultSecurityRuleCredential = securityRuleCredential;
 
         return this;
     }
 
-    public ISecuritySystemSettings SetClientDomainModeSecurityRuleSource<TClientDomainModeSecurityRuleSource>()
+    public ISecuritySystemBuilder SetClientDomainModeSecurityRuleSource<TClientDomainModeSecurityRuleSource>()
         where TClientDomainModeSecurityRuleSource : class, IClientDomainModeSecurityRuleSource
     {
         this.clientDomainModeSecurityRuleSource = typeof(TClientDomainModeSecurityRuleSource);
@@ -278,7 +282,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddClientSecurityRuleInfoSource<TClientSecurityRuleInfoSource>()
+    public ISecuritySystemBuilder AddClientSecurityRuleInfoSource<TClientSecurityRuleInfoSource>()
         where TClientSecurityRuleInfoSource : class, IClientSecurityRuleInfoSource
     {
         this.registerActions.Add(sc =>
@@ -287,7 +291,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings AddClientSecurityRuleInfoSource(Type sourceType)
+    public ISecuritySystemBuilder AddClientSecurityRuleInfoSource(Type sourceType)
     {
         this.registerActions.Add(sc => sc.AddKeyedSingleton<IClientSecurityRuleInfoSource>(RootClientSecurityRuleInfoSource.ElementKey,
             (sp, _) => sp.GetRequiredService<IServiceProxyFactory>()
@@ -296,7 +300,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetQueryableSource<TQueryableSource>()
+    public ISecuritySystemBuilder SetQueryableSource<TQueryableSource>()
         where TQueryableSource : class, IQueryableSource
     {
         this.registerQueryableSourceAction = sc => sc.AddScoped<IQueryableSource, TQueryableSource>();
@@ -304,7 +308,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetRawUserAuthenticationService<TRawUserAuthenticationService>(bool withImpersonate = true)
+    public ISecuritySystemBuilder SetRawUserAuthenticationService<TRawUserAuthenticationService>(bool withImpersonate = true)
         where TRawUserAuthenticationService : class, IRawUserAuthenticationService
     {
         this.registerRawUserAuthenticationServiceAction = sc =>
@@ -321,7 +325,7 @@ public class SecuritySystemSettings : ISecuritySystemSettings
         return this;
     }
 
-    public ISecuritySystemSettings SetGenericRepository<TGenericRepository>()
+    public ISecuritySystemBuilder SetGenericRepository<TGenericRepository>()
         where TGenericRepository : class, IGenericRepository
     {
         this.registerGenericRepositoryAction = sc => sc.AddScoped<IGenericRepository, TGenericRepository>();
@@ -393,9 +397,6 @@ public class SecuritySystemSettings : ISecuritySystemSettings
             }
         }
     }
-
-
-
 
     private IServiceCollection RegisterGeneralServices(IServiceCollection services)
     {

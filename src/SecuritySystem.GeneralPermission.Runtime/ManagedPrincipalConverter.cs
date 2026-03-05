@@ -38,9 +38,10 @@ public class ManagedPrincipalConverter<TPrincipal, TPermission, TPermissionRestr
 {
     public async Task<ManagedPrincipal> ToManagedPrincipalAsync(TPrincipal dbPrincipal, CancellationToken cancellationToken)
     {
-        var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal, cancellationToken);
+        var dbPermissions = await permissionLoader.LoadAsync(dbPrincipal).ToArrayAsync(cancellationToken);
 
-        var permissions = await dbPermissions.SyncWhenAll(permission => permissionManagementService.ToManagedPermissionAsync(permission, cancellationToken));
+        var permissions = await dbPermissions.ToAsyncEnumerable().SelectAsync(permissionManagementService.ToManagedPermissionAsync)
+            .ToArrayAsync(cancellationToken);
 
         return new ManagedPrincipal(headerConverter.Convert(dbPrincipal), [..permissions]);
     }

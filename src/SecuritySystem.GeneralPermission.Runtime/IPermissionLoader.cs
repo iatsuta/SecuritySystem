@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.GeneralPermission;
 
-public interface IPermissionLoader<in TPrincipal, TPermission>
+public interface IPermissionLoader<in TPrincipal, out TPermission>
 {
-    Task<List<TPermission>> LoadAsync(TPrincipal principal, CancellationToken cancellationToken);
+    IAsyncEnumerable<TPermission> LoadAsync(TPrincipal principal);
 }
