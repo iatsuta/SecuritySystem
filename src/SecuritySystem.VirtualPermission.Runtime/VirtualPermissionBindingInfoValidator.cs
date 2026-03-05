@@ -19,16 +19,19 @@ public class VirtualPermissionBindingInfoValidator(ISecurityRoleSource securityR
                 return;
             }
 
-            this.InternalValidate(virtualBindingInfo);
+            foreach (var itemBindingInfo in virtualBindingInfo.BaseItems)
+            {
+                this.InternalValidate(virtualBindingInfo, itemBindingInfo);
+            }
 
             this.validated.Add(virtualBindingInfo);
         }
     }
 
-    private void InternalValidate(VirtualPermissionBindingInfo virtualBindingInfo)
+    private void InternalValidate(VirtualPermissionBindingInfo virtualBindingInfo, VirtualPermissionSecurityRoleItemBindingInfo itemBindingInfo)
     {
         var securityContextRestrictions = securityRoleSource
-                                          .GetSecurityRole(virtualBindingInfo.SecurityRole)
+                                          .GetSecurityRole(itemBindingInfo.SecurityRole)
                                           .Information
                                           .Restriction
                                           .SecurityContextRestrictions;

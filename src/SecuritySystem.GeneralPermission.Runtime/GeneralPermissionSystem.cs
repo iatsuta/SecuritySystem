@@ -42,14 +42,13 @@ public class GeneralPermissionSystem<TPermission>(
         where TSecurityContextIdent : notnull =>
         this.InnerService.GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(restrictionFilterInfo);
 
-    public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
-        this.InnerService.GetPermissionSource(securityRule);
+    public IEnumerable<IPermissionSource<TPermission>> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
+        this.InnerService.GetPermissionSources(securityRule);
 
-    IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
-        ((IPermissionSystem)this.InnerService).GetPermissionSource(securityRule);
+    IEnumerable<IPermissionSource> IPermissionSystem.GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
+        ((IPermissionSystem)this.InnerService).GetPermissionSources(securityRule);
 
-    public Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default) =>
-        this.InnerService.GetAvailableSecurityRoles(cancellationToken);
+    public IAsyncEnumerable<SecurityRole> GetAvailableSecurityRoles() => this.InnerService.GetAvailableSecurityRoles();
 }
 
 public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleIdent>(
@@ -78,21 +77,20 @@ public class GeneralPermissionSystem<TPermission, TSecurityRole, TSecurityRoleId
                 new Tuple<SecurityContextRestrictionFilterInfo<TSecurityContext>?>(restrictionFilterInfo));
 
 
-    public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
-
+    public IEnumerable<IPermissionSource<TPermission>> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
+    [
         serviceProxyFactory.Create<IPermissionSource<TPermission>, GeneralPermissionSource<TPermission>>(
-            securityRule.TryApply(defaultSecurityRuleCredential));
+            securityRule.TryApply(defaultSecurityRuleCredential))
+    ];
 
-    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken)
+
+    public IAsyncEnumerable<SecurityRole> GetAvailableSecurityRoles()
     {
-        var dbRolesIdents = await availablePermissionSource
+        return availablePermissionSource
             .GetQueryable(DomainSecurityRule.AnyRole with { CustomCredential = defaultSecurityRuleCredential })
             .Select(generalBindingInfo.SecurityRole.Path.Select(securityRoleIdentityInfo.Id.Path))
             .Distinct()
-            .GenericToListAsync(cancellationToken);
-
-        return dbRolesIdents.Select(ident => securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(ident)));
+            .GenericAsAsyncEnumerable()
+            .Select(ident => securityRoleSource.GetSecurityRole(TypedSecurityIdentity.Create(ident)));
     }
-
-    IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) => this.GetPermissionSource(securityRule);
 }

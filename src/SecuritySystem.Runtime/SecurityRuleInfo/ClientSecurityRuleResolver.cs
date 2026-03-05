@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
 
 namespace SecuritySystem.SecurityRuleInfo;
 
@@ -6,12 +7,14 @@ public class ClientSecurityRuleResolver(
     IDomainSecurityRoleExtractor domainSecurityRoleExtractor,
     IClientSecurityRuleInfoSource clientSecurityRuleInfoSource) : IClientSecurityRuleResolver
 {
-    private readonly ConcurrentDictionary<SecurityRole, DomainSecurityRule.ClientSecurityRule[]> cache = [];
+    private readonly ConcurrentDictionary<SecurityRole, ImmutableArray<DomainSecurityRule.ClientSecurityRule>> cache = [];
 
-    public IEnumerable<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole) =>
+    public ImmutableArray<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole) =>
         this.cache.GetOrAdd(securityRole, _ =>
         {
-            var request = from clientSecurityRuleInfo in clientSecurityRuleInfoSource.GetInfos()
+            var request =
+
+                from clientSecurityRuleInfo in clientSecurityRuleInfoSource.GetInfos()
 
                 let roles = domainSecurityRoleExtractor.ExtractSecurityRoles(clientSecurityRuleInfo.Implementation)
 
@@ -19,6 +22,6 @@ public class ClientSecurityRuleResolver(
 
                 select clientSecurityRuleInfo.Rule;
 
-            return request.ToArray();
+            return [..request];
         });
 }

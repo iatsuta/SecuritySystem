@@ -7,7 +7,7 @@ namespace SecuritySystem.DependencyInjection;
 
 public class UserSourceBuilder<TUser> : IUserSourceBuilder<TUser>
 {
-	public Action<IVisualIdentitySourceSettings>? VisualIdentitySetupAction { get; private set; }
+	public Action<IVisualIdentitySourceBuilder>? VisualIdentitySetupAction { get; private set; }
 
 	public Expression<Func<TUser, bool>> FilterPath { get; private set; } = _ => true;
 

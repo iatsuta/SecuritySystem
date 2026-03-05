@@ -4,16 +4,20 @@ public interface IPermissionSystem
 {
     Type PermissionType { get; }
 
-    IPermissionSource GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+    IEnumerable<IPermissionSource> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule);
 
-    Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<SecurityRole> GetAvailableSecurityRoles();
 }
 
 public interface IPermissionSystem<TPermission> : IPermissionSystem
 {
-    IPermissionRestrictionSource<TPermission, TSecurityContextIdent> GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
+    IPermissionRestrictionSource<TPermission, TSecurityContextIdent> GetRestrictionSource<TSecurityContext, TSecurityContextIdent>(
+        SecurityContextRestrictionFilterInfo<TSecurityContext>? restrictionFilterInfo)
         where TSecurityContext : class, ISecurityContext
         where TSecurityContextIdent : notnull;
 
-    new IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+    new IEnumerable<IPermissionSource<TPermission>> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule);
+
+    IEnumerable<IPermissionSource> IPermissionSystem.GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule) =>
+        this.GetPermissionSources(securityRule);
 }

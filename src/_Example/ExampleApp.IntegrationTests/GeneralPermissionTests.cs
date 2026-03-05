@@ -6,6 +6,7 @@ using ExampleApp.Domain;
 using GenericQueryable;
 
 using Microsoft.Extensions.DependencyInjection;
+
 using SecuritySystem;
 using SecuritySystem.AvailableSecurity;
 using SecuritySystem.DomainServices;
@@ -51,7 +52,7 @@ public class GeneralPermissionTests : TestBase
         var availableSecurityRoleSource = scope.ServiceProvider.GetRequiredService<IAvailableSecurityRoleSource>();
 
         // Act
-        var availableSecurityRoles = await availableSecurityRoleSource.GetAvailableSecurityRoles(true, this.CancellationToken);
+        var availableSecurityRoles = await availableSecurityRoleSource.GetAvailableSecurityRoles().ToArrayAsync(this.CancellationToken);
 
         var managedPrincipal = await this.AuthManager.For(principalName).GetPrincipalAsync(this.CancellationToken);
 
@@ -104,5 +105,4 @@ public class GeneralPermissionTests : TestBase
             securityProvider.HasAccess(testObject).Should().Be(true);
         }
     }
-
 }

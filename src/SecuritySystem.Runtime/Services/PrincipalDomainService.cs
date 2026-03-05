@@ -85,27 +85,29 @@ public class PrincipalDomainService<TPrincipal, TPermission, TPrincipalIdent>(
         }
     }
 
-	private async Task<TPrincipalIdent?> TryExtractIdent(string name, CancellationToken cancellationToken)
-	{
-		var tryCandidates = await userSources.Where(userSource => userSource.UserType != typeof(TPrincipal))
-			.SyncWhenAll(userSource => userSource.ToSimple().TryGetUserAsync(name, cancellationToken));
+    private async Task<TPrincipalIdent?> TryExtractIdent(string name, CancellationToken cancellationToken)
+    {
+        var tryCandidates = userSources
+            .ToAsyncEnumerable()
+            .Where(userSource => userSource.UserType != typeof(TPrincipal))
+            .Select(async (userSource, ct) => await userSource.ToSimple().TryGetUserAsync(name, ct));
 
-		var identRequest =
+        var identRequest =
 
-			from tryUser in tryCandidates
+            from tryUser in tryCandidates
 
-			where tryUser is not null
+            where tryUser is not null
 
-			let ident = identityConverter.TryConvert(tryUser.Identity)
+            let ident = identityConverter.TryConvert(tryUser.Identity)
 
-			where ident is not null
+            where ident is not null
 
-			select ident.Id;
+            select ident.Id;
 
-		return identRequest.SingleOrDefault();
-	}
+        return await identRequest.SingleOrDefaultAsync(cancellationToken);
+    }
 
-	public async Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken)
+    public async Task RemoveAsync(TPrincipal principal, bool force, CancellationToken cancellationToken)
 	{
 		if (!force && await queryableSource.GetQueryable<TPermission>()
 			    .GenericAnyAsync(bindingInfo.Principal.Path.Select(p => p == principal), cancellationToken))

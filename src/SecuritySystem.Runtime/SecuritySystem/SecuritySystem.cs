@@ -23,7 +23,9 @@ public class SecuritySystem(
 
     private bool HasAccess(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        return permissionSystems.Any(v => v.GetPermissionSource(securityRule).HasAccess());
+        return permissionSystems
+            .SelectMany(v => v.GetPermissionSources(securityRule))
+            .Any(permissionSource => permissionSource.HasAccess());
     }
 
     private void CheckAccess(DomainSecurityRule.RoleBaseSecurityRule securityRule)

@@ -1,23 +1,21 @@
-﻿using CommonFramework;
-
-using SecuritySystem.ExternalSystem;
+﻿using SecuritySystem.ExternalSystem;
 
 namespace SecuritySystem.AvailableSecurity;
 
 public class AvailableSecurityRoleSource(IEnumerable<IPermissionSystem> permissionSystems, ISecurityRoleSource securityRoleSource)
     : IAvailableSecurityRoleSource
 {
-    public async Task<List<FullSecurityRole>> GetAvailableSecurityRoles(bool expandChildren, CancellationToken cancellationToken)
+    public IAsyncEnumerable<FullSecurityRole> GetAvailableSecurityRoles(bool expandChildren)
     {
-        var allRoles = await permissionSystems.SyncWhenAll(ps => ps.GetAvailableSecurityRoles(cancellationToken));
+        var roles = permissionSystems
+            .ToAsyncEnumerable()
+            .SelectMany(ps => ps.GetAvailableSecurityRoles())
+            .Distinct()
+            .Select(securityRoleSource.GetSecurityRole);
 
-        var roles = allRoles.SelectMany().Distinct().Select(securityRoleSource.GetSecurityRole);
-
-        var rolesWithExpand =
+        return
             expandChildren
-                ? roles.GetAllElements(sr => sr.Information.Children.Select(securityRoleSource.GetSecurityRole)).Distinct()
+                ? roles.GetAllElements(sr => sr.Information.Children.ToAsyncEnumerable().Select(securityRoleSource.GetSecurityRole)).Distinct()
                 : roles;
-
-        return rolesWithExpand.ToList();
     }
 }

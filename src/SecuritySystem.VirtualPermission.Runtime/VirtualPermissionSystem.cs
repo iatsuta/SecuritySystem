@@ -29,24 +29,37 @@ public class VirtualPermissionSystem<TPermission>(
                 VirtualPermissionRestrictionSource<TPermission, TSecurityContext, TSecurityContextIdent>>(virtualBindingInfo, Tuple.Create(restrictionFilterInfo));
     }
 
-    public IPermissionSource<TPermission> GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule)
+    public IEnumerable<IPermissionSource<TPermission>> GetPermissionSources(DomainSecurityRule.RoleBaseSecurityRule securityRule)
     {
-        if (securityRuleExpander.FullRoleExpand(securityRule).Children.SelectMany(c => c.SecurityRoles).Contains(virtualBindingInfo.SecurityRole))
-        {
-            return serviceProxyFactory.Create<IPermissionSource<TPermission>, VirtualPermissionSource<TPermission>>(virtualBindingInfo,
-                securityRule with { CustomCredential = securityRuleCredential });
-        }
-        else
-        {
-            return new EmptyPermissionSource<TPermission>();
-        }
+        var expandedRoles = securityRuleExpander.FullRoleExpand(securityRule).Children.SelectMany(c => c.SecurityRoles).Distinct().ToHashSet();
+
+        return
+
+            from itemBindingInfo in virtualBindingInfo.Items
+
+            where expandedRoles.Contains(itemBindingInfo.SecurityRole)
+
+            select this.CreatePermissionSource(securityRule, itemBindingInfo);
     }
 
-    public async Task<IEnumerable<SecurityRole>> GetAvailableSecurityRoles(CancellationToken cancellationToken) =>
-        await this.GetPermissionSource(virtualBindingInfo.SecurityRole).GetPermissionQuery().GenericAnyAsync(cancellationToken)
-            ? [virtualBindingInfo.SecurityRole]
-            : [];
+    public IAsyncEnumerable<SecurityRole> GetAvailableSecurityRoles() =>
+        virtualBindingInfo
+            .Items
+            .ToAsyncEnumerable()
+            .Where(async (itemBindingInfo, ct) =>
+                await this.CreatePermissionSource(itemBindingInfo.SecurityRole, itemBindingInfo)
+                    .GetPermissionQuery()
+                    .GenericAnyAsync(ct))
+            .Select(itemBindingInfo => itemBindingInfo.SecurityRole)
+            .Distinct();
 
-
-    IPermissionSource IPermissionSystem.GetPermissionSource(DomainSecurityRule.RoleBaseSecurityRule securityRule) => this.GetPermissionSource(securityRule);
+    private IPermissionSource<TPermission> CreatePermissionSource(
+        DomainSecurityRule.RoleBaseSecurityRule securityRule,
+        VirtualPermissionSecurityRoleItemBindingInfo<TPermission> itemBindingInfo)
+    {
+        return serviceProxyFactory.Create<IPermissionSource<TPermission>, VirtualPermissionSource<TPermission>>(
+            virtualBindingInfo,
+            itemBindingInfo,
+            securityRule.TryApply(securityRuleCredential));
+    }
 }

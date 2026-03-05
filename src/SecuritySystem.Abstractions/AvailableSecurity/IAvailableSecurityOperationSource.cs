@@ -2,5 +2,5 @@
 
 public interface IAvailableSecurityOperationSource
 {
-    Task<List<SecurityOperation>> GetAvailableSecurityOperations(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<SecurityOperation> GetAvailableSecurityOperations();
 }
