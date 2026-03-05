@@ -38,14 +38,14 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
     private Type? permissionManagementServiceType;
 
 
-    public void Initialize(ISecuritySystemSettings securitySystemSettings,
+    public void Initialize(ISecuritySystemBuilder securitySystemBuilder,
         PropertyAccessors<TPermission, TPrincipal> principalAccessors,
         PropertyAccessors<TPermission, TSecurityRole> securityRoleAccessors,
         PropertyAccessors<TPermissionRestriction, TPermission> permissionAccessors,
         PropertyAccessors<TPermissionRestriction, TSecurityContextType> securityContextTypeAccessors,
         PropertyAccessors<TPermissionRestriction, TSecurityContextObjectIdent> securityContextObjectIdAccessors)
     {
-        this.RegisterGeneralServices(securitySystemSettings);
+        this.RegisterGeneralServices(securitySystemBuilder);
 
         var bindingInfo = new PermissionBindingInfo<TPermission, TPrincipal>
         {
@@ -65,7 +65,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
                 SecurityContextObjectId = securityContextObjectIdAccessors
             };
 
-        securitySystemSettings
+        securitySystemBuilder
             .AddPermissionSystem(sp => new GeneralPermissionSystemFactory(sp, bindingInfo))
             .AddExtensions(services =>
             {
@@ -174,7 +174,7 @@ public class GeneralPermissionSettings<TPrincipal, TPermission, TSecurityRole, T
         return this;
     }
 
-    private ISecuritySystemSettings RegisterGeneralServices(ISecuritySystemSettings settings)
+    private ISecuritySystemBuilder RegisterGeneralServices(ISecuritySystemBuilder settings)
     {
         return settings
             .AddExtensions(services =>

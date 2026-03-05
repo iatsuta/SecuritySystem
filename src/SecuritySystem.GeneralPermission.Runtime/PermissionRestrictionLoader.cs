@@ -25,8 +25,7 @@ public class PermissionRestrictionLoader<TPermission, TPermissionRestriction>(
             bindingInfo);
     });
 
-    public Task<List<TPermissionRestriction>> LoadAsync(TPermission permission, CancellationToken cancellationToken) =>
-        this.lazyInnerService.Value.LoadAsync(permission, cancellationToken);
+    public IAsyncEnumerable<TPermissionRestriction> LoadAsync(TPermission permission) => this.lazyInnerService.Value.LoadAsync(permission);
 }
 
 public class PermissionRestrictionLoader<TPermission, TPermissionRestriction, TSecurityContextType, TSecurityContextObjectIdent>(
@@ -36,10 +35,9 @@ public class PermissionRestrictionLoader<TPermission, TPermissionRestriction, TS
     where TPermission : class
     where TPermissionRestriction : class
 {
-    public async Task<List<TPermissionRestriction>> LoadAsync(TPermission permission, CancellationToken cancellationToken)
-    {
-        return await queryableSource.GetQueryable<TPermissionRestriction>()
+    public IAsyncEnumerable<TPermissionRestriction> LoadAsync(TPermission permission) =>
+
+        queryableSource.GetQueryable<TPermissionRestriction>()
             .Where(restrictionBindingInfo.Permission.Path.Select(p => p == permission))
-            .GenericToListAsync(cancellationToken);
-    }
+            .GenericAsAsyncEnumerable();
 }

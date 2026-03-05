@@ -1,14 +1,16 @@
 ﻿using CommonFramework;
+
 using SecuritySystem.DependencyInjection;
+
 using System.Linq.Expressions;
 
 namespace SecuritySystem.GeneralPermission.DependencyInjection;
 
-public static class SecuritySystemSettingsExtensions
+public static class SecuritySystemBuilderExtensions
 {
-    extension(ISecuritySystemSettings securitySystemSettings)
+    extension(ISecuritySystemBuilder securitySystemBuilder)
     {
-        public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+        public ISecuritySystemBuilder AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
             TSecurityContextObjectIdent>(
             PropertyAccessors<TPermission, TPrincipal> principalAccessors,
             PropertyAccessors<TPermission, TSecurityRole> securityRoleAccessors,
@@ -27,13 +29,13 @@ public static class SecuritySystemSettingsExtensions
 
             setupAction?.Invoke(settings);
 
-            settings.Initialize(securitySystemSettings, principalAccessors, securityRoleAccessors, permissionAccessors, securityContextTypeAccessors,
+            settings.Initialize(securitySystemBuilder, principalAccessors, securityRoleAccessors, permissionAccessors, securityContextTypeAccessors,
                 securityContextObjectIdAccessors);
 
-            return securitySystemSettings;
+            return securitySystemBuilder;
         }
 
-        public ISecuritySystemSettings AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
+        public ISecuritySystemBuilder AddGeneralPermission<TPrincipal, TPermission, TSecurityRole, TPermissionRestriction, TSecurityContextType,
             TSecurityContextObjectIdent>(
             Expression<Func<TPermission, TPrincipal>> principalPath,
             Expression<Func<TPermission, TSecurityRole>> securityRolePath,
@@ -47,7 +49,7 @@ public static class SecuritySystemSettingsExtensions
             where TPermissionRestriction : class
             where TSecurityContextType : class
             where TSecurityContextObjectIdent : notnull =>
-            securitySystemSettings.AddGeneralPermission(
+            securitySystemBuilder.AddGeneralPermission(
                 principalPath.ToPropertyAccessors(),
                 securityRolePath.ToPropertyAccessors(),
                 permissionPath.ToPropertyAccessors(),

@@ -24,7 +24,7 @@ public class ClientSecurityRuleTests : TestBase
         var availableClientSecurityRuleSource = scope.ServiceProvider.GetRequiredService<IAvailableClientSecurityRuleSource>();
 
         // Act
-        var result = await availableClientSecurityRuleSource.GetAvailableSecurityRules(this.CancellationToken);
+        var result = await availableClientSecurityRuleSource.GetAvailableSecurityRules().ToArrayAsync(this.CancellationToken);
 
         // Assert
         result.OrderBy(v => v.Name).Should().BeEquivalentTo(expectedResult);

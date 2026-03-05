@@ -6,8 +6,7 @@ using CommonFramework.VisualIdentitySource;
 using GenericQueryable;
 
 using HierarchicalExpand;
-using HierarchicalExpand.AncestorDenormalization;
-
+using HierarchicalExpand.Denormalization;
 using SecuritySystem.Credential;
 using SecuritySystem.DomainServices;
 
@@ -92,7 +91,7 @@ public class RootAuthManager(
                 var securityContext = await queryableSource.GetQueryable<TSecurityContext>()
                     .Where(identityInfo.Id.Path.Select(ExpressionHelper.GetEqualityWithExpr(id))).GenericSingleAsync(cancellationToken);
 
-                var denormalizedAncestorsService = serviceProvider.GetRequiredService<IDenormalizedAncestorsService<TSecurityContext>>();
+                var denormalizedAncestorsService = serviceProvider.GetRequiredService<IAncestorDenormalizer<TSecurityContext>>();
 
                 await denormalizedAncestorsService.SyncUpAsync(securityContext, cancellationToken);
             });

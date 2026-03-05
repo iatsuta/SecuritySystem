@@ -60,15 +60,19 @@ public class SecurityFilterBuilderFactory<TDomainObject, TPermission>(
 
         var permissionFilterExpression = builder.GetSecurityFilterExpression(securityRule.GetSafeExpandType());
 
-        var permissionQuery = permissionSystem.GetPermissionSource(securityRule).GetPermissionQuery();
+        var filterExpressions =
 
-        var filterExpression =
+            from permissionSource in permissionSystem.GetPermissionSources(securityRule)
 
-            ExpressionEvaluateHelper.InlineEvaluate(ee =>
+            let permissionQuery = permissionSource.GetPermissionQuery()
+
+            select ExpressionEvaluateHelper.InlineEvaluate(ee =>
 
                 ExpressionHelper.Create((TDomainObject domainObject) =>
 
                     permissionQuery.Any(permission => ee.Evaluate(permissionFilterExpression, domainObject, permission))));
+
+        var filterExpression = filterExpressions.BuildOr();
 
         var lazyHasAccessFunc = LazyHelper.Create(() => filterExpression.UpdateBody(CacheContainsCallVisitor.Value).Pipe(this.expressionEvaluator.Compile));
 

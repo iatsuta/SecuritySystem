@@ -9,7 +9,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class GetBusinessRoleHandler(
-    [WithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs] ISecuritySystem securitySystem,
     ISecurityRoleSource securityRoleSource,
     ISecurityOperationInfoSource securityOperationInfoSource,
     IRootPrincipalSourceService principalSourceService)
@@ -25,16 +25,15 @@ public class GetBusinessRoleHandler(
             securityRole
                 .Information
                 .Operations
-                .Select(
-                    o => new OperationDto
-                         {
-                             Name = o.Name, Description = securityOperationInfoSource.GetSecurityOperationInfo(o).Description
-                         })
+                .Select(o => new OperationDto
+                {
+                    Name = o.Name, Description = securityOperationInfoSource.GetSecurityOperationInfo(o).Description
+                })
                 .OrderBy(x => x.Name)
                 .ToList();
 
-        var principals = await principalSourceService.GetLinkedPrincipalsAsync([securityRole], cancellationToken);
+        var principals = await principalSourceService.GetLinkedPrincipalsAsync([securityRole]).ToListAsync(cancellationToken);
 
-        return new BusinessRoleDetailsDto { Operations = operations, Principals = principals.ToList() };
+        return new BusinessRoleDetailsDto { Operations = operations, Principals = principals };
     }
 }

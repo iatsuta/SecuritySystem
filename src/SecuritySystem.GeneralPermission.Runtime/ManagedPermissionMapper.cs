@@ -1,5 +1,6 @@
 ﻿using CommonFramework;
 using CommonFramework.GenericRepository;
+using CommonFramework.IdentitySource;
 
 using GenericQueryable;
 
@@ -7,7 +8,6 @@ using SecuritySystem.ExternalSystem.Management;
 using SecuritySystem.Services;
 
 using System.Collections.Immutable;
-using CommonFramework.IdentitySource;
 
 namespace SecuritySystem.GeneralPermission;
 
@@ -143,27 +143,29 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
 
         await genericRepository.SaveAsync(newDbPermission, cancellationToken);
 
-        var newPermissionRestrictions = await managedPermission.Restrictions.SyncWhenAll(async restrictionGroup =>
+        var newPermissionRestrictions = await managedPermission.Restrictions.ToAsyncEnumerable().SelectAsync(async restrictionGroup =>
         {
             var securityContextTypeIdentity = securityContextInfoSource.GetSecurityContextInfo(restrictionGroup.Key).Identity;
 
             var dbSecurityContextType = await securityContextTypeRepository.GetObjectAsync(securityContextTypeIdentity, cancellationToken);
 
-            var newPermissionRestrictions = await restrictionGroup.Value.Cast<TSecurityContextObjectIdent>().SyncWhenAll(async securityContextId =>
-            {
-                var newDbPermissionRestriction = new TPermissionRestriction();
+            var newPermissionRestrictions = await restrictionGroup.Value.Cast<TSecurityContextObjectIdent>().ToAsyncEnumerable().SelectAsync(async
+                    securityContextId =>
+                {
+                    var newDbPermissionRestriction = new TPermissionRestriction();
 
-                restrictionBindingInfo.Permission.Setter(newDbPermissionRestriction, newDbPermission);
-                restrictionBindingInfo.SecurityContextObjectId.Setter(newDbPermissionRestriction, securityContextId);
-                restrictionBindingInfo.SecurityContextType.Setter(newDbPermissionRestriction, dbSecurityContextType);
+                    restrictionBindingInfo.Permission.Setter(newDbPermissionRestriction, newDbPermission);
+                    restrictionBindingInfo.SecurityContextObjectId.Setter(newDbPermissionRestriction, securityContextId);
+                    restrictionBindingInfo.SecurityContextType.Setter(newDbPermissionRestriction, dbSecurityContextType);
 
-                await genericRepository.SaveAsync(newDbPermissionRestriction, cancellationToken);
+                    await genericRepository.SaveAsync(newDbPermissionRestriction, cancellationToken);
 
-                return newDbPermissionRestriction;
-            });
+                    return newDbPermissionRestriction;
+                })
+                .ToArrayAsync(cancellationToken);
 
             return newPermissionRestrictions;
-        });
+        }).ToArrayAsync(cancellationToken);
 
         return new PermissionData<TPermission, TPermissionRestriction>(newDbPermission, newPermissionRestrictions.SelectMany());
     }
@@ -230,7 +232,7 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
             bindingInfo.PermissionStartDate?.Setter.Invoke(dbPermission, managedPermission.Period.StartDate);
             bindingInfo.PermissionEndDate?.Setter.Invoke(dbPermission, managedPermission.Period.EndDate);
 
-            var newPermissionRestrictions = await restrictionMergeResult.AddingItems.SyncWhenAll(async restriction =>
+            var newPermissionRestrictions = await restrictionMergeResult.AddingItems.ToAsyncEnumerable().SelectAsync(async restriction =>
             {
                 var newPermissionRestriction = new TPermissionRestriction();
 
@@ -244,7 +246,7 @@ public class PermissionManagementService<TPrincipal, TPermission, TSecurityRole,
                 await genericRepository.SaveAsync(newPermissionRestriction, cancellationToken);
 
                 return newPermissionRestriction;
-            });
+            }).ToArrayAsync(cancellationToken);
 
             foreach (var dbRestriction in restrictionMergeResult.RemovingItems)
             {

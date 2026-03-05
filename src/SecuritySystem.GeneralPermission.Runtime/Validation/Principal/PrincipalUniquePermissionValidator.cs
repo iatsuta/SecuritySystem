@@ -18,9 +18,9 @@ public class PrincipalUniquePermissionValidator<TPrincipal, TPermission, TPermis
     {
         var duplicates = await principalData
             .PermissionDataList
+            .ToAsyncEnumerable()
             .GroupBy(permission => permission, comparer)
             .Where(g => g.Count() > 1)
-            .ToAsyncEnumerable()
             .ToListAsync(cancellationToken);
 
         if (duplicates.Count > 0)

@@ -27,7 +27,7 @@ public class RawPermissionRestrictionLoader<TPermission, TPermissionRestriction>
 {
     public async Task<Dictionary<Type, Array>> LoadAsync(TPermission permission, CancellationToken cancellationToken)
     {
-        var dbRestrictions = await permissionRestrictionLoader.LoadAsync(permission, cancellationToken);
+        var dbRestrictions = await permissionRestrictionLoader.LoadAsync(permission).ToArrayAsync(cancellationToken);
 
         return permissionRestrictionRawConverter.Convert(dbRestrictions);
     }

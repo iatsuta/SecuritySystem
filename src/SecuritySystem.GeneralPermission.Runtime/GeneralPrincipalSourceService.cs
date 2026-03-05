@@ -1,4 +1,5 @@
-﻿using CommonFramework;
+﻿using System.Collections.Immutable;
+using CommonFramework;
 using CommonFramework.GenericRepository;
 using CommonFramework.VisualIdentitySource;
 
@@ -26,14 +27,14 @@ public class GeneralPrincipalSourceService<TPrincipal>(
 
     public Type PrincipalType { get; } = typeof(TPrincipal);
 
-    public async Task<IEnumerable<ManagedPrincipalHeader>> GetPrincipalsAsync(string nameFilter, int limit, CancellationToken cancellationToken)
+    public IAsyncEnumerable<ManagedPrincipalHeader> GetPrincipalsAsync(string nameFilter, int limit)
     {
-        return await principalQueryable
+        return principalQueryable
             .Pipe(
                 !string.IsNullOrWhiteSpace(nameFilter),
                 q => q.Where(this.nameAccessors.Path.Select(principalName => principalName.Contains(nameFilter))))
             .Select(principalHeaderConverter.ConvertExpression)
-            .GenericToListAsync(cancellationToken);
+            .GenericAsAsyncEnumerable();
     }
 
     public async Task<ManagedPrincipal?> TryGetPrincipalAsync(UserCredential userCredential, CancellationToken cancellationToken)
@@ -50,15 +51,15 @@ public class GeneralPrincipalSourceService<TPrincipal>(
         }
     }
 
-    public async Task<IEnumerable<string>> GetLinkedPrincipalsAsync(IEnumerable<SecurityRole> securityRoles, CancellationToken cancellationToken)
+    public IAsyncEnumerable<string> GetLinkedPrincipalsAsync(ImmutableHashSet<SecurityRole> securityRoles)
     {
-        return await availablePrincipalSource.GetAvailablePrincipalsQueryable(
+        return availablePrincipalSource.GetAvailablePrincipalsQueryable(
                 new DomainSecurityRule.ExpandedRolesSecurityRule(securityRoles)
                 {
                     CustomCredential = new SecurityRuleCredential.AnyUserCredential()
                 })
             .Select(this.nameAccessors.Path)
             .Distinct()
-            .GenericToListAsync(cancellationToken);
+            .GenericAsAsyncEnumerable();
     }
 }

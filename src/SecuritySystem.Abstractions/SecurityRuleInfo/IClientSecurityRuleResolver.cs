@@ -1,6 +1,8 @@
-﻿namespace SecuritySystem.SecurityRuleInfo;
+﻿using System.Collections.Immutable;
+
+namespace SecuritySystem.SecurityRuleInfo;
 
 public interface IClientSecurityRuleResolver
 {
-    IEnumerable<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole);
+    ImmutableArray<DomainSecurityRule.ClientSecurityRule> Resolve(SecurityRole securityRole);
 }

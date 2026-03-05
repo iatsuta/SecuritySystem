@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Immutable;
 
 using CommonFramework;
 using CommonFramework.DependencyInjection;
@@ -10,16 +10,38 @@ using SecuritySystem.DependencyInjection;
 using SecuritySystem.ExternalSystem;
 using SecuritySystem.ExternalSystem.Management;
 
+using System.Linq.Expressions;
+
 namespace SecuritySystem.VirtualPermission.DependencyInjection;
 
-public class VirtualBindingInfoRootSettingsBuilder<TPrincipal, TPermission> : IVirtualBindingInfoRootSettingsBuilder<TPermission>
+public class VirtualPermissionRootBuilder<TPrincipal, TPermission> : IVirtualPermissionRootBuilder<TPermission>
     where TPermission : class
 {
-    private readonly List<VirtualPermissionBindingInfo<TPermission>> virtualPermissionBindingInfoList = [];
+    private readonly List<VirtualPermissionSecurityRoleItemBindingInfo<TPermission>> itemBindingInfoList = [];
 
     private readonly List<Func<PermissionBindingInfo<TPermission, TPrincipal>, PermissionBindingInfo<TPermission, TPrincipal>>> permissionBindingInit = [];
 
-    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(
+    private readonly List<Func<VirtualPermissionBindingInfo<TPermission>, VirtualPermissionBindingInfo<TPermission>>> virtualBindingInit = [];
+
+    public IVirtualPermissionRootBuilder<TPermission> AddRestriction<TSecurityContext>(
+        Expression<Func<TPermission, IEnumerable<TSecurityContext>>> path)
+        where TSecurityContext : ISecurityContext
+    {
+        this.virtualBindingInit.Add(permissionBinding => permissionBinding with { Restrictions = permissionBinding.Restrictions.Concat([path]).ToImmutableList() });
+
+        return this;
+    }
+
+    public IVirtualPermissionRootBuilder<TPermission> AddRestriction<TSecurityContext>(
+        Expression<Func<TPermission, TSecurityContext?>> path)
+        where TSecurityContext : ISecurityContext
+    {
+        this.virtualBindingInit.Add(permissionBinding => permissionBinding with { Restrictions = permissionBinding.Restrictions.Concat([path]).ToImmutableList() });
+
+        return this;
+    }
+
+    public IVirtualPermissionRootBuilder<TPermission> SetPeriod(
         PropertyAccessors<TPermission, DateTime?>? startDatePropertyAccessor,
         PropertyAccessors<TPermission, DateTime?>? endDatePropertyAccessor)
     {
@@ -29,21 +51,21 @@ public class VirtualBindingInfoRootSettingsBuilder<TPrincipal, TPermission> : IV
         return this;
     }
 
-    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPeriod(
+    public IVirtualPermissionRootBuilder<TPermission> SetPeriod(
         Expression<Func<TPermission, DateTime?>>? startDatePath,
         Expression<Func<TPermission, DateTime?>>? endDatePath) =>
         this.SetPeriod(
             startDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(startDatePath),
             endDatePath == null ? null : new PropertyAccessors<TPermission, DateTime?>(endDatePath));
 
-    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetComment(Expression<Func<TPermission, string>> commentPath)
+    public IVirtualPermissionRootBuilder<TPermission> SetComment(Expression<Func<TPermission, string>> commentPath)
     {
         this.permissionBindingInit.Add(permissionBinding => permissionBinding with { PermissionComment = commentPath.ToPropertyAccessors() });
 
         return this;
     }
 
-    public IVirtualBindingInfoRootSettingsBuilder<TPermission> SetPermissionDelegation(
+    public IVirtualPermissionRootBuilder<TPermission> SetPermissionDelegation(
         Expression<Func<TPermission, TPermission?>> newDelegatedFromPath)
     {
         this.permissionBindingInit.Add(permissionBinding => permissionBinding with { DelegatedFrom = newDelegatedFromPath.ToPropertyAccessors() });
@@ -51,43 +73,40 @@ public class VirtualBindingInfoRootSettingsBuilder<TPrincipal, TPermission> : IV
         return this;
     }
 
-    public IVirtualBindingInfoRootSettingsBuilder<TPermission> ForRole(SecurityRole securityRole,
+    public IVirtualPermissionRootBuilder<TPermission> AddSecurityRole(SecurityRole securityRole,
         Action<IVirtualBindingInfoSettingsBuilder<TPermission>>? init = null)
     {
         var innerBuilder = new VirtualBindingInfoSettingsBuilder<TPermission>();
 
         init?.Invoke(innerBuilder);
 
-        var virtualBindingInfo = innerBuilder.Init(new VirtualPermissionBindingInfo<TPermission> { SecurityRole = securityRole });
+        var virtualBindingInfo = innerBuilder.Initialize(new VirtualPermissionSecurityRoleItemBindingInfo<TPermission> { SecurityRole = securityRole });
 
-        this.virtualPermissionBindingInfoList.Add(virtualBindingInfo);
+        this.itemBindingInfoList.Add(virtualBindingInfo);
 
         return this;
     }
 
-    public void Initialize(ISecuritySystemSettings securitySystemSettings, PropertyAccessors<TPermission, TPrincipal> principalAccessors)
+    public void Initialize(ISecuritySystemBuilder securitySystemBuilder, PropertyAccessors<TPermission, TPrincipal> principalAccessors)
     {
-        var baseBindingInfo = new PermissionBindingInfo<TPermission, TPrincipal> { IsReadonly = true, Principal = principalAccessors };
+        var bindingInfo =
+            permissionBindingInit.Aggregate(new PermissionBindingInfo<TPermission, TPrincipal> { IsReadonly = true, Principal = principalAccessors },
+                (state, f) => f(state));
 
-        var bindingInfo = permissionBindingInit.Aggregate(baseBindingInfo, (state, f) => f(state));
+        var virtualBindingInfo = virtualBindingInit.Aggregate(new VirtualPermissionBindingInfo<TPermission> { Items = itemBindingInfoList.ToImmutableList() },
+            (state, f) => f(state));
 
-        foreach (var virtualBindingInfo in this.virtualPermissionBindingInfoList)
-        {
-            securitySystemSettings.AddPermissionSystem(serviceProxyFactory =>
-                serviceProxyFactory.Create<IPermissionSystemFactory, VirtualPermissionSystemFactory>(virtualBindingInfo));
-        }
+        securitySystemBuilder.AddPermissionSystem(serviceProxyFactory =>
+            serviceProxyFactory.Create<IPermissionSystemFactory, VirtualPermissionSystemFactory>(virtualBindingInfo));
 
-        securitySystemSettings.AddExtensions(services =>
+        securitySystemBuilder.AddExtensions(services =>
         {
             services.AddSingleton<PermissionBindingInfo>(bindingInfo);
 
             services.TryAddSingleton<IVirtualPermissionBindingInfoValidator, VirtualPermissionBindingInfoValidator>();
 
-            foreach (var virtualBindingInfo in this.virtualPermissionBindingInfoList)
-            {
-                services.AddScopedFrom<IPrincipalSourceService, IServiceProxyFactory>(factory =>
-                    factory.Create<IPrincipalSourceService, VirtualPrincipalSourceService<TPermission>>(virtualBindingInfo));
-            }
+            services.AddScopedFrom<IPrincipalSourceService, IServiceProxyFactory>(factory =>
+                factory.Create<IPrincipalSourceService, VirtualPrincipalSourceService<TPermission>>(virtualBindingInfo));
         });
     }
 }

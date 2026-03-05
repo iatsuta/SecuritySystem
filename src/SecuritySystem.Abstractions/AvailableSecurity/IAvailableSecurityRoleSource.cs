@@ -2,5 +2,5 @@
 
 public interface IAvailableSecurityRoleSource
 {
-    Task<List<FullSecurityRole>> GetAvailableSecurityRoles(bool expandChildren = true, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<FullSecurityRole> GetAvailableSecurityRoles(bool expandChildren = true);
 }

@@ -16,8 +16,11 @@ public class PermissionLoader<TPrincipal, TPermission>(
     private readonly PermissionBindingInfo<TPermission, TPrincipal> bindingInfo =
         (PermissionBindingInfo<TPermission, TPrincipal>)bindingInfoSource.GetForPermission(typeof(TPermission));
 
-    public Task<List<TPermission>> LoadAsync(TPrincipal principal, CancellationToken cancellationToken)
+    public IAsyncEnumerable<TPermission> LoadAsync(TPrincipal principal)
     {
-        return queryableSource.GetQueryable<TPermission>().Where(bindingInfo.Principal.Path.Select(p => p == principal)).GenericToListAsync(cancellationToken);
+        return queryableSource
+            .GetQueryable<TPermission>()
+            .Where(bindingInfo.Principal.Path.Select(p => p == principal))
+            .GenericAsAsyncEnumerable();
     }
 }

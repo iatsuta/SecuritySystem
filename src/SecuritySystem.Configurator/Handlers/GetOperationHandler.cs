@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Collections.Immutable;
+using Microsoft.AspNetCore.Http;
 
 using SecuritySystem.Attributes;
 using SecuritySystem.Configurator.Interfaces;
@@ -9,7 +10,7 @@ using SecuritySystem.ExternalSystem.Management;
 namespace SecuritySystem.Configurator.Handlers;
 
 public class GetOperationHandler(
-    [WithoutRunAs]ISecuritySystem securitySystem,
+    [WithoutRunAs] ISecuritySystem securitySystem,
     ISecurityRoleSource roleSource,
     IRootPrincipalSourceService principalSourceService)
     : BaseReadHandler, IGetOperationHandler
@@ -18,17 +19,17 @@ public class GetOperationHandler(
     {
         if (!securitySystem.IsSecurityAdministrator()) return new OperationDetailsDto { BusinessRoles = [], Principals = [] };
 
-        var operationName = context.ExtractName();
+        var securityOperation = new SecurityOperation(context.ExtractName());
 
         var securityRoles = roleSource.SecurityRoles
-                                      .Where(x => x.Information.Operations.Any(o => o.Name == operationName))
-                                      .ToList();
+            .Where(x => x.Information.Operations.Contains(securityOperation))
+            .ToImmutableHashSet<SecurityRole>();
 
-        var principals = await principalSourceService.GetLinkedPrincipalsAsync(securityRoles, cancellationToken);
+        var principals = await principalSourceService.GetLinkedPrincipalsAsync(securityRoles).ToListAsync(cancellationToken);
 
         return new OperationDetailsDto
-               {
-                   BusinessRoles = securityRoles.Select(x => x.Name).Order().ToList(), Principals = principals.ToList()
-               };
+        {
+            BusinessRoles = securityRoles.Select(x => x.Name).Order().ToList(), Principals = principals
+        };
     }
 }

@@ -24,9 +24,9 @@ public class AccessorsFilterBuilderFactory<TDomainObject>(IServiceProxyFactory s
             return factory.CreateFilter(securityRule, securityPath);
         }).ToList();
 
-        return new AccessorsFilterInfo<TDomainObject>(
-            domainObject => accessorsFilterInfoList.SelectMany(accessorsFilterInfo => accessorsFilterInfo.GetAccessorsFunc(domainObject))
-                                                   .Distinct(StringComparer.CurrentCultureIgnoreCase));
+        return new(domainObject => accessorsFilterInfoList
+            .SelectMany(accessorsFilterInfo => accessorsFilterInfo.GetAccessorsFunc(domainObject))
+            .Distinct(StringComparer.CurrentCultureIgnoreCase));
     }
 }
 
@@ -46,18 +46,14 @@ public class AccessorsFilterBuilderFactory<TDomainObject, TPermission>(
 
         var builder = this.CreateBuilder(securityPath, securityContextRestrictions);
 
-        var getAccessorsFunc = LazyHelper.Create(
-            () => FuncHelper.Create(
-                (TDomainObject domainObject) =>
-                {
-                    var filter = builder.GetAccessorsFilter(domainObject, securityRule.GetSafeExpandType());
+        var getAccessorsFunc = LazyHelper.Create(() => FuncHelper.Create((TDomainObject domainObject) =>
+        {
+            var filter = builder.GetAccessorsFilter(domainObject, securityRule.GetSafeExpandType());
 
-                    var permissionSource = permissionSystem.GetPermissionSource(securityRule);
+            return permissionSystem.GetPermissionSources(securityRule).SelectMany(permissionSource => permissionSource.GetAccessors(filter)).Distinct();
+        }));
 
-                    return permissionSource.GetAccessors(filter);
-                }));
-
-        return new AccessorsFilterInfo<TDomainObject>(v => getAccessorsFunc.Value(v));
+        return new(v => getAccessorsFunc.Value(v));
     }
 
     protected override AccessorsFilterBuilder<TDomainObject, TPermission> CreateBuilder(
