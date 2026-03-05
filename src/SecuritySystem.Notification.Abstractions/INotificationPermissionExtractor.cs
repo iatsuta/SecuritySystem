@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.Notification;
 
-public interface INotificationPermissionExtractor<TPermission>
+public interface INotificationPermissionExtractor<out TPermission>
 {
-    Task<List<TPermission>> GetPermissionsAsync(SecurityRole[] securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TPermission> GetPermissionsAsync(IEnumerable<SecurityRole> securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups);
 }

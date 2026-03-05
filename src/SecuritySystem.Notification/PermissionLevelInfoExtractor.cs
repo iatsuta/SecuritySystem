@@ -22,23 +22,20 @@ public abstract class PermissionLevelInfoExtractor<TPermission> : IPermissionLev
 }
 
 
-public abstract class PermissionLevelInfoExtractor<TPermission, TSecurityContext, TSecurityContextIdent>(
+public class PermissionLevelInfoExtractor<TPermission, TSecurityContext, TSecurityContextIdent>(
     IQueryableSource queryableSource,
-    IIdentityInfoSource identityInfoSource) : IPermissionLevelInfoExtractor<TPermission>
+    IdentityInfo<TSecurityContext, TSecurityContextIdent> identityInfo,
+    IDirectLevelExtractor<TSecurityContext> directLevelExtractor) : IPermissionLevelInfoExtractor<TPermission>
     where TSecurityContext : class, ISecurityContext
     where TSecurityContextIdent : notnull
 {
-    protected readonly IdentityInfo<TSecurityContext, TSecurityContextIdent> IdentityInfo = identityInfoSource.GetIdentityInfo<TSecurityContext, TSecurityContextIdent>();
-
-    protected abstract Expression<Func<IQueryable<TSecurityContext>, int>> GetDirectLevelExpression(NotificationFilterGroup<TSecurityContextIdent> notificationFilterGroup);
-
-    public Expression<Func<PermissionLevelInfo<TPermission>, FullPermissionLevelInfo<TPermission>>> GetSelector(NotificationFilterGroup<TSecurityContextIdent> notificationFilterGroup)
+    public Expression<Func<PermissionLevelInfo<TPermission>, FullPermissionLevelInfo<TPermission>>> GetSelector(NotificationFilterGroup notificationFilterGroup)
     {
         var grandAccess = notificationFilterGroup.ExpandType.AllowEmpty();
 
         var securityContextQ = queryableSource.GetQueryable<TSecurityContext>();
 
-        var getDirectLevelExpression = this.GetDirectLevelExpression(notificationFilterGroup);
+        var getDirectLevelExpression = directLevelExtractor.GetDirectLevelExpression(notificationFilterGroup);
 
         return ExpressionEvaluateHelper
             .InlineEvaluate(ee =>
@@ -53,7 +50,7 @@ public abstract class PermissionLevelInfoExtractor<TPermission, TSecurityContext
                                                                                           == typeof(TSecurityContext).Name
                                                                                           && fi.SecurityContextId
                                                                                           == ee.Evaluate(
-                                                                                              this.IdentityInfo.Id.Path,
+                                                                                              identityInfo.Id.Path,
                                                                                               securityContext)))
 
 

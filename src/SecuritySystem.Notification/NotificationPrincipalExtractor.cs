@@ -1,14 +1,15 @@
 ﻿namespace SecuritySystem.Notification;
 
-public class NotificationPrincipalExtractor(INotificationPermissionExtractor notificationPermissionExtractor) : INotificationPrincipalExtractor
+public class NotificationPrincipalExtractor<TPrincipal, TPermission>(
+    PermissionBindingInfo<TPermission, TPrincipal> bindingInfo,
+    INotificationPermissionExtractor<TPermission> notificationPermissionExtractor)
+    : INotificationPrincipalExtractor<TPrincipal>
 {
-    public async Task<IEnumerable<Principal>> GetPrincipalsAsync(
-        SecurityRole[] securityRoles,
-        IEnumerable<NotificationFilterGroup> notificationFilterGroups,
-        CancellationToken cancellationToken)
+    public IAsyncEnumerable<TPrincipal> GetPrincipalsAsync(SecurityRole[] securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups)
     {
-        var permissions = await notificationPermissionExtractor.GetPermissionsAsync(securityRoles, notificationFilterGroups, cancellationToken);
-
-        return permissions.Select(permission => permission.Principal).Distinct();
+        return notificationPermissionExtractor
+            .GetPermissionsAsync(securityRoles, notificationFilterGroups)
+            .Select(bindingInfo.Principal.Getter)
+            .Distinct();
     }
 }

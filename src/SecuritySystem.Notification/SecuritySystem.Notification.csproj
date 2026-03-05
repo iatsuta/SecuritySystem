@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SecuritySystem.Notification.Abstractions\SecuritySystem.Notification.Abstractions.csproj" />
+    <ProjectReference Include="..\SecuritySystem.Runtime\SecuritySystem.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

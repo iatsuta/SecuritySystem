@@ -11,3 +11,10 @@ public record FullPermissionLevelInfo<TPermission> : PermissionLevelInfo<TPermis
 {
     public required int Level { get; init; }
 }
+
+public record PermissionLevelDictInfo<TPermission>
+{
+    public required TPermission Permission { get; init; }
+
+    public required Dictionary<Type, int> LevelDict { get; init; }
+}

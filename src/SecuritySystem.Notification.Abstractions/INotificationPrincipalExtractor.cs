@@ -1,6 +1,6 @@
 ﻿namespace SecuritySystem.Notification;
 
-public interface INotificationPrincipalExtractor<TPrincipal>
+public interface INotificationPrincipalExtractor<out TPrincipal>
 {
-    Task<List<TPrincipal>> GetPrincipalsAsync(SecurityRole[] securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TPrincipal> GetPrincipalsAsync(SecurityRole[] securityRoles, IEnumerable<NotificationFilterGroup> notificationFilterGroups);
 }
